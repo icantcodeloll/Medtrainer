@@ -10,7 +10,7 @@ import re
 # ==========================================
 st.set_page_config(page_title="Trainer", page_icon="🩺", layout="wide")
 
-API_KEYS = [st.secrets["GENAI_KEY_1"]]
+API_KEYS = [st.secrets["GENAI_KEY_1"], st.secrets["GENAI_KEY_2"], st.secrets["GENAI_KEY_3"], st.secrets["GENAI_KEY_4"], st.secrets["GENAI_KEY_5"], st.secrets["GENAI_KEY_6"], st.secrets["GENAI_KEY_7"], st.secrets["GENAI_KEY_8"], st.secrets["GENAI_KEY_9"], st.secrets["GENAI_KEY_10"]]
 CSV_FILE = "learning_objectives_informative_reports.csv"
 NOTES_FILE = "lecture_notes.csv"
 JOIN_COLUMN = "lecture_id"
