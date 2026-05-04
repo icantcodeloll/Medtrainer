@@ -1,3 +1,4 @@
+from tkinter.constants import N
 import streamlit as st
 import pandas as pd
 from google import genai
@@ -33,6 +34,8 @@ else:
 # Initialize Session States
 if 'current_level' not in st.session_state:
     st.session_state.current_level = 10
+if 'num_questions' not in st.session_state:
+    st.session_state.num_questions = 10 
 if 'missed_questions' not in st.session_state:
     st.session_state.missed_questions = []
 if 'current_exam' not in st.session_state:
@@ -101,11 +104,11 @@ def get_ai_grading(exam_text, user_answers, correct_key):
     # Using search during grading ensures explanations match current guidelines
     return call_gemini_with_rotation(prompt, GRADER_MODEL, use_search=True)
 
-def get_blind_exam(topics_list, level):
+def get_blind_exam(topics_list, level, num_questions):
     combined_content = "\n\n".join([f"Source {i+1}: {t}" for i, t in enumerate(topics_list)])
     prompt = f"""
     You are a medical board examiner. 
-    TASK: Generate EXACTLY 10 Multiple Choice Questions (1 per snippet provided below).
+    TASK: Generate EXACTLY {num_questions} Multiple Choice Questions (1 per snippet provided below).
     DIFFICULTY LEVEL: {level}/50.
     
 
@@ -147,7 +150,10 @@ def get_deep_explanation(question_text):
 # ==========================================
 st.title("🩺 Trainer")
 st.sidebar.header("Stats & Controls")
-st.sidebar.metric("Current Level", f"{st.session_state.current_level}/50")
+st.session_state.current_level = st.sidebar.slider("Starting Level", 1, 50, st.session_state.current_level)
+st.session_state.num_questions = st.sidebar.slider("Number of Questions", 1, 20, st.session_state.num_questions)
+
+st.sidebar.metric("Active Level", f"{st.session_state.current_level}/50")
 
 # --- ADD THIS: Focus Mode Dropdown ---
 df_sidebar = pd.read_csv(CSV_FILE)
@@ -158,6 +164,7 @@ focus_mode = st.sidebar.selectbox("🎯 Focus Mode:", all_categories)
 if st.sidebar.button("🔄 Generate New Exam"):
     st.session_state.exam_submitted = False  # Add this line
     st.session_state.last_score = 0
+    n = st.session_state.num_questions
     try:
         df_main = pd.read_csv(CSV_FILE)
         df_notes = pd.read_csv(NOTES_FILE)
@@ -184,13 +191,13 @@ if st.sidebar.button("🔄 Generate New Exam"):
         if 'mastery_score' in df.columns:
             # Prioritize items with mastery <= 3
             weak_pool = df[df['mastery_score'] <= 3]
-            if len(weak_pool) >= 10:
-                st.session_state.samples_df = weak_pool.sample(10)
+            if len(weak_pool) >= n:
+                st.session_state.samples_df = weak_pool.sample(n)
             else:
-                st.session_state.samples_df = df.sample(10)
+                st.session_state.samples_df = df.sample(n)
             st.sidebar.info("🎯 Smart Sampling: Prioritizing weak areas.")
         else:
-            st.session_state.samples_df = df.sample(min(10, len(df)))
+            st.session_state.samples_df = df.sample(min(n, len(df)))
         
         # Use the session state version for the rest of the generation
         samples_df = st.session_state.samples_df
@@ -199,12 +206,12 @@ if st.sidebar.button("🔄 Generate New Exam"):
         if 'category' in samples_df.columns:
             st.session_state.current_categories = samples_df['category'].fillna('General').tolist()
         else:
-            st.session_state.current_categories = ['General'] * 10
+            st.session_state.current_categories = ['General'] * n
 
         samples = (samples_df['explanation'] + "\n[Notes: " + samples_df['content'].fillna('') + "]").tolist()
         
-        with st.spinner("Searching latest medical data and generating 10 questions..."):
-            raw_response = get_blind_exam(samples, st.session_state.current_level)
+        with st.spinner(f"Generating {n} questions at Level {st.session_state.current_level}..."):
+            raw_response = get_blind_exam(samples, st.session_state.current_level, n)
             if raw_response and "[KEY:" in raw_response:
                 # Use a split that keeps the questions separate from the key
                 text, key_part = raw_response.split("[KEY:")
