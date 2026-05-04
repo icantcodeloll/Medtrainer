@@ -86,12 +86,13 @@ def call_gemini_with_rotation(prompt, model_to_use, use_search=False):
 # ==========================================
 # 2. CORE LOGIC FUNCTIONS
 # ==========================================
-def get_ai_grading(exam_text, user_answers, correct_key):
+def get_ai_grading(exam_text, user_answers, correct_key, score):
     prompt = f"""
     Here is the input:
     EXAM QUESTIONS: {exam_text}
     CORRECT KEY: {correct_key}
     STUDENT ANSWERS: {user_answers}
+    SCORE: {score}
 
     You are a medical instructor. Grade the student's performance.
     ### GRADING PROTOCOL:
@@ -332,7 +333,8 @@ if st.session_state.current_exam:
             feedback = get_ai_grading(
                 st.session_state.current_exam, 
                 st.session_state.last_user_input, 
-                st.session_state.last_correct_key
+                st.session_state.last_correct_key,
+                st.session_state.last_score
             )
             st.markdown(feedback)
 
