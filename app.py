@@ -162,10 +162,6 @@ def get_deep_explanation(question_text):
 # ==========================================
 st.title("🩺 Trainer")
 st.sidebar.header("Stats & Controls")
-st.session_state.current_level = st.sidebar.slider("Starting Level", 1, 50, st.session_state.current_level)
-st.session_state.num_questions = st.sidebar.slider("Number of Questions", 1, 20, st.session_state.num_questions)
-
-st.sidebar.metric("Active Level", f"{st.session_state.current_level}/50")
 
 # --- ADD THIS: Focus Mode Dropdown ---
 df_sidebar = pd.read_csv(CSV_FILE)
@@ -238,6 +234,20 @@ if st.sidebar.button("🔄 Generate New Exam"):
                 st.error("Failed to generate a valid exam. The AI response was incomplete.")
     except Exception as e:
         st.error(f"File Error: Ensure {CSV_FILE} and {NOTES_FILE} are in the folder. ({e})")
+
+# Move Active Level metric here
+st.sidebar.metric("Active Level", f"{st.session_state.current_level}/50")
+
+# Settings button for sliders
+if st.sidebar.button("⚙️ Settings", use_container_width=True):
+    if 'show_settings' not in st.session_state:
+        st.session_state.show_settings = False
+    st.session_state.show_settings = not st.session_state.show_settings
+
+# Show sliders only when settings is expanded
+if st.session_state.get('show_settings', False):
+    st.session_state.current_level = st.sidebar.slider("Starting Level", 1, 50, st.session_state.current_level)
+    st.session_state.num_questions = st.sidebar.slider("Number of Questions", 1, 20, st.session_state.num_questions)
 
 # Display the Exam
 
