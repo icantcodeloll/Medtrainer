@@ -169,6 +169,14 @@ categories = df_sidebar['category'].fillna("Uncategorized").astype(str).unique()
 all_categories = ["All Topics"] + sorted(categories)
 focus_mode = st.sidebar.selectbox("🎯 Focus Mode:", all_categories)
 
+# --- ADD THIS: Exam Filter Dropdown ---
+if 'exam' in df_sidebar.columns:
+    exams = df_sidebar['exam'].fillna("Uncategorized").astype(str).unique().tolist()
+    all_exams = ["All Exams"] + sorted(exams)
+    exam_filter = st.sidebar.selectbox("📋 Exam Filter:", all_exams)
+else:
+    exam_filter = "All Exams"
+
 if st.sidebar.button("🔄 Generate New Exam"):
     st.session_state.exam_submitted = False  # Add this line
     st.session_state.last_score = 0
@@ -185,6 +193,12 @@ if st.sidebar.button("🔄 Generate New Exam"):
                 st.error(f"No questions found for {focus_mode}. Check your CSV.")
                 st.stop()
 
+        # --- ADD THIS: Filter by exam ---
+        if exam_filter != "All Exams" and 'exam' in df.columns:
+            df = df[df['exam'] == exam_filter]
+            if df.empty:
+                st.error(f"No questions found for {exam_filter}. Check your CSV.")
+                st.stop()
 
         # --- TOGGLE LOGIC ---
         if 'include' in df.columns:
