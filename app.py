@@ -274,17 +274,17 @@ if st.session_state.current_exam:
             st.subheader(f"Question {i+1}")
             
             # Enhanced formatting: Add line breaks after questions and options
-            # 1. Add double line break after question text before options
-            formatted_q = re.sub(r"(\d+\.\s[^A-D]*?)(?=A\.)", r"\1\n\n", q_text)
-            # 2. Add line breaks after each option (A., B., C., D.)
-            formatted_q = re.sub(r"([A-D]\.\s[^A-D]*?)(?=[A-D]\.|$)", r"\1\n\n", formatted_q)
-            # 3. Clean up any multiple consecutive spaces
-            formatted_q = re.sub(r"\s+", " ", formatted_q)
-            # 4. Clean up any multiple consecutive line breaks
-            formatted_q = re.sub(r"\n{3,}", "\n\n", formatted_q)
+            # 1. Add HTML line breaks after question text before options
+            formatted_q = re.sub(r"(\d+\.\s[^A-D]*?)(?=A\.)", r"\1<br><br>", q_text)
+            # 2. Add HTML line breaks after each option (A., B., C., D.)
+            formatted_q = re.sub(r"([A-D]\.\s[^A-D]*?)(?=[A-D]\.|$)", r"\1<br><br>", formatted_q)
+            # 3. Replace newlines with HTML breaks for better rendering
+            formatted_q = formatted_q.replace("\n", "<br>")
+            # 4. Clean up any multiple consecutive breaks
+            formatted_q = re.sub(r"(<br>){3,}", "<br><br>", formatted_q)
             
-            # Use markdown so the bolding and newlines render correctly
-            st.markdown(formatted_q)
+            # Use markdown with HTML allowed for proper line breaks
+            st.markdown(formatted_q, unsafe_allow_html=True)
             
             # This makes the radio buttons cleaner
             st.session_state.user_selections[i] = st.radio(
