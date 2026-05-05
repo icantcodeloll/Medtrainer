@@ -286,14 +286,14 @@ if st.session_state.current_exam:
             st.subheader(f"Question {i+1}")
             
             # Enhanced formatting: Add line breaks after questions and options
-            # 1. Add extra HTML line breaks after question text before options
-            formatted_q = re.sub(r"(\d+\.\s[^A-D]*?)(?=A\.)", r"\1<br><br><br>", q_text)
-            # 2. Add HTML line breaks after each option (A., B., C., D.)
-            formatted_q = re.sub(r"([A-D]\.\s[^A-D]*?)(?=[A-D]\.|$)", r"\1<br><br>", formatted_q)
+            # 1. Add HTML line breaks after question text before options
+            formatted_q = re.sub(r"(\d+\.\s[^A-D]*?)(?=A\.)", r"\1<br><br>", q_text)
+            # 2. Add single HTML line break after each option (A., B., C., D.)
+            formatted_q = re.sub(r"([A-D]\.\s[^A-D]*?)(?=[A-D]\.|$)", r"\1<br>", formatted_q)
             # 3. Replace newlines with HTML breaks for better rendering
             formatted_q = formatted_q.replace("\n", "<br>")
-            # 4. Clean up any multiple consecutive breaks (allow up to 3 for question separation)
-            formatted_q = re.sub(r"(<br>){4,}", "<br><br><br>", formatted_q)
+            # 4. Clean up any multiple consecutive breaks (allow up to 2 for question separation)
+            formatted_q = re.sub(r"(<br>){3,}", "<br><br>", formatted_q)
             
             # Use markdown with HTML allowed for proper line breaks
             st.markdown(formatted_q, unsafe_allow_html=True)
