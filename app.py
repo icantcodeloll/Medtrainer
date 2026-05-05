@@ -291,7 +291,7 @@ if st.session_state.current_exam:
             # 2. Add single HTML line break after each option (A., B., C., D.)
             formatted_q = re.sub(r"([A-D]\.\s[^A-D]*?)(?=[A-D]\.|$)", r"\1<br>", formatted_q)
             # 3. Replace newlines with HTML breaks for better rendering
-            #formatted_q = formatted_q.replace("\n", "<br>")
+            formatted_q = formatted_q.replace("\n", "<br>")
             # 4. Clean up any multiple consecutive breaks (allow up to 2 for question separation)
             formatted_q = re.sub(r"(<br>){3,}", "<br><br>", formatted_q)
             
