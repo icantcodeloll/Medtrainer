@@ -2,4 +2,3 @@ streamlit
 pandas
 google-genai
 google
-tkinter
