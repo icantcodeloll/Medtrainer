@@ -288,15 +288,18 @@ if st.session_state.current_exam:
             # Enhanced formatting: Add line breaks after questions and options
             # Only add HTML breaks if no \n already exists
             
-            # 1. Add HTML line breaks after question text before options (only if no \n)
+            # 1. Add 2 HTML line breaks after question text before options (only if no \n)
             formatted_q = re.sub(r"(\d+\.\s[^A-D]*?)(?=A\.)", r"\1<br><br>", q_text)
             # 2. Add single HTML line break after each option (only if no \n)
             formatted_q = re.sub(r"([A-D]\.\s[^A-D]*?)(?=[A-D]\.|$)", r"\1<br>", formatted_q)
             
             # 3. If \n exists, convert to single HTML break (don't add extra)
             formatted_q = formatted_q.replace("\n", "<br>")
-            # 4. Clean up any multiple consecutive breaks (allow up to 2)
-            formatted_q = re.sub(r"(<br>){3,}", "<br><br>", formatted_q)
+            # 4. Clean up any multiple consecutive breaks to max 1, except preserve 2 breaks after questions
+            # First, preserve the 2 breaks after questions
+            formatted_q = re.sub(r"(\d+\.\s[^A-D]*?)<br><br>", r"\1<br><br>", formatted_q)
+            # Then clean up all other consecutive breaks to max 1
+            formatted_q = re.sub(r"(<br>){2,}", "<br>", formatted_q)
             
             # Use markdown with HTML allowed for proper line breaks
             st.markdown(formatted_q, unsafe_allow_html=True)
