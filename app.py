@@ -248,6 +248,18 @@ if st.sidebar.button("⚙️ Settings", use_container_width=True):
 if st.session_state.get('show_settings', False):
     st.session_state.current_level = st.sidebar.slider("Starting Level", 1, 50, st.session_state.current_level)
     st.session_state.num_questions = st.sidebar.slider("Number of Questions", 1, 20, st.session_state.num_questions)
+    
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("🎓 Knowledge Bank")
+    # Use the df_sidebar we loaded earlier
+    if 'mastery_score' in df_sidebar.columns:
+        total_objs = len(df_sidebar)
+        mastered = len(df_sidebar[df_sidebar['mastery_score'] == 5])
+        progress_val = mastered / total_objs if total_objs > 0 else 0
+        
+        st.sidebar.write(f"Mastered: {mastered} / {total_objs}")
+        st.sidebar.progress(progress_val)
+        st.sidebar.caption(f"{progress_val*100:.1f}% of curriculum at Mastery Level 5")
 
 # Display the Exam
 
@@ -443,15 +455,3 @@ if st.session_state.missed_questions:
         st.sidebar.success("Saved to missed_questions.txt")
 
 
-# --- ADD THIS: Mastery Progress Tracker ---
-st.sidebar.markdown("---")
-st.sidebar.subheader("🎓 Knowledge Bank")
-# Use the df_sidebar we loaded earlier
-if 'mastery_score' in df_sidebar.columns:
-    total_objs = len(df_sidebar)
-    mastered = len(df_sidebar[df_sidebar['mastery_score'] == 5])
-    progress_val = mastered / total_objs if total_objs > 0 else 0
-    
-    st.sidebar.write(f"Mastered: {mastered} / {total_objs}")
-    st.sidebar.progress(progress_val)
-    st.sidebar.caption(f"{progress_val*100:.1f}% of curriculum at Mastery Level 5")
