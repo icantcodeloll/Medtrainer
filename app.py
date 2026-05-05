@@ -272,9 +272,19 @@ if st.session_state.current_exam:
     with st.form("grading_form"):
         for i, q_text in enumerate(individual_questions):
             st.subheader(f"Question {i+1}")
-            formatted_q = re.sub(r"\s+([A-D]\.)", r"\n\1", q_text)
-            # Use markdown so the bolding and newlines from the AI render correctly
-            st.markdown(q_text)
+            
+            # Enhanced formatting: Add line breaks after questions and options
+            # 1. Add double line break after question text before options
+            formatted_q = re.sub(r"(\d+\.\s[^A-D]*?)(?=A\.)", r"\1\n\n", q_text)
+            # 2. Add line breaks after each option (A., B., C., D.)
+            formatted_q = re.sub(r"([A-D]\.\s[^A-D]*?)(?=[A-D]\.|$)", r"\1\n\n", formatted_q)
+            # 3. Clean up any multiple consecutive spaces
+            formatted_q = re.sub(r"\s+", " ", formatted_q)
+            # 4. Clean up any multiple consecutive line breaks
+            formatted_q = re.sub(r"\n{3,}", "\n\n", formatted_q)
+            
+            # Use markdown so the bolding and newlines render correctly
+            st.markdown(formatted_q)
             
             # This makes the radio buttons cleaner
             st.session_state.user_selections[i] = st.radio(
