@@ -118,11 +118,33 @@ def get_ai_grading(exam_text, user_answers, correct_key, score):
 
 def get_blind_exam(topics_list, level, num_questions):
     combined_content = "\n\n".join([f"Source {i+1}: {t}" for i, t in enumerate(topics_list)])
+    
+    # Difficulty calibration for more precise level differentiation
+    if level <= 5:
+        difficulty_desc = "very easy - basic recall and simple clinical scenarios"
+        complexity_guide = "focus on fundamental definitions, straightforward anatomy, common conditions"
+    elif level <= 15:
+        difficulty_desc = "easy - basic clinical reasoning with some complexity"
+        complexity_guide = "include multi-step clinical reasoning, differential diagnosis basics"
+    elif level <= 25:
+        difficulty_desc = "moderate - requires clinical judgment and applied knowledge"
+        complexity_guide = "complex clinical scenarios, integration of multiple concepts, some nuance"
+    elif level <= 35:
+        difficulty_desc = "hard - advanced clinical reasoning, complex differential diagnosis"
+        complexity_guide = "multi-system pathology, nuanced clinical decision-making, rare conditions"
+    elif level <= 45:
+        difficulty_desc = "very hard - expert-level clinical reasoning, complex cases"
+        complexity_guide = "board-level complexity, interdisciplinary knowledge, cutting-edge guidelines"
+    else:  # 46-50
+        difficulty_desc = "extremely hard - supreme clinical mastery, highest board difficulty"
+        complexity_guide = "maximum complexity, synthesis of multiple specialties, latest research"
+    
     prompt = f"""
     You are a medical board examiner. 
     TASK: Generate EXACTLY {num_questions} Multiple Choice Questions (1 per snippet provided below).
     DIFFICULTY LEVEL: {level}/50.
-    
+    DIFFICULTY DESCRIPTION: {difficulty_desc}.
+    COMPLEXITY GUIDANCE: {complexity_guide}.
 
     INSTRUCTIONS:
     1. START IMMEDIATELY with '1. [Question Text]'. 
@@ -131,13 +153,18 @@ def get_blind_exam(topics_list, level, num_questions):
     4. Use the STUDY MATERIAL provided below as the base.
     5. USE GOOGLE SEARCH to supplement these questions with external medical knowledge, 
        latest clinical guidelines (e.g., NICE, Sepsis-3, GOLD), and realistic clinical presentations.
-    6. Ensure questions are complex enough for Level {level}.
-    7. **STRICT ANSWER DISTRIBUTION**: You must ensure a mathematically balanced distribution of correct answers across the 10 questions.
+    6. Ensure questions match the specified difficulty level:
+       - Level 1-5: Basic knowledge recall, simple anatomy
+       - Level 6-15: Clinical reasoning with some complexity
+       - Level 16-25: Moderate complexity requiring clinical judgment
+       - Level 26-35: Hard scenarios with advanced reasoning
+       - Level 36-45: Very hard expert-level cases
+       - Level 46-50: Extremely hard board-level mastery
+    7. **STRICT ANSWER DISTRIBUTION**: You must ensure a mathematically balanced distribution of correct answers across the questions.
        - Each letter (A, B, C, D) should be the correct answer approximately 2-3 times. 
        - Do NOT favor any specific letter. For every question, ensure there is exactly a 25% chance of the answer being A.
     8. Provide 4 options (A, B, C, D).    
     9. Provide the key in this format at the VERY end: [KEY: A, B, C, D, A, B, C, D, A, B]
-    
 
     STUDY MATERIAL:
     {combined_content}
