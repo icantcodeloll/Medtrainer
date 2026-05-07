@@ -116,6 +116,44 @@ def get_ai_grading(exam_text, user_answers, correct_key, score):
     # Using search during grading ensures explanations match current guidelines
     return call_gemini_with_rotation(prompt, GRADER_MODEL, use_search=True)
 
+def validate_exam_format(exam_text, expected_questions):
+    """Validate that the AI response follows the correct format"""
+    if not exam_text or not exam_text.strip():
+        return False, "Empty response"
+    
+    # Check if starts with question number
+    if not re.match(r'^\s*1\.\s', exam_text.strip()):
+        return False, "Does not start with '1. '"
+    
+    # Check for correct number of questions
+    question_pattern = r'^\s*\d+\.\s'
+    questions = re.findall(question_pattern, exam_text, re.MULTILINE)
+    if len(questions) != expected_questions:
+        return False, f"Expected {expected_questions} questions, found {len(questions)}"
+    
+    # Check for answer key format
+    key_pattern = r'\[KEY:\s*[A-D,\s]+\]$'
+    if not re.search(key_pattern, exam_text.strip()):
+        return False, "Missing or malformed answer key"
+    
+    # Check each question has A, B, C, D options
+    lines = exam_text.split('\n')
+    current_question = 0
+    option_count = 0
+    
+    for line in lines:
+        line = line.strip()
+        if re.match(r'^\d+\.\s', line):
+            current_question += 1
+            option_count = 0
+        elif re.match(r'^[A-D]\.\s', line):
+            option_count += 1
+    
+    if current_question != expected_questions:
+        return False, f"Question count mismatch: {current_question} vs {expected_questions}"
+    
+    return True, "Valid format"
+
 def get_blind_exam(topics_list, level, num_questions):
     combined_content = "\n\n".join([f"Source {i+1}: {t}" for i, t in enumerate(topics_list)])
     
@@ -146,30 +184,65 @@ def get_blind_exam(topics_list, level, num_questions):
     DIFFICULTY DESCRIPTION: {difficulty_desc}.
     COMPLEXITY GUIDANCE: {complexity_guide}.
 
-    INSTRUCTIONS:
-    1. START IMMEDIATELY with '1. [Question Text]'. 
-    2. Do NOT include any introductory text, pleasantries, or descriptions of the task.
-    3. Every question MUST start with its number and a period (e.g., '1.', '2.').
-    4. Use the STUDY MATERIAL provided below as the base.
-    5. USE GOOGLE SEARCH to supplement these questions with external medical knowledge, 
-       latest clinical guidelines (e.g., NICE, Sepsis-3, GOLD), and realistic clinical presentations.
-    6. Ensure questions match the specified difficulty level:
-       - Level 1-5: Basic knowledge recall, simple anatomy
-       - Level 6-15: Clinical reasoning with some complexity
-       - Level 16-25: Moderate complexity requiring clinical judgment
-       - Level 26-35: Hard scenarios with advanced reasoning
-       - Level 36-45: Very hard expert-level cases
-       - Level 46-50: Extremely hard board-level mastery
-    7. **STRICT ANSWER DISTRIBUTION**: You must ensure a mathematically balanced distribution of correct answers across the questions.
-       - Each letter (A, B, C, D) should be the correct answer approximately 2-3 times. 
-       - Do NOT favor any specific letter. For every question, ensure there is exactly a 25% chance of the answer being A.
-    8. Provide 4 options (A, B, C, D).    
-    9. Provide the key in this format at the VERY end: [KEY: A, B, C, D, A, B, C, D, A, B]
+    CRITICAL FORMATTING REQUIREMENTS:
+    1. START IMMEDIATELY with '1. ' followed by the question text. NO preamble.
+    2. ABSOLUTELY NO introductory text, explanations, or meta-commentary.
+    3. Each question MUST follow this EXACT format:
+       "X. [Question text]
+       A. [Option A]
+       B. [Option B] 
+       C. [Option C]
+       D. [Option D]"
+    4. Every question MUST start with its number and period (e.g., '1.', '2.', '3.').
+    5. NO extra text, warnings, or formatting notes anywhere in the response.
+    6. The VERY LAST line must be: [KEY: A, B, C, D, A, B, C, D, A, B]
+
+    CONTENT REQUIREMENTS:
+    7. Use the STUDY MATERIAL provided below as the base.
+    8. USE GOOGLE SEARCH to supplement with latest medical guidelines and realistic clinical cases.
+    9. Ensure questions match difficulty level {level}:
+       - Level 1-5: Basic recall, simple anatomy
+       - Level 6-15: Basic clinical reasoning
+       - Level 16-25: Moderate complexity
+       - Level 26-35: Hard scenarios
+       - Level 36-45: Very hard expert cases
+       - Level 46-50: Extremely hard board mastery
+    10. **STRICT ANSWER DISTRIBUTION**: Each letter (A, B, C, D) correct exactly 2-3 times.
+    11. All options must be plausible distractors.
 
     STUDY MATERIAL:
     {combined_content}
+
+    REMEMBER: Start with '1. ' immediately. No introduction. End with [KEY: format].
     """
-    return call_gemini_with_rotation(prompt, EXAM_MODEL, use_search=True)
+    
+    # Retry logic with validation
+    max_retries = 3
+    for attempt in range(max_retries):
+        exam_text = call_gemini_with_rotation(prompt, EXAM_MODEL, use_search=True)
+        
+        # Validate the response
+        is_valid, error_msg = validate_exam_format(exam_text, num_questions)
+        
+        if is_valid:
+            return exam_text
+        else:
+            if attempt < max_retries - 1:
+                # Add more specific instructions for retry
+                retry_prompt = prompt + f"""
+                
+    ATTENTION: Your previous response FAILED validation. Error: {error_msg}
+    Please regenerate with STRICT adherence to the format requirements above.
+    Start immediately with '1. ' and end with the correct [KEY: format].
+    """
+                exam_text = call_gemini_with_rotation(retry_prompt, EXAM_MODEL, use_search=True)
+                is_valid, error_msg = validate_exam_format(exam_text, num_questions)
+                if is_valid:
+                    return exam_text
+    
+    # If all retries fail, return the last attempt with a warning
+    st.error(f"⚠️ AI response validation failed: {error_msg}")
+    return exam_text
 
 # Replace get_mnemonic with this:
 def get_deep_explanation(question_text):
