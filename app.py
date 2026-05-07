@@ -157,25 +157,25 @@ def validate_exam_format(exam_text, expected_questions):
 def get_blind_exam(topics_list, level, num_questions):
     combined_content = "\n\n".join([f"Source {i+1}: {t}" for i, t in enumerate(topics_list)])
     
-    # Difficulty calibration for more precise level differentiation
+    # Difficulty calibration from core concepts to extremely specific knowledge
     if level <= 5:
-        difficulty_desc = "very easy - basic recall and simple clinical scenarios"
-        complexity_guide = "focus on fundamental definitions, straightforward anatomy, common conditions"
+        difficulty_desc = "very core - fundamental medical concepts and simple recall"
+        complexity_guide = "focus on basic anatomy, physiology, simple definitions, core medical principles"
     elif level <= 15:
-        difficulty_desc = "easy - basic clinical reasoning with some complexity"
-        complexity_guide = "include multi-step clinical reasoning, differential diagnosis basics"
+        difficulty_desc = "foundational - basic clinical applications and standard protocols"
+        complexity_guide = "include common diseases, standard treatments, basic clinical reasoning"
     elif level <= 25:
-        difficulty_desc = "moderate - requires clinical judgment and applied knowledge"
-        complexity_guide = "complex clinical scenarios, integration of multiple concepts, some nuance"
+        difficulty_desc = "intermediate - applied clinical knowledge and complex scenarios"
+        complexity_guide = "complex clinical cases, differential diagnosis, treatment nuances"
     elif level <= 35:
-        difficulty_desc = "hard - advanced clinical reasoning, complex differential diagnosis"
-        complexity_guide = "multi-system pathology, nuanced clinical decision-making, rare conditions"
+        difficulty_desc = "advanced - specialized knowledge and complex decision-making"
+        complexity_guide = "specialty-specific conditions, advanced therapeutics, rare presentations"
     elif level <= 45:
-        difficulty_desc = "very hard - expert-level clinical reasoning, complex cases"
-        complexity_guide = "board-level complexity, interdisciplinary knowledge, cutting-edge guidelines"
+        difficulty_desc = "expert - highly specialized and cutting-edge medical knowledge"
+        complexity_guide = "subspecialty expertise, latest research, complex multi-system management"
     else:  # 46-50
-        difficulty_desc = "extremely hard - supreme clinical mastery, highest board difficulty"
-        complexity_guide = "maximum complexity, synthesis of multiple specialties, latest research"
+        difficulty_desc = "extremely specific - niche expert knowledge and ultra-specialized details"
+        complexity_guide = "ultra-specific clinical scenarios, molecular mechanisms, rare genetic conditions, cutting-edge research specifics"
     
     prompt = f"""
     You are a medical board examiner. 
@@ -201,12 +201,12 @@ def get_blind_exam(topics_list, level, num_questions):
     7. Use the STUDY MATERIAL provided below as the base.
     8. USE GOOGLE SEARCH to supplement with latest medical guidelines and realistic clinical cases.
     9. Ensure questions match difficulty level {level}:
-       - Level 1-5: Basic recall, simple anatomy
-       - Level 6-15: Basic clinical reasoning
-       - Level 16-25: Moderate complexity
-       - Level 26-35: Hard scenarios
-       - Level 36-45: Very hard expert cases
-       - Level 46-50: Extremely hard board mastery
+       - Level 1-5: Core concepts, simple recall, basic anatomy/physiology
+       - Level 6-15: Foundational knowledge, standard protocols, common conditions
+       - Level 16-25: Applied clinical knowledge, complex scenarios, differential diagnosis
+       - Level 26-35: Specialized knowledge, advanced therapeutics, rare presentations
+       - Level 36-45: Expert knowledge, cutting-edge research, subspecialty expertise
+       - Level 46-50: Extremely specific knowledge, molecular mechanisms, ultra-specialized details
     10. **STRICT ANSWER DISTRIBUTION**: Each letter (A, B, C, D) correct exactly 2-3 times.
     11. All options must be plausible distractors.
 
