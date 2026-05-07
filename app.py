@@ -429,15 +429,20 @@ if st.session_state.current_exam:
         
         submitted = st.form_submit_button("Submit for AI Grading")
     if submitted:
+            # Use actual number of questions from current exam
+            num_actual_questions = len(raw_questions)
+            
             # Convert dictionary to a sorted list of answers
-            user_answers = [st.session_state.user_selections[i] for i in range(len(raw_questions))]
+            user_answers = [st.session_state.user_selections[i] for i in range(num_actual_questions)]
             user_input = "\n".join([f"Q{i+1}: {ans if ans else 'No Answer'}" for i, ans in enumerate(user_answers)])
-            correct_key = "\n".join([f"Q{i+1}: {ans}" for i, ans in enumerate(st.session_state.current_key)])
+            
+            # Use only the first num_actual_questions answers from current_key
+            correct_key = st.session_state.current_key[:num_actual_questions]
+            correct_key_formatted = "\n".join([f"Q{i+1}: {ans}" for i, ans in enumerate(correct_key)])
 
             # Save this formatted version to session state
             st.session_state.last_user_input = user_input
-            st.session_state.last_correct_key = correct_key
-            correct_key = st.session_state.current_key
+            st.session_state.last_correct_key = correct_key_formatted
             
             if len(user_answers) != len(correct_key):
                 st.error(f"⚠️ Mismatch: The exam has {len(correct_key)} questions, but you entered {len(user_answers)} answers. Please fix your input.")
