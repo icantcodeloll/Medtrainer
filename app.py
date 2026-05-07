@@ -490,9 +490,21 @@ if st.session_state.current_exam:
             st.session_state.last_score = score
             st.session_state.last_user_input = user_input
 
-            # Update Level
-            if score >= 9: st.session_state.current_level = min(50, st.session_state.current_level + 1)
-            elif score <= 4: st.session_state.current_level = max(1, st.session_state.current_level - 1)
+            # Update Level based on performance
+            num_questions = len(user_answers)
+            percentage_correct = (score / num_questions) * 100
+            questions_wrong = num_questions - score
+            
+            # Level up if: only 1 question wrong OR 80%+ correct (whichever is lower threshold)
+            if questions_wrong <= 1 or percentage_correct >= 80:
+                st.session_state.current_level = min(50, st.session_state.current_level + 1)
+                st.success(f"🎯 Level Up! Now at Level {st.session_state.current_level}")
+            # Level down if: less than half correct
+            elif percentage_correct < 50:
+                st.session_state.current_level = max(1, st.session_state.current_level - 1)
+                st.warning(f"📉 Level Down. Now at Level {st.session_state.current_level}")
+            else:
+                st.info(f"📊 Score: {score}/{num_questions} ({percentage_correct:.0f}%) - Level maintained")
 
 # 2. THE FEEDBACK (Outside the form)
     if st.session_state.get('exam_submitted'):
