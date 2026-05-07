@@ -238,6 +238,8 @@ if st.sidebar.button("🔄 Generate New Exam"):
 
         # --- SMART SAMPLING (SRS) ---
         if 'mastery_score' in df.columns:
+            # Convert mastery_score to integers for comparison
+            df['mastery_score'] = pd.to_numeric(df['mastery_score'], errors='coerce').fillna(1).astype(int)
             # Prioritize items with mastery <= 3
             weak_pool = df[df['mastery_score'] <= 3]
             if len(weak_pool) >= n:
@@ -294,6 +296,8 @@ if st.session_state.get('show_settings', False):
     st.sidebar.subheader("🎓 Knowledge Bank")
     # Use the df_sidebar we loaded earlier
     if 'mastery_score' in df_sidebar.columns:
+        # Convert mastery_score to integers for comparison
+        df_sidebar['mastery_score'] = pd.to_numeric(df_sidebar['mastery_score'], errors='coerce').fillna(1).astype(int)
         total_objs = len(df_sidebar)
         mastered = len(df_sidebar[df_sidebar['mastery_score'] == 5])
         progress_val = mastered / total_objs if total_objs > 0 else 0
@@ -382,10 +386,14 @@ if st.session_state.current_exam:
                     score += 1
                     # --- ADDED: Increase Mastery Score (Max 5) ---
                     if 'mastery_score' in df_main.columns:
+                        # Convert mastery_score to integers for comparison
+                        df_main['mastery_score'] = pd.to_numeric(df_main['mastery_score'], errors='coerce').fillna(1).astype(int)
                         df_main.at[original_idx, 'mastery_score'] = min(5, df_main.at[original_idx, 'mastery_score']) + mastery_change
                 else:
                     # --- ADDED: Decrease Mastery Score (Min 1) ---
                     if 'mastery_score' in df_main.columns:
+                        # Convert mastery_score to integers for comparison
+                        df_main['mastery_score'] = pd.to_numeric(df_main['mastery_score'], errors='coerce').fillna(1).astype(int)
                         df_main.at[original_idx, 'mastery_score'] = max(1, df_main.at[original_idx, 'mastery_score']) - mastery_change
                     
                     if i < len(individual_questions):
