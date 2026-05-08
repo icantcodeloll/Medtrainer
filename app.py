@@ -4,6 +4,8 @@ from google import genai
 from google.genai import types 
 import time
 import re
+import atexit
+from progress_manager import save_progress, load_progress, restore_progress
 
 # ==========================================
 # 1. SETUP & CONFIGURATION
@@ -42,23 +44,29 @@ else:
     mastery_change = 0
 
 
-# Initialize Session States
+# Load saved progress on startup
+loaded_progress = load_progress()
+
+# Initialize Session States (with progress restoration)
 if 'current_level' not in st.session_state:
-    st.session_state.current_level = 10
+    st.session_state.current_level = loaded_progress.get("current_level", 10)
 if 'num_questions' not in st.session_state:
-    st.session_state.num_questions = 10 
+    st.session_state.num_questions = loaded_progress.get("num_questions", 10) 
 if 'missed_questions' not in st.session_state:
-    st.session_state.missed_questions = []
+    st.session_state.missed_questions = loaded_progress.get("missed_questions", [])
 if 'current_exam' not in st.session_state:
-    st.session_state.current_exam = None
+    st.session_state.current_exam = loaded_progress.get("current_exam", None)
 if 'current_key' not in st.session_state:
-    st.session_state.current_key = []
+    st.session_state.current_key = loaded_progress.get("current_key", [])
 if 'key_index' not in st.session_state:
-    st.session_state.key_index = 0
+    st.session_state.key_index = loaded_progress.get("key_index", 0)
 if 'current_categories' not in st.session_state:
-    st.session_state.current_categories = []
+    st.session_state.current_categories = loaded_progress.get("current_categories", [])
 if 'samples_df' not in st.session_state:
-    st.session_state.samples_df = None
+    st.session_state.samples_df = loaded_progress.get("samples_df", None)
+
+# Register auto-save on app shutdown
+atexit.register(save_progress, st.session_state)
 
 def get_client():
     return genai.Client(api_key=API_KEYS[st.session_state.key_index])
