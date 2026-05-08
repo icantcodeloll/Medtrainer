@@ -71,10 +71,8 @@ atexit.register(save_progress, st.session_state)
 # Move Active Level metric here
 st.sidebar.metric("Active Level", f"{st.session_state.current_level}/50")
 
-# Add progress control buttons under Active Level
-st.sidebar.markdown("**Progress Controls:**")
 
-if st.sidebar.button("💾 Save Progress", help="Manually save your current progress"):
+if st.sidebar.button("Save Progress", help="Manually save your current progress"):
     if save_progress(st.session_state):
         st.sidebar.success("✅ Progress saved successfully!")
     else:
