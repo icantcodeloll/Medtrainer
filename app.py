@@ -280,6 +280,7 @@ else:
 if st.sidebar.button("🔄 Generate New Exam"):
     st.session_state.exam_submitted = False  # Add this line
     st.session_state.last_score = 0
+    st.session_state.user_selections = {}  # Clear previous selections
     n = st.session_state.num_questions
     try:
         df_main = pd.read_csv(CSV_FILE)
