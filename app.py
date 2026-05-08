@@ -68,10 +68,6 @@ if 'samples_df' not in st.session_state:
 # Register auto-save on app shutdown
 atexit.register(save_progress, st.session_state)
 
-# Move Active Level metric here
-st.sidebar.metric("Active Level", f"{st.session_state.current_level}/50")
-
-
 if st.sidebar.button("Save Progress", help="Manually save your current progress"):
     if save_progress(st.session_state):
         st.sidebar.success("✅ Progress saved successfully!")
