@@ -387,6 +387,26 @@ if st.session_state.get('show_settings', False):
     st.session_state.num_questions = st.sidebar.slider("Number of Questions", 1, 20, st.session_state.num_questions)
     
     st.sidebar.markdown("---")
+    if st.sidebar.button("🔄 Reset Progress", help="Clear all saved progress and reset to defaults"):
+        if os.path.exists("user_progress.json"):
+            os.remove("user_progress.json")
+            # Reset session state to defaults
+            st.session_state.current_level = 10
+            st.session_state.num_questions = 10
+            st.session_state.missed_questions = []
+            st.session_state.current_exam = None
+            st.session_state.current_key = []
+            st.session_state.last_score = 0
+            st.session_state.user_selections = {}
+            st.session_state.exam_submitted = False
+            st.session_state.current_categories = []
+            st.session_state.samples_df = None
+            st.sidebar.success("✅ Progress reset successfully!")
+            st.rerun()
+        else:
+            st.sidebar.info("ℹ️ No saved progress to reset")
+    
+    st.sidebar.markdown("---")
     st.sidebar.subheader("🎓 Knowledge Bank")
     # Use the df_sidebar we loaded earlier
     if 'mastery_score' in df_sidebar.columns:
