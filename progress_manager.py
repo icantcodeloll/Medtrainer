@@ -6,21 +6,29 @@ PROGRESS_FILE = "user_progress.json"
 
 def save_progress(session_state):
     """Save all relevant progress data to JSON file"""
-    progress_data = {
-        "timestamp": datetime.now().isoformat(),
-        "current_level": session_state.get("current_level", 10),
-        "num_questions": session_state.get("num_questions", 10),
-        "last_score": session_state.get("last_score", 0),
-        "missed_questions": session_state.get("missed_questions", []),
-        "last_user_input": session_state.get("last_user_input", ""),
-        "last_correct_key": session_state.get("last_correct_key", ""),
-        "exam_submitted": session_state.get("exam_submitted", False),
-        "current_categories": session_state.get("current_categories", []),
-        "samples_df": session_state.get("samples_df", None)
-    }
-    
-    with open(PROGRESS_FILE, 'w') as f:
-        json.dump(progress_data, f, indent=2)
+    try:
+        progress_data = {
+            "timestamp": datetime.now().isoformat(),
+            "current_level": session_state.get("current_level", 10),
+            "num_questions": session_state.get("num_questions", 10),
+            "last_score": session_state.get("last_score", 0),
+            "missed_questions": session_state.get("missed_questions", []),
+            "last_user_input": session_state.get("last_user_input", ""),
+            "last_correct_key": session_state.get("last_correct_key", ""),
+            "exam_submitted": session_state.get("exam_submitted", False),
+            "current_categories": session_state.get("current_categories", []),
+            # Handle DataFrame serialization
+            "samples_df": session_state.get("samples_df").to_dict() if session_state.get("samples_df") is not None else None
+        }
+        
+        with open(PROGRESS_FILE, 'w') as f:
+            json.dump(progress_data, f, indent=2)
+        
+        print(f"Progress saved to {PROGRESS_FILE}")
+        return True
+    except Exception as e:
+        print(f"Error saving progress: {e}")
+        return False
 
 def load_progress():
     """Load progress data from JSON file"""

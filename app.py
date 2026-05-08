@@ -68,6 +68,13 @@ if 'samples_df' not in st.session_state:
 # Register auto-save on app shutdown
 atexit.register(save_progress, st.session_state)
 
+# Add manual save button in sidebar
+if st.sidebar.button("💾 Save Progress", help="Manually save your current progress"):
+    if save_progress(st.session_state):
+        st.sidebar.success("✅ Progress saved successfully!")
+    else:
+        st.sidebar.error("❌ Failed to save progress")
+
 def get_client():
     return genai.Client(api_key=API_KEYS[st.session_state.key_index])
 
