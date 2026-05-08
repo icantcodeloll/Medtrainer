@@ -508,7 +508,7 @@ if st.session_state.current_exam:
 
 # 2. THE FEEDBACK (Outside the form)
     if st.session_state.get('exam_submitted'):
-        st.subheader(f"Results: {st.session_state.last_score}/10")
+        st.subheader(f"Results: {st.session_state.last_score}/{num_questions}")
         
         with st.spinner("Instructor is searching for the latest feedback..."):
             # This keeps your original answer comparison and AI explanation
