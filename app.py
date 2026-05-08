@@ -50,9 +50,9 @@ loaded_progress = load_progress()
 
 # Initialize Session States (with progress restoration)
 if 'current_level' not in st.session_state:
-    st.session_state.current_level = loaded_progress.get("current_level", 10)
+    st.session_state.current_level = loaded_progress.get("current_level", 1)
 if 'num_questions' not in st.session_state:
-    st.session_state.num_questions = loaded_progress.get("num_questions", 10) 
+    st.session_state.num_questions = loaded_progress.get("num_questions", 5) 
 if 'missed_questions' not in st.session_state:
     st.session_state.missed_questions = loaded_progress.get("missed_questions", [])
 if 'current_exam' not in st.session_state:
