@@ -68,12 +68,34 @@ if 'samples_df' not in st.session_state:
 # Register auto-save on app shutdown
 atexit.register(save_progress, st.session_state)
 
-# Add manual save button in sidebar
-if st.sidebar.button("💾 Save Progress", help="Manually save your current progress"):
-    if save_progress(st.session_state):
-        st.sidebar.success("✅ Progress saved successfully!")
-    else:
-        st.sidebar.error("❌ Failed to save progress")
+# Add manual save and reset buttons in sidebar
+col1, col2 = st.sidebar.columns(2)
+with col1:
+    if st.button("💾 Save Progress", help="Manually save your current progress"):
+        if save_progress(st.session_state):
+            st.success("✅ Progress saved successfully!")
+        else:
+            st.error("❌ Failed to save progress")
+
+with col2:
+    if st.button("🔄 Reset Progress", help="Clear all saved progress and reset to defaults"):
+        if os.path.exists("user_progress.json"):
+            os.remove("user_progress.json")
+            # Reset session state to defaults
+            st.session_state.current_level = 10
+            st.session_state.num_questions = 10
+            st.session_state.missed_questions = []
+            st.session_state.current_exam = None
+            st.session_state.current_key = []
+            st.session_state.last_score = 0
+            st.session_state.user_selections = {}
+            st.session_state.exam_submitted = False
+            st.session_state.current_categories = []
+            st.session_state.samples_df = None
+            st.success("✅ Progress reset successfully!")
+            st.rerun()
+        else:
+            st.info("ℹ️ No saved progress to reset")
 
 def get_client():
     return genai.Client(api_key=API_KEYS[st.session_state.key_index])
