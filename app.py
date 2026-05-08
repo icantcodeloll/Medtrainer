@@ -4,6 +4,7 @@ from google import genai
 from google.genai import types 
 import time
 import re
+import os
 import atexit
 from progress_manager import save_progress, load_progress, restore_progress
 
