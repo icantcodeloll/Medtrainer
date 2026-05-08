@@ -78,7 +78,7 @@ with col1:
             st.error("❌ Failed to save progress")
 
 with col2:
-    if st.button("🔄 Reset Progress", help="Clear all saved progress and reset to defaults"):
+    if st.button("Reset", help="Clear all saved progress and reset to defaults"):
         if os.path.exists("user_progress.json"):
             os.remove("user_progress.json")
             # Reset session state to defaults
