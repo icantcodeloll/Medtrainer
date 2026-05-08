@@ -507,9 +507,9 @@ if st.session_state.current_exam:
             st.session_state.last_user_input = user_input
 
             # Update Level based on performance
-            num_questions = len(user_answers)
-            percentage_correct = (score / num_questions) * 100
-            questions_wrong = num_questions - score
+            num_actual_questions = len(user_answers)
+            percentage_correct = (score / num_actual_questions) * 100
+            questions_wrong = num_actual_questions - score
             
             # Level up if: only 1 question wrong OR 80%+ correct (whichever is lower threshold)
             if questions_wrong <= 1 or percentage_correct >= 80:
