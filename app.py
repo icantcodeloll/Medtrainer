@@ -172,25 +172,25 @@ def validate_exam_format(exam_text, expected_questions):
 def get_blind_exam(topics_list, level, num_questions):
     combined_content = "\n\n".join([f"Source {i+1}: {t}" for i, t in enumerate(topics_list)])
     
-    # Difficulty calibration from core concepts to extremely specific knowledge
+    # Difficulty calibration from intuitive basics to counterintuitive expert challenges
     if level <= 5:
-        difficulty_desc = "very core - fundamental medical concepts and simple recall"
-        complexity_guide = "focus on basic anatomy, physiology, simple definitions, core medical principles"
+        difficulty_desc = "intuitive basics - straightforward medical concepts that make logical sense"
+        complexity_guide = "focus on intuitive anatomy, obvious physiology, simple definitions, core principles that follow common sense"
     elif level <= 15:
-        difficulty_desc = "foundational - basic clinical applications and standard protocols"
-        complexity_guide = "include common diseases, standard treatments, basic clinical reasoning"
+        difficulty_desc = "logical progression - clinical applications that follow standard patterns"
+        complexity_guide = "include common diseases with predictable presentations, standard treatments, straightforward clinical reasoning"
     elif level <= 25:
-        difficulty_desc = "intermediate - applied clinical knowledge and complex scenarios"
-        complexity_guide = "complex clinical cases, differential diagnosis, treatment nuances"
+        difficulty_desc = "complex but predictable - applied knowledge with some nuance"
+        complexity_guide = "complex clinical cases with clear patterns, differential diagnosis with logical elimination, treatment with expected responses"
     elif level <= 35:
-        difficulty_desc = "advanced - specialized knowledge and complex decision-making"
-        complexity_guide = "specialty-specific conditions, advanced therapeutics, rare presentations"
+        difficulty_desc = "challenging patterns - specialized knowledge requiring deeper analysis"
+        complexity_guide = "specialty-specific conditions with some counterintuitive elements, advanced therapeutics with unexpected side effects, presentations that deviate from textbook patterns"
     elif level <= 45:
-        difficulty_desc = "expert - highly specialized and cutting-edge medical knowledge"
-        complexity_guide = "subspecialty expertise, latest research, complex multi-system management"
+        difficulty_desc = "counterintuitive expert - knowledge that defies common medical assumptions"
+        complexity_guide = "subspecialty expertise where textbook knowledge fails, paradoxical treatment responses, rare conditions that present opposite to expected patterns, cutting-edge research that contradicts established dogma"
     else:  # 46-50
-        difficulty_desc = "supreme difficulty - cutting-edge board exam mastery"
-        complexity_guide = "multi-system integration, latest research breakthroughs, complex clinical reasoning, niche subspecialty knowledge, molecular-level pathophysiology, emerging treatment protocols, rare disease patterns, advanced diagnostic challenges requiring synthesis of multiple specialties"
+        difficulty_desc = "supreme counterintuition - advanced mastery of medical paradoxes and exceptions"
+        complexity_guide = "multi-system integration where standard rules don't apply, latest research breakthroughs that overturn conventional wisdom, complex clinical reasoning requiring recognition of exceptions, niche subspecialty knowledge where intuitive answers are wrong, molecular-level pathophysiology that defies simple explanations, emerging treatment protocols with paradoxical mechanisms, rare disease patterns that mimic opposite conditions, advanced diagnostic challenges where the obvious answer is incorrect"
     
     prompt = f"""
     You are a medical board examiner. 
@@ -216,12 +216,12 @@ def get_blind_exam(topics_list, level, num_questions):
     7. Use the STUDY MATERIAL provided below as the base.
     8. USE GOOGLE SEARCH to supplement with latest medical guidelines and realistic clinical cases.
     9. Ensure questions match difficulty level {level}:
-       - Level 1-5: Core concepts, simple recall, basic anatomy/physiology
-       - Level 6-15: Foundational knowledge, standard protocols, common conditions
-       - Level 16-25: Applied clinical knowledge, complex scenarios, differential diagnosis
-       - Level 26-35: Specialized knowledge, advanced therapeutics, rare presentations
-       - Level 36-45: Expert knowledge, cutting-edge research, subspecialty expertise
-       - Level 46-50: Supreme difficulty - multi-system integration, latest research breakthroughs, complex clinical reasoning, niche subspecialty knowledge, molecular-level pathophysiology, emerging treatment protocols, rare disease patterns, advanced diagnostic challenges requiring synthesis of multiple specialties
+       - Level 1-5: Intuitive basics - straightforward concepts that follow common sense, obvious anatomy/physiology
+       - Level 6-15: Logical progression - predictable clinical patterns, standard protocols, common conditions with textbook presentations
+       - Level 16-25: Complex but predictable - applied knowledge with clear patterns, differential diagnosis with logical elimination
+       - Level 26-35: Challenging patterns - specialized knowledge with some counterintuitive elements, presentations deviating from textbook
+       - Level 36-45: Counterintuitive expert - knowledge that defies common medical assumptions, paradoxical responses, conditions presenting opposite to expected
+       - Level 46-50: Supreme counterintuition - medical paradoxes and exceptions where intuitive answers are wrong, conditions that mimic opposite presentations, treatments with paradoxical mechanisms, diagnostic challenges where obvious answer is incorrect
     10. **STRICT ANSWER DISTRIBUTION**: Each letter (A, B, C, D) correct exactly 2-3 times.
     11. All options must be plausible distractors.
 
