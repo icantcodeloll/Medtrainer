@@ -169,6 +169,43 @@ def validate_exam_format(exam_text, expected_questions):
     
     return True, "Valid format"
 
+def double_check_questions(exam_text, num_questions):
+    """Double-check generated questions for accuracy and consistency"""
+    # First validation pass
+    is_valid, error_msg = validate_exam_format(exam_text, num_questions)
+    if not is_valid:
+        return False, error_msg
+    
+    # Extract questions and answers for verification
+    questions = re.split(r'^\s*\d+\.\s', exam_text, flags=re.MULTILINE)[1:]  # Skip empty first element
+    answers = []
+    
+    # Extract answer key
+    key_match = re.search(r'\[KEY:\s*([A-D,\s]+)\]', exam_text)
+    if not key_match:
+        return False, "Cannot extract answer key"
+    
+    key_answers = [ans.strip() for ans in key_match.group(1).split(',')]
+    
+    # Second validation pass: Check each question has exactly 4 options
+    for i, question in enumerate(questions[:num_questions]):
+        options = re.findall(r'^([A-D])\.\s', question, flags=re.MULTILINE)
+        if len(options) != 4:
+            return False, f"Question {i+1} has {len(options)} options, expected 4"
+    
+    # Third validation pass: Check answer distribution
+    answer_count = {}
+    for ans in key_answers[:num_questions]:
+        answer_count[ans] = answer_count.get(ans, 0) + 1
+    
+    # Each letter should appear 2-3 times for balanced distribution
+    for letter in ['A', 'B', 'C', 'D']:
+        count = answer_count.get(letter, 0)
+        if count < 2 or count > 3:
+            return False, f"Unbalanced answer distribution: {letter} appears {count} times (should be 2-3)"
+    
+    return True, "Questions passed double-check validation"
+
 def get_blind_exam(topics_list, level, num_questions):
     combined_content = "\n\n".join([f"Source {i+1}: {t}" for i, t in enumerate(topics_list)])
     
@@ -198,6 +235,13 @@ def get_blind_exam(topics_list, level, num_questions):
     DIFFICULTY LEVEL: {level}/50.
     DIFFICULTY DESCRIPTION: {difficulty_desc}.
     COMPLEXITY GUIDANCE: {complexity_guide}.
+
+    CRITICAL BIAS PREVENTION:
+    1. AVOID confirmation bias - Ensure each option could plausibly be correct
+    2. NO obvious "red herrings" - All distractors must be medically plausible
+    3. BALANCED difficulty - Correct answer should not be obviously easier/harder than others
+    4. MEDICAL ACCURACY - Verify all information with current medical guidelines
+    5. CLARITY over trickery - Questions should test knowledge, not reading comprehension
 
     CRITICAL FORMATTING REQUIREMENTS:
     1. START IMMEDIATELY with '1. ' followed by the question text. NO preamble.
@@ -231,33 +275,59 @@ def get_blind_exam(topics_list, level, num_questions):
     REMEMBER: Start with '1. ' immediately. No introduction. End with [KEY: format].
     """
     
-    # Retry logic with validation
+    # Retry logic with double-check validation
     max_retries = 3
     for attempt in range(max_retries):
         exam_text = call_gemini_with_rotation(prompt, EXAM_MODEL, use_search=True)
         
-        # Validate the response
+        # First validation pass: Basic format check
         is_valid, error_msg = validate_exam_format(exam_text, num_questions)
         
         if is_valid:
-            return exam_text
+            # Second validation pass: Double-check for accuracy and consistency
+            is_double_checked, double_check_msg = double_check_questions(exam_text, num_questions)
+            
+            if is_double_checked:
+                return exam_text
+            else:
+                if attempt < max_retries - 1:
+                    # Add specific instructions for double-check retry
+                    retry_prompt = prompt + f"""
+                    
+ATTENTION: Your questions passed basic format validation but FAILED double-check validation. Error: {double_check_msg}
+Please regenerate with:
+1. Exactly 4 options (A, B, C, D) for each question
+2. Balanced answer distribution (each letter 2-3 times)
+3. Clear question structure and proper formatting
+4. AVOID confirmation bias - Ensure each option could plausibly be correct
+5. MEDICAL ACCURACY - Verify all information with current guidelines
+6. Start immediately with '1. ' and end with [KEY: format]
+"""
+                    exam_text = call_gemini_with_rotation(retry_prompt, EXAM_MODEL, use_search=True)
+                    is_valid, error_msg = validate_exam_format(exam_text, num_questions)
+                    if is_valid:
+                        is_double_checked, double_check_msg = double_check_questions(exam_text, num_questions)
+                        if is_double_checked:
+                            return exam_text
         else:
             if attempt < max_retries - 1:
                 # Add more specific instructions for retry
                 retry_prompt = prompt + f"""
                 
-    ATTENTION: Your previous response FAILED validation. Error: {error_msg}
-    Please regenerate with STRICT adherence to the format requirements above.
-    Start immediately with '1. ' and end with the correct [KEY: format].
-    """
+ATTENTION: Your previous response FAILED validation. Error: {error_msg}
+Please regenerate with STRICT adherence to the format requirements above.
+Start immediately with '1. ' and end with the correct [KEY: format].
+"""
                 exam_text = call_gemini_with_rotation(retry_prompt, EXAM_MODEL, use_search=True)
                 is_valid, error_msg = validate_exam_format(exam_text, num_questions)
                 if is_valid:
-                    return exam_text
-    
-    # If all retries fail, return the last attempt with a warning
-    st.error(f"⚠️ AI response validation failed: {error_msg}")
-    return exam_text
+                    is_double_checked, double_check_msg = double_check_questions(exam_text, num_questions)
+                    if is_double_checked:
+                        return exam_text
+        
+        # If all retries fail, return the last attempt with a warning
+        st.error(f"⚠️ AI response validation failed: {error_msg}")
+        return exam_text
 
 # Replace get_mnemonic with this:
 def get_deep_explanation(question_text):
