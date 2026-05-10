@@ -78,17 +78,22 @@ if st.sidebar.button("Save Progress", help="Manually save your current progress"
 def get_client():
     return genai.Client(api_key=API_KEYS[st.session_state.key_index])
 
-def call_gemini_with_rotation(prompt, model_to_use, use_search=False):
+def call_gemini_with_rotation(prompt, model_to_use, use_search=False, timeout_per_question=3):
     keys_tried = 0
     
     # Configure Google Search Tool if requested
     tools = []
     if use_search:
         tools = [types.Tool(google_search=types.GoogleSearch())]
-
+    
     while keys_tried < len(API_KEYS):
         try:
             client = get_client()
+            # Calculate timeout based on number of questions
+            num_questions_match = re.search(r'EXACTLY (\d+)', prompt)
+            num_questions = int(num_questions_match.group(1)) if num_questions_match else 10
+            total_timeout = timeout_per_question * num_questions
+            
             response = client.models.generate_content(
                 model=model_to_use, 
                 contents=prompt,
@@ -105,6 +110,10 @@ def call_gemini_with_rotation(prompt, model_to_use, use_search=False):
                 time.sleep(1)
             elif "503" in str(e):
                 time.sleep(5)
+            elif "timeout" in str(e).lower() or "deadline" in str(e).lower():
+                st.warning(f"⏱️ Question generation timeout ({total_timeout}s). Retrying...")
+                keys_tried += 1
+                time.sleep(2)
             else:
                 st.error(f"Error: {e}")
                 return None
@@ -169,42 +178,6 @@ def validate_exam_format(exam_text, expected_questions):
     
     return True, "Valid format"
 
-def double_check_questions(exam_text, num_questions):
-    """Double-check generated questions for accuracy and consistency"""
-    # First validation pass
-    is_valid, error_msg = validate_exam_format(exam_text, num_questions)
-    if not is_valid:
-        return False, error_msg
-    
-    # Extract questions and answers for verification
-    questions = re.split(r'^\s*\d+\.\s', exam_text, flags=re.MULTILINE)[1:]  # Skip empty first element
-    answers = []
-    
-    # Extract answer key
-    key_match = re.search(r'\[KEY:\s*([A-D,\s]+)\]', exam_text)
-    if not key_match:
-        return False, "Cannot extract answer key"
-    
-    key_answers = [ans.strip() for ans in key_match.group(1).split(',')]
-    
-    # Second validation pass: Check each question has exactly 4 options
-    for i, question in enumerate(questions[:num_questions]):
-        options = re.findall(r'^([A-D])\.\s', question, flags=re.MULTILINE)
-        if len(options) != 4:
-            return False, f"Question {i+1} has {len(options)} options, expected 4"
-    
-    # Third validation pass: Check answer distribution
-    answer_count = {}
-    for ans in key_answers[:num_questions]:
-        answer_count[ans] = answer_count.get(ans, 0) + 1
-    
-    # Each letter should appear 2-3 times for balanced distribution
-    for letter in ['A', 'B', 'C', 'D']:
-        count = answer_count.get(letter, 0)
-        if count < 2 or count > 3:
-            return False, f"Unbalanced answer distribution: {letter} appears {count} times (should be 2-3)"
-    
-    return True, "Questions passed double-check validation"
 
 def get_blind_exam(topics_list, level, num_questions):
     combined_content = "\n\n".join([f"Source {i+1}: {t}" for i, t in enumerate(topics_list)])
@@ -275,40 +248,16 @@ def get_blind_exam(topics_list, level, num_questions):
     REMEMBER: Start with '1. ' immediately. No introduction. End with [KEY: format].
     """
     
-    # Retry logic with double-check validation
+    # Retry logic with simple validation
     max_retries = 3
     for attempt in range(max_retries):
-        exam_text = call_gemini_with_rotation(prompt, EXAM_MODEL, use_search=True)
+        exam_text = call_gemini_with_rotation(prompt, EXAM_MODEL, use_search=True, timeout_per_question=3)
         
-        # First validation pass: Basic format check
+        # Validate response
         is_valid, error_msg = validate_exam_format(exam_text, num_questions)
         
         if is_valid:
-            # Second validation pass: Double-check for accuracy and consistency
-            is_double_checked, double_check_msg = double_check_questions(exam_text, num_questions)
-            
-            if is_double_checked:
-                return exam_text
-            else:
-                if attempt < max_retries - 1:
-                    # Add specific instructions for double-check retry
-                    retry_prompt = prompt + f"""
-                    
-ATTENTION: Your questions passed basic format validation but FAILED double-check validation. Error: {double_check_msg}
-Please regenerate with:
-1. Exactly 4 options (A, B, C, D) for each question
-2. Balanced answer distribution (each letter 2-3 times)
-3. Clear question structure and proper formatting
-4. AVOID confirmation bias - Ensure each option could plausibly be correct
-5. MEDICAL ACCURACY - Verify all information with current guidelines
-6. Start immediately with '1. ' and end with [KEY: format]
-"""
-                    exam_text = call_gemini_with_rotation(retry_prompt, EXAM_MODEL, use_search=True)
-                    is_valid, error_msg = validate_exam_format(exam_text, num_questions)
-                    if is_valid:
-                        is_double_checked, double_check_msg = double_check_questions(exam_text, num_questions)
-                        if is_double_checked:
-                            return exam_text
+            return exam_text
         else:
             if attempt < max_retries - 1:
                 # Add more specific instructions for retry
@@ -318,12 +267,10 @@ ATTENTION: Your previous response FAILED validation. Error: {error_msg}
 Please regenerate with STRICT adherence to the format requirements above.
 Start immediately with '1. ' and end with the correct [KEY: format].
 """
-                exam_text = call_gemini_with_rotation(retry_prompt, EXAM_MODEL, use_search=True)
+                exam_text = call_gemini_with_rotation(retry_prompt, EXAM_MODEL, use_search=True, timeout_per_question=3)
                 is_valid, error_msg = validate_exam_format(exam_text, num_questions)
                 if is_valid:
-                    is_double_checked, double_check_msg = double_check_questions(exam_text, num_questions)
-                    if is_double_checked:
-                        return exam_text
+                    return exam_text
         
         # If all retries fail, return the last attempt with a warning
         st.error(f"⚠️ AI response validation failed: {error_msg}")
