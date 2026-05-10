@@ -189,8 +189,8 @@ def get_blind_exam(topics_list, level, num_questions):
         difficulty_desc = "expert - highly specialized and cutting-edge medical knowledge"
         complexity_guide = "subspecialty expertise, latest research, complex multi-system management"
     else:  # 46-50
-        difficulty_desc = "extremely specific - niche expert knowledge and ultra-specialized details"
-        complexity_guide = "ultra-specific clinical scenarios, molecular mechanisms, rare genetic conditions, cutting-edge research specifics"
+        difficulty_desc = "supreme difficulty - cutting-edge board exam mastery"
+        complexity_guide = "multi-system integration, latest research breakthroughs, complex clinical reasoning, niche subspecialty knowledge, molecular-level pathophysiology, emerging treatment protocols, rare disease patterns, advanced diagnostic challenges requiring synthesis of multiple specialties"
     
     prompt = f"""
     You are a medical board examiner. 
@@ -221,7 +221,7 @@ def get_blind_exam(topics_list, level, num_questions):
        - Level 16-25: Applied clinical knowledge, complex scenarios, differential diagnosis
        - Level 26-35: Specialized knowledge, advanced therapeutics, rare presentations
        - Level 36-45: Expert knowledge, cutting-edge research, subspecialty expertise
-       - Level 46-50: Extremely specific knowledge, molecular mechanisms, ultra-specialized details
+       - Level 46-50: Supreme difficulty - multi-system integration, latest research breakthroughs, complex clinical reasoning, niche subspecialty knowledge, molecular-level pathophysiology, emerging treatment protocols, rare disease patterns, advanced diagnostic challenges requiring synthesis of multiple specialties
     10. **STRICT ANSWER DISTRIBUTION**: Each letter (A, B, C, D) correct exactly 2-3 times.
     11. All options must be plausible distractors.
 
