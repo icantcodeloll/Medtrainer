@@ -540,11 +540,11 @@ if st.session_state.current_exam:
                 st.session_state.current_level = max(1, st.session_state.current_level - 1)
                 st.warning(f"📉 Level Down. Now at Level {st.session_state.current_level}")
             else:
-                st.info(f"📊 Score: {score}/{num_questions} ({percentage_correct:.0f}%) - Level maintained")
+                st.info(f"📊 Score: {score}/{st.session_state.num_questions} ({percentage_correct:.0f}%) - Level maintained")
 
 # 2. THE FEEDBACK (Outside the form)
     if st.session_state.get('exam_submitted'):
-        st.subheader(f"Results: {st.session_state.last_score}/{num_questions}")
+        st.subheader(f"Results: {st.session_state.last_score}/{st.session_state.num_questions}")
         
         with st.spinner("Instructor is searching for the latest feedback..."):
             # This keeps your original answer comparison and AI explanation
