@@ -71,9 +71,9 @@ atexit.register(save_progress, st.session_state)
 
 if st.sidebar.button("Save Progress", help="Manually save your current progress"):
     if save_progress(st.session_state):
-        st.sidebar.success("✅ Progress saved successfully!")
+        st.sidebar.success("Progress saved successfully!")
     else:
-        st.sidebar.error("❌ Failed to save progress")
+        st.sidebar.error("Failed to save progress")
 
 def get_client():
     return genai.Client(api_key=API_KEYS[st.session_state.key_index])
@@ -104,14 +104,14 @@ def call_gemini_with_rotation(prompt, model_to_use, use_search=False, timeout_pe
             if "429" in str(e):
                 keys_tried += 1
                 if keys_tried >= len(API_KEYS):
-                    st.error("🛑 All API keys exhausted.")
+                    st.error("All API keys exhausted.")
                     return None
                 st.session_state.key_index = (st.session_state.key_index + 1) % len(API_KEYS)
                 time.sleep(1)
             elif "503" in str(e):
                 time.sleep(5)
             elif "timeout" in str(e).lower() or "deadline" in str(e).lower():
-                st.warning(f"⏱️ Question generation timeout ({total_timeout}s). Retrying...")
+                st.warning(f"Question generation timeout ({total_timeout}s). Retrying...")
                 keys_tried += 1
                 time.sleep(2)
             else:
@@ -273,7 +273,7 @@ Start immediately with '1. ' and end with the correct [KEY: format].
                     return exam_text
         
         # If all retries fail, return the last attempt with a warning
-        st.error(f"⚠️ AI response validation failed: {error_msg}")
+        st.error(f"AI response validation failed: {error_msg}")
         return exam_text
 
 # Replace get_mnemonic with this:
@@ -292,24 +292,24 @@ def get_deep_explanation(question_text):
 # ==========================================
 # 3. WEB INTERFACE
 # ==========================================
-st.title("🩺 Trainer")
+st.title("Trainer")
 st.sidebar.header("Stats & Controls")
 
 # --- ADD THIS: Focus Mode Dropdown ---
 df_sidebar = pd.read_csv(CSV_FILE)
 categories = df_sidebar['category'].fillna("Uncategorized").astype(str).unique().tolist()
 all_categories = ["All Topics"] + sorted(categories)
-focus_mode = st.sidebar.selectbox("🎯 Focus Mode:", all_categories)
+focus_mode = st.sidebar.selectbox("Focus Mode:", all_categories)
 
 # --- ADD THIS: Exam Filter Dropdown ---
 if 'exam' in df_sidebar.columns:
     exams = df_sidebar['exam'].fillna("Uncategorized").astype(str).unique().tolist()
     all_exams = ["All Exams"] + sorted(exams)
-    exam_filter = st.sidebar.selectbox("📋 Exam Filter:", all_exams)
+    exam_filter = st.sidebar.selectbox("Exam Filter:", all_exams)
 else:
     exam_filter = "All Exams"
 
-if st.sidebar.button("🔄 Generate New Exam"):
+if st.sidebar.button("Generate New Exam"):
     st.session_state.exam_submitted = False  # Add this line
     st.session_state.last_score = 0
     st.session_state.user_selections = {}  # Clear previous selections
@@ -338,7 +338,7 @@ if st.sidebar.button("🔄 Generate New Exam"):
             df = df[df['include'].astype(str).str.lower().str.strip() == 'y']
             
             if df.empty:
-                st.error("❌ No active objectives found. Mark some as 'y' in your CSV.")
+                st.error("No active objectives found. Mark some as 'y' in your CSV.")
                 st.stop()
     
 
@@ -352,7 +352,7 @@ if st.sidebar.button("🔄 Generate New Exam"):
                 st.session_state.samples_df = weak_pool.sample(n)
             else:
                 st.session_state.samples_df = df.sample(n)
-            st.sidebar.info("🎯 Smart Sampling: Prioritizing weak areas.")
+            st.sidebar.info("Smart Sampling: Prioritizing weak areas.")
         else:
             st.session_state.samples_df = df.sample(min(n, len(df)))
         
@@ -388,7 +388,7 @@ if st.sidebar.button("🔄 Generate New Exam"):
 st.sidebar.metric("Active Level", f"{st.session_state.current_level}/50")
 
 # Settings button for sliders
-if st.sidebar.button("⚙️ Settings", use_container_width=True):
+if st.sidebar.button("Settings", use_container_width=True):
     if 'show_settings' not in st.session_state:
         st.session_state.show_settings = False
     st.session_state.show_settings = not st.session_state.show_settings
@@ -399,7 +399,7 @@ if st.session_state.get('show_settings', False):
     st.session_state.num_questions = st.sidebar.slider("Number of Questions", 1, 20, st.session_state.num_questions)
     
     st.sidebar.markdown("---")
-    if st.sidebar.button("🔄 Reset Progress", help="Clear all saved progress and reset to defaults"):
+    if st.sidebar.button("Reset Progress", help="Clear all saved progress and reset to defaults"):
         if os.path.exists("user_progress.json"):
             os.remove("user_progress.json")
             # Reset session state to defaults
@@ -413,13 +413,13 @@ if st.session_state.get('show_settings', False):
             st.session_state.exam_submitted = False
             st.session_state.current_categories = []
             st.session_state.samples_df = None
-            st.sidebar.success("✅ Progress reset successfully!")
+            st.sidebar.success("Progress reset successfully!")
             st.rerun()
         else:
-            st.sidebar.info("ℹ️ No saved progress to reset")
+            st.sidebar.info("No saved progress to reset")
     
     st.sidebar.markdown("---")
-    st.sidebar.subheader("🎓 Knowledge Bank")
+    st.sidebar.subheader("Knowledge Bank")
     # Use the df_sidebar we loaded earlier
     if 'mastery_score' in df_sidebar.columns:
         # Convert mastery_score to integers for comparison
@@ -498,7 +498,7 @@ if st.session_state.current_exam:
             st.session_state.last_correct_key = correct_key_formatted
             
             if len(user_answers) != len(correct_key):
-                st.error(f"⚠️ Mismatch: The exam has {len(correct_key)} questions, but you entered {len(user_answers)} answers. Please fix your input.")
+                st.error(f"Mismatch: The exam has {len(correct_key)} questions, but you entered {len(user_answers)} answers. Please fix your input.")
                 st.stop() # Stops the code before it hits the loop and crashes
             score = 0
             
@@ -551,13 +551,13 @@ if st.session_state.current_exam:
             # Level up if: only 1 question wrong OR 80%+ correct (whichever is lower threshold)
             if questions_wrong <= 1 or percentage_correct >= 80:
                 st.session_state.current_level = min(50, st.session_state.current_level + 1)
-                st.success(f"🎯 Level Up! Now at Level {st.session_state.current_level}")
+                st.success(f"Level Up! Now at Level {st.session_state.current_level}")
             # Level down if: less than half correct
             elif percentage_correct < 50:
                 st.session_state.current_level = max(1, st.session_state.current_level - 1)
-                st.warning(f"📉 Level Down. Now at Level {st.session_state.current_level}")
+                st.warning(f"Level Down. Now at Level {st.session_state.current_level}")
             else:
-                st.info(f"📊 Score: {score}/{st.session_state.num_questions} ({percentage_correct:.0f}%) - Level maintained")
+                st.info(f"Score: {score}/{st.session_state.num_questions} ({percentage_correct:.0f}%) - Level maintained")
 
 # 2. THE FEEDBACK (Outside the form)
     if st.session_state.get('exam_submitted'):
@@ -629,7 +629,7 @@ if st.session_state.current_exam:
 if st.session_state.missed_questions:
     # 1. THE HEATMAP (Visual)
     st.write("---")
-    st.header("📊 Weakness Heatmap")
+    st.header("Weakness Heatmap")
     m_df = pd.DataFrame(st.session_state.missed_questions)
     if 'category' in m_df.columns:
         st.bar_chart(m_df['category'].value_counts(), color="#ff4b4b")
@@ -637,7 +637,7 @@ if st.session_state.missed_questions:
     # 2. YOUR ORIGINAL SIDEBAR EXPORT (Preserved)
     st.sidebar.markdown("---")
     st.sidebar.subheader(f"Missed Questions ({len(st.session_state.missed_questions)})")
-    if st.sidebar.button("💾 Export Mistakes to .txt"):
+    if st.sidebar.button("Export Mistakes to .txt"):
         with open("missed_questions.txt", "a") as f:
             f.write(f"\n\n=== WEB SESSION: {time.strftime('%Y-%m-%d %H:%M')} ===\n")
             for item in st.session_state.missed_questions:
