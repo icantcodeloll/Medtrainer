@@ -89,11 +89,6 @@ def call_gemini_with_rotation(prompt, model_to_use, use_search=False, timeout_pe
     while keys_tried < len(API_KEYS):
         try:
             client = get_client()
-            # Calculate timeout based on number of questions
-            num_questions_match = re.search(r'EXACTLY (\d+)', prompt)
-            num_questions = int(num_questions_match.group(1)) if num_questions_match else 10
-            total_timeout = timeout_per_question * num_questions
-            
             response = client.models.generate_content(
                 model=model_to_use, 
                 contents=prompt,
@@ -110,10 +105,6 @@ def call_gemini_with_rotation(prompt, model_to_use, use_search=False, timeout_pe
                 time.sleep(1)
             elif "503" in str(e):
                 time.sleep(5)
-            elif "timeout" in str(e).lower() or "deadline" in str(e).lower():
-                st.warning(f"Question generation timeout ({total_timeout}s). Retrying...")
-                keys_tried += 1
-                time.sleep(2)
             else:
                 st.error(f"Error: {e}")
                 return None
@@ -575,55 +566,6 @@ if st.session_state.current_exam:
 
         st.write("---")
         
-        # 3. INTERACTIVE TOOLS (Upgraded with Selection Dropdown)
-        if st.session_state.missed_questions:
-            st.subheader("🛠️ Remediation Tools")
-            
-            # Dropdown to select WHICH missed question to analyze
-            # We show the first 60 characters of the question text in the list
-            # Clean the display list for the dropdown
-            mistake_options = [m['question'][:80].replace('\n', ' ') + "..." for m in st.session_state.missed_questions]
-            selected_index = st.selectbox(
-                "Pick a question to focus on:", 
-                range(len(mistake_options)), 
-                format_func=lambda x: f"Question {x + 1}: {mistake_options[x]}"
-            )
-            
-            
-            # The data for the specific question chosen from the dropdown
-            target_mistake = st.session_state.missed_questions[selected_index]
-
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                # Change the subheader and button text here:
-                st.subheader("📖 Deep Dive")
-                if st.button("Explain More (Deep Dive)"):
-                    with st.spinner("Generating detailed clinical explanation..."):
-                        # Make sure to call the NEW function name here:
-                        explanation = get_deep_explanation(target_mistake['question'])
-                        st.info(explanation)
-
-            with col2:
-                st.subheader("🔍 Logic Check")
-                # unique key is needed for text_input inside interactive areas
-                user_logic = st.text_input("Why did you pick that answer?", key=f"logic_input_{selected_index}")
-                if st.button("Analyze My Reasoning"):
-                    if user_logic:
-                        with st.spinner("Analyzing clinical logic..."):
-                            # We send the specific question context and the user's logic
-                            logic_prompt = f"""
-                            Context: {target_mistake['question']}
-                            Student Logic: {user_logic}
-                            Correct Answer: {target_mistake['correct']}
-                            Identify the clinical logic error and why their reasoning was incorrect.
-                            """
-                            analysis = call_gemini_with_rotation(logic_prompt, GRADER_MODEL)
-                            st.info(analysis)
-                    else:
-                        st.warning("Please enter your reasoning first.")
-        else:
-            st.success("Perfect score! No remediation tools needed.")
 
 # Missed Questions Bank in Sidebar
 if st.session_state.missed_questions:
