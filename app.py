@@ -460,12 +460,13 @@ if st.session_state.current_exam:
             # Use markdown with HTML allowed for proper line breaks
             st.markdown(formatted_q, unsafe_allow_html=True)
             
-            # This makes the radio buttons cleaner - use timestamp to force refresh
-            timestamp = int(time.time())
+            # This makes the radio buttons cleaner - use exam content for unique key
+            exam_content = st.session_state.get('current_exam', '')
+            exam_content_hash = hash(exam_content) if exam_content else 0
             st.session_state.user_selections[i] = st.radio(
                 label=f"Select answer for Question {i+1}", # Provide a real label
                 options=["A", "B", "C", "D"],
-                key=f"q_radio_{i}_{timestamp}",
+                key=f"q_radio_{i}_{abs(exam_content_hash) % 1000}",
                 horizontal=True,
                 index=None,
                 label_visibility="collapsed" # This hides the label visually
