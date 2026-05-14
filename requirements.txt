@@ -2,3 +2,4 @@ streamlit
 pandas
 google-genai
 google
+streamlit-progress
