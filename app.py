@@ -1,5 +1,4 @@
 import concurrent.futures
-import random
 import streamlit as st
 import pandas as pd
 from google import genai
@@ -172,122 +171,78 @@ def validate_exam_format(exam_text, expected_questions):
     return True, "Valid format"
 
 
-def generate_single_question(index, topic, level, difficulty_desc, complexity_guide, api_keys, model):
-    """Thread-safe generation function that DOES NOT use Streamlit session state."""
+def get_blind_exam(topics_list, level, num_questions):
+    combined_content = "\n\n".join([f"Source {i+1}: {t}" for i, t in enumerate(topics_list)])
+    
+    # Difficulty calibration from intuitive basics to counterintuitive expert challenges
+    if level <= 5:
+        difficulty_desc = "intuitive basics - straightforward medical concepts that make logical sense"
+        complexity_guide = "focus on intuitive anatomy, obvious physiology, simple definitions, core principles that follow common sense"
+    elif level <= 15:
+        difficulty_desc = "logical progression - clinical applications that follow standard patterns"
+        complexity_guide = "include common diseases with predictable presentations, standard treatments, straightforward clinical reasoning"
+    elif level <= 25:
+        difficulty_desc = "complex but predictable - applied knowledge with some nuance"
+        complexity_guide = "complex clinical cases with clear patterns, differential diagnosis with logical elimination, treatment with expected responses"
+    elif level <= 35:
+        difficulty_desc = "challenging patterns - specialized knowledge requiring deeper analysis"
+        complexity_guide = "specialty-specific conditions with some counterintuitive elements, advanced therapeutics with unexpected side effects, presentations that deviate from textbook patterns"
+    elif level <= 45:
+        difficulty_desc = "counterintuitive expert - knowledge that defies common medical assumptions"
+        complexity_guide = "subspecialty expertise where textbook knowledge fails, paradoxical treatment responses, rare conditions that present opposite to expected patterns, cutting-edge research that contradicts established dogma"
+    else:  # 46-50
+        difficulty_desc = "supreme counterintuition - advanced mastery of medical paradoxes and exceptions"
+        complexity_guide = "multi-system integration where standard rules don't apply, latest research breakthroughs that overturn conventional wisdom, complex clinical reasoning requiring recognition of exceptions, niche subspecialty knowledge where intuitive answers are wrong, molecular-level pathophysiology that defies simple explanations, emerging treatment protocols with paradoxical mechanisms, rare disease patterns that mimic opposite conditions, advanced diagnostic challenges where the obvious answer is incorrect"
+    
     prompt = f"""
     You are a medical board examiner. 
-    TASK: Generate EXACTLY 1 Multiple Choice Question based on the study material below.
-    DIFFICULTY LEVEL: {level}/50. ({difficulty_desc})
-    COMPLEXITY GUIDANCE: {complexity_guide}
+    TASK: Generate EXACTLY {num_questions} Multiple Choice Questions (1 per snippet provided below).
+    DIFFICULTY LEVEL: {level}/50.
+    DIFFICULTY DESCRIPTION: {difficulty_desc}.
+    COMPLEXITY GUIDANCE: {complexity_guide}.
+
+    CRITICAL BIAS PREVENTION:
+    1. AVOID confirmation bias - Ensure each option could plausibly be correct
+    2. NO obvious "red herrings" - All distractors must be medically plausible
+    3. BALANCED difficulty - Correct answer should not be obviously easier/harder than others
+    4. MEDICAL ACCURACY - Verify all information with current medical guidelines
+    5. CLARITY over trickery - Questions should test knowledge, not reading comprehension
 
     CRITICAL FORMATTING REQUIREMENTS:
-    1. Format EXACTLY like this:
-       [Question text]
+    1. START IMMEDIATELY with '1. ' followed by the question text. NO preamble.
+    2. ABSOLUTELY NO introductory text, explanations, or meta-commentary.
+    3. Each question MUST follow this EXACT format:
+       "X. [Question text]
        A. [Option A]
        B. [Option B] 
        C. [Option C]
-       D. [Option D]
-       [KEY: X]
-       
-    Replace 'X' with the correct letter (A, B, C, or D).
+       D. [Option D]"
+    4. Every question MUST start with its number and period (e.g., '1.', '2.', '3.').
+    5. NO extra text, warnings, or formatting notes anywhere in the response.
+    6. The VERY LAST line must be: [KEY: A, B, C, D, A, B, C, D, A, B]
+
+    CONTENT REQUIREMENTS:
+    7. Use the STUDY MATERIAL provided below as the base.
+    8. USE GOOGLE SEARCH to supplement with latest medical guidelines and realistic clinical cases.
+    9. Ensure questions match difficulty level {level}:
+       - Level 1-5: Intuitive basics - straightforward concepts that follow common sense, obvious anatomy/physiology
+       - Level 6-15: Logical progression - predictable clinical patterns, standard protocols, common conditions with textbook presentations
+       - Level 16-25: Complex but predictable - applied knowledge with clear patterns, differential diagnosis with logical elimination
+       - Level 26-35: Challenging patterns - specialized knowledge with some counterintuitive elements, presentations deviating from textbook
+       - Level 36-45: Counterintuitive expert - knowledge that defies common medical assumptions, paradoxical responses, conditions presenting opposite to expected
+       - Level 46-50: Supreme counterintuition - medical paradoxes and exceptions where intuitive answers are wrong, conditions that mimic opposite presentations, treatments with paradoxical mechanisms, diagnostic challenges where obvious answer is incorrect
+    10. **STRICT ANSWER DISTRIBUTION**: Each letter (A, B, C, D) correct exactly 2-3 times.
+    11. All options must be plausible distractors.
 
     STUDY MATERIAL:
-    {topic}
+    {combined_content}
+
+    REMEMBER: Start with '1. ' immediately. No introduction. End with [KEY: format].
     """
     
-    # Start at a random API key so concurrent threads use different keys!
-    start_idx = random.randint(0, len(api_keys) - 1)
-    keys_tried = 0
-    
-    while keys_tried < len(api_keys):
-        try:
-            # Use local client to avoid Streamlit thread crashes
-            current_key = api_keys[(start_idx + keys_tried) % len(api_keys)]
-            client = genai.Client(api_key=current_key)
-            response = client.models.generate_content(
-                model=model, 
-                contents=prompt
-            )
-            return index, response.text
-        except Exception as e:
-            if "429" in str(e):
-                keys_tried += 1
-                time.sleep(2)
-            elif "503" in str(e):
-                time.sleep(3)
-            else:
-                return index, f"Error: {e}"
-                
-    return index, None
-
-
-def get_blind_exam(topics_list, level, num_questions):
-    """Generates the exam by fetching questions in parallel safely."""
-    if level <= 5:
-        difficulty_desc = "intuitive basics"
-        complexity_guide = "focus on intuitive anatomy, obvious physiology, simple definitions"
-    elif level <= 15:
-        difficulty_desc = "logical progression"
-        complexity_guide = "include common diseases with predictable presentations, standard treatments"
-    elif level <= 25:
-        difficulty_desc = "complex but predictable"
-        complexity_guide = "complex clinical cases with clear patterns, differential diagnosis"
-    elif level <= 35:
-        difficulty_desc = "challenging patterns"
-        complexity_guide = "specialty-specific conditions with some counterintuitive elements"
-    elif level <= 45:
-        difficulty_desc = "counterintuitive expert"
-        complexity_guide = "subspecialty expertise where textbook knowledge fails, paradoxical responses"
-    else:
-        difficulty_desc = "supreme counterintuition"
-        complexity_guide = "multi-system integration where standard rules don't apply, exceptions"
-
-    # Array to hold our parallel results in the correct order
-    results = [None] * num_questions
-    
-    # Use max 6 workers to balance speed and API concurrent connection limits
-    with concurrent.futures.ThreadPoolExecutor(max_workers=6) as executor:
-        futures = [
-            executor.submit(
-                generate_single_question, 
-                i, topics_list[i], level, difficulty_desc, complexity_guide, API_KEYS, EXAM_MODEL
-            ) for i in range(num_questions)
-        ]
-        
-        for future in concurrent.futures.as_completed(futures):
-            idx, res = future.result()
-            results[idx] = res
-
-    # Reassemble the results into the exact string format your Streamlit UI expects
-    combined_exam = ""
-    keys = []
-    
-    for i, res in enumerate(results):
-        if not res or "Error:" in res:
-            # Fallback if a thread completely fails so the UI doesn't crash
-            combined_exam += f"{i+1}. (Error generating question)\nA. N/A\nB. N/A\nC. N/A\nD. N/A\n\n"
-            keys.append("A")
-            continue
-            
-        # Extract the key letter (A, B, C, or D)
-        key_match = re.search(r'$$KEY:\s*([A-D])$$', res, re.IGNORECASE)
-        if key_match:
-            keys.append(key_match.group(1).upper())
-            # Remove the key from the visible text
-            q_text = re.sub(r'$$KEY:\s*[A-D]$$', '', res, flags=re.IGNORECASE).strip()
-            # Remove any leading numbers the AI might have accidentally added
-            q_text = re.sub(r'^\d+\.\s*', '', q_text) 
-            combined_exam += f"{i+1}. {q_text}\n\n"
-        else:
-            keys.append("A")
-            q_text = re.sub(r'^\d+\.\s*', '', res.strip())
-            combined_exam += f"{i+1}. {q_text}\n\n"
-
-    # Append the master key to the bottom so your UI parsing splits it correctly
-    combined_exam += f"[KEY: {', '.join(keys)}]"
-    
-    return combined_exam
-
+    # Single call to the model
+    exam_text = call_gemini_with_rotation(prompt, EXAM_MODEL, use_search=True, timeout_per_question=3)
+    return exam_text
 
 # Replace get_mnemonic with this:
 def get_deep_explanation(question_text):
@@ -384,7 +339,7 @@ if st.sidebar.button("Generate New Exam"):
             raw_response = get_blind_exam(samples, st.session_state.current_level, n)
             if raw_response and "[KEY:" in raw_response:
                 # Use a split that keeps the questions separate from the key
-                text, key_part = raw_response.rsplit("[KEY:", 1)
+                text, key_part = raw_response.split("[KEY:")
                 
                 # CLEANING: Remove the key section from the visible text 
                 # so it doesn't show up in the last radio button question
