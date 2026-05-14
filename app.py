@@ -9,8 +9,6 @@ import re
 import os
 import atexit
 from progress_manager import save_progress, load_progress, restore_progress
-from streamlit.progress import ProgressBar
-
 
 # ==========================================
 # 1. SETUP & CONFIGURATION
@@ -290,38 +288,6 @@ def get_blind_exam(topics_list, level, num_questions):
     
     return combined_exam
 
-from streamlit.progress import ProgressBar
-
-def generate_with_progress(topics_list, level, num_questions):
-    """Show actual progress during generation"""
-    progress_bar = st.progress(0)
-    status_text = st.empty()
-    
-    # Step 1: Prepare prompt
-    status_text.text("Preparing questions...")
-    progress_bar.progress(10)
-    
-    # Step 2: Generate
-    status_text.text("Generating with AI...")
-    exam_text = get_blind_exam_fast(topics_list, level, num_questions)
-    progress_bar.progress(60)
-    
-    # Step 3: Parse and validate
-    status_text.text("Formatting results...")
-    if exam_text and "[KEY:" in exam_text:
-        text, key_part = exam_text.split("[KEY:")
-        progress_bar.progress(90)
-        
-        # Step 4: Final processing
-        status_text.text("Finalizing...")
-        st.session_state.current_exam = text.strip()
-        st.session_state.current_key = re.findall(r'[A-D]', key_part)
-        progress_bar.progress(100)
-        status_text.text("Ready!")
-        return True
-    
-    progress_bar.progress(100)
-    return False
 
 # Replace get_mnemonic with this:
 def get_deep_explanation(question_text):
