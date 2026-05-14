@@ -363,7 +363,7 @@ if st.sidebar.button("Settings", use_container_width=True):
 # Show sliders only when settings is expanded
 if st.session_state.get('show_settings', False):
     st.session_state.current_level = st.sidebar.slider("Starting Level", 1, 50, st.session_state.current_level)
-    st.session_state.num_questions = st.sidebar.slider("Number of Questions", 1, 20, st.session_state.num_questions)
+    st.session_state.num_questions = st.sidebar.slider("Number of Questions", 3, 20, st.session_state.num_questions)
     
     st.sidebar.markdown("---")
     if st.sidebar.button("Reset Progress", help="Clear all saved progress and reset to defaults"):
