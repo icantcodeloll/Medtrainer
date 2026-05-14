@@ -239,7 +239,7 @@ def get_blind_exam(topics_list, level, num_questions):
     """
     
     # Single call to the model
-    exam_text = call_gemini_with_rotation(prompt, EXAM_MODEL, use_search=True, timeout_per_question=3)
+    exam_text = call_gemini_with_rotation(prompt, EXAM_MODEL, use_search=True)
     return exam_text
 
 # Replace get_mnemonic with this:
