@@ -7,6 +7,7 @@ import re
 import os
 import atexit
 from progress_manager import save_progress, load_progress, restore_progress
+import concurrent.futures
 
 # ==========================================
 # 1. SETUP & CONFIGURATION
@@ -75,11 +76,10 @@ if st.sidebar.button("Save Progress", help="Manually save your current progress"
     else:
         st.sidebar.error("Failed to save progress")
 
-def get_client():
-    return genai.Client(api_key=API_KEYS[st.session_state.key_index])
 
-def call_gemini_with_rotation(prompt, model_to_use, use_search=False, timeout_per_question=3):
+def call_gemini_with_rotation(prompt, model_to_use, use_search=False, starting_key_idx=0):
     keys_tried = 0
+    current_idx = starting_key_idx
     
     # Configure Google Search Tool if requested
     tools = []
@@ -88,7 +88,8 @@ def call_gemini_with_rotation(prompt, model_to_use, use_search=False, timeout_pe
     
     while keys_tried < len(API_KEYS):
         try:
-            client = get_client()
+            # Create client directly with the specific key
+            client = genai.Client(api_key=API_KEYS[current_idx])
             response = client.models.generate_content(
                 model=model_to_use, 
                 contents=prompt,
@@ -99,14 +100,12 @@ def call_gemini_with_rotation(prompt, model_to_use, use_search=False, timeout_pe
             if "429" in str(e):
                 keys_tried += 1
                 if keys_tried >= len(API_KEYS):
-                    st.error("All API keys exhausted.")
                     return None
-                st.session_state.key_index = (st.session_state.key_index + 1) % len(API_KEYS)
+                current_idx = (current_idx + 1) % len(API_KEYS)
                 time.sleep(1)
             elif "503" in str(e):
                 time.sleep(5)
             else:
-                st.error(f"Error: {e}")
                 return None
 
 # ==========================================
