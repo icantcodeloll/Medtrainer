@@ -32,7 +32,7 @@ JOIN_COLUMN = "lecture_id"
 
 # Models
 # Note: Google Search works best with Flash/Pro (Lite may have tool limitations)
-EXAM_MODEL = 'gemini-2.5-flash'
+EXAM_MODEL = 'gemini-2.5-flash-lite'
 GRADER_MODEL = 'gemini-2.5-flash-lite'
 
 #Models that work: gemini-2.5-flash, gemini-2.5-flash-lite
@@ -239,33 +239,9 @@ def get_blind_exam(topics_list, level, num_questions):
     REMEMBER: Start with '1. ' immediately. No introduction. End with [KEY: format].
     """
     
-    # Retry logic with simple validation
-    max_retries = 3
-    for attempt in range(max_retries):
-        exam_text = call_gemini_with_rotation(prompt, EXAM_MODEL, use_search=True, timeout_per_question=3)
-        
-        # Validate response
-        is_valid, error_msg = validate_exam_format(exam_text, num_questions)
-        
-        if is_valid:
-            return exam_text
-        else:
-            if attempt < max_retries - 1:
-                # Add more specific instructions for retry
-                retry_prompt = prompt + f"""
-                
-ATTENTION: Your previous response FAILED validation. Error: {error_msg}
-Please regenerate with STRICT adherence to the format requirements above.
-Start immediately with '1. ' and end with the correct [KEY: format].
-"""
-                exam_text = call_gemini_with_rotation(retry_prompt, EXAM_MODEL, use_search=True, timeout_per_question=3)
-                is_valid, error_msg = validate_exam_format(exam_text, num_questions)
-                if is_valid:
-                    return exam_text
-        
-        # If all retries fail, return the last attempt with a warning
-        st.error(f"AI response validation failed: {error_msg}")
-        return exam_text
+    # Single call to the model
+    exam_text = call_gemini_with_rotation(prompt, EXAM_MODEL, use_search=True, timeout_per_question=3)
+    return exam_text
 
 # Replace get_mnemonic with this:
 def get_deep_explanation(question_text):
