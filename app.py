@@ -8,7 +8,6 @@ import os
 import atexit
 from progress_manager import save_progress, load_progress, restore_progress
 
-
 # ==========================================
 # 1. SETUP & CONFIGURATION
 # ==========================================
@@ -79,7 +78,7 @@ if st.sidebar.button("Save Progress", help="Manually save your current progress"
 def get_client():
     return genai.Client(api_key=API_KEYS[st.session_state.key_index])
 
-def call_gemini_with_rotation(prompt, model_to_use, use_search=False):
+def call_gemini_with_rotation(prompt, model_to_use, use_search=False, timeout_per_question=3):
     keys_tried = 0
     
     # Configure Google Search Tool if requested
