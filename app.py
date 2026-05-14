@@ -25,7 +25,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-API_KEYS = [st.secrets["GENAI_KEY_1"], st.secrets["GENAI_KEY_2"], st.secrets["GENAI_KEY_3"], st.secrets["GENAI_KEY_4"], st.secrets["GENAI_KEY_5"], st.secrets["GENAI_KEY_6"], st.secrets["GENAI_KEY_7"], st.secrets["GENAI_KEY_8"], st.secrets["GENAI_KEY_9"], st.secrets["GENAI_KEY_10"]]
+API_KEYS = [st.secrets["GENAI_KEY_1"], st.secrets["GENAI_KEY_2"], st.secrets["GENAI_KEY_3"], st.secrets["GENAI_KEY_4"], st.secrets["GENAI_KEY_5"], st.secrets["GENAI_KEY_6"], st.secrets["GENAI_KEY_7"], st.secrets["GENAI_KEY_8"], st.secrets["GENAI_KEY_9"], st.secrets["GENAI_KEY_10"], st.secrets["GENAI_KEY_11"], st.secrets["GENAI_KEY_12"], st.secrets["GENAI_KEY_13"], st.secrets["GENAI_KEY_14"], st.secrets["GENAI_KEY_15"], st.secrets["GENAI_KEY_16"], st.secrets["GENAI_KEY_17"], st.secrets["GENAI_KEY_18"], st.secrets["GENAI_KEY_19"], st.secrets["GENAI_KEY_20"]]
 CSV_FILE = "learning_objectives_informative_reports.csv"
 NOTES_FILE = "lecture_notes.csv"
 JOIN_COLUMN = "lecture_id"
