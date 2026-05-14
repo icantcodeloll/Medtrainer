@@ -250,7 +250,7 @@ def get_deep_explanation(question_text):
     2. **Gold Standard**: Why the correct answer is the preferred clinical choice.
     3. **Clinical Pearl**: A high-yield tip for board exams (e.g., 'Always look for X in a patient with Y').
     """
-    return call_gemini_with_rotation(prompt, EXAM_MODEL, use_search=True)
+    return call_gemini_with_rotation(prompt, EXAM_MODEL, use_search=False)
 
 # ==========================================
 # 3. WEB INTERFACE
