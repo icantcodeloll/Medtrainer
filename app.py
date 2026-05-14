@@ -384,7 +384,7 @@ if st.sidebar.button("Generate New Exam"):
             raw_response = get_blind_exam(samples, st.session_state.current_level, n)
             if raw_response and "[KEY:" in raw_response:
                 # Use a split that keeps the questions separate from the key
-                text, key_part = raw_response.split("[KEY:")
+                text, key_part = raw_response.rsplit("[KEY:", 1)
                 
                 # CLEANING: Remove the key section from the visible text 
                 # so it doesn't show up in the last radio button question
