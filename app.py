@@ -32,7 +32,7 @@ JOIN_COLUMN = "lecture_id"
 
 # Models
 # Note: Google Search works best with Flash/Pro (Lite may have tool limitations)
-EXAM_MODEL = 'gemini-2.5-flash'
+EXAM_MODEL = 'gemini-2.5-flash-lite'
 GRADER_MODEL = 'gemini-2.5-flash-lite'
 
 #Models that work: gemini-2.5-flash, gemini-2.5-flash-lite
@@ -250,7 +250,7 @@ def get_deep_explanation(question_text):
     2. **Gold Standard**: Why the correct answer is the preferred clinical choice.
     3. **Clinical Pearl**: A high-yield tip for board exams (e.g., 'Always look for X in a patient with Y').
     """
-    return call_gemini_with_rotation(prompt, EXAM_MODEL, use_search=False)
+    return call_gemini_with_rotation(prompt, EXAM_MODEL, use_search=True)
 
 # ==========================================
 # 3. WEB INTERFACE
