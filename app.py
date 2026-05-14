@@ -171,22 +171,16 @@ def validate_exam_format(exam_text, expected_questions):
     return True, "Valid format"
 
 
-def generate_single_question(index, topic, level, difficulty_desc, complexity_guide):
-    """Helper function to generate a single question in parallel."""
+def generate_single_question(index, topic, level, difficulty_desc, complexity_guide, api_keys, model):
+    """Thread-safe generation function that DOES NOT use Streamlit session state."""
     prompt = f"""
     You are a medical board examiner. 
     TASK: Generate EXACTLY 1 Multiple Choice Question based on the study material below.
     DIFFICULTY LEVEL: {level}/50. ({difficulty_desc})
     COMPLEXITY GUIDANCE: {complexity_guide}
 
-    CRITICAL BIAS PREVENTION:
-    1. AVOID confirmation bias - Ensure each option could plausibly be correct
-    2. BALANCED difficulty - Correct answer should not be obviously easier/harder than others
-    3. MEDICAL ACCURACY - Verify all information with current medical guidelines
-
     CRITICAL FORMATTING REQUIREMENTS:
-    1. NO introductory text, explanations, or meta-commentary.
-    2. Format EXACTLY like this:
+    1. Format EXACTLY like this:
        [Question text]
        A. [Option A]
        B. [Option B] 
@@ -200,14 +194,34 @@ def generate_single_question(index, topic, level, difficulty_desc, complexity_gu
     {topic}
     """
     
-    # We pass use_search=False here to save time, but you can turn it on if needed
-    response = call_gemini_with_rotation(prompt, EXAM_MODEL, use_search=False)
-    return index, response
+    # Start at a random API key so concurrent threads use different keys!
+    start_idx = random.randint(0, len(api_keys) - 1)
+    keys_tried = 0
+    
+    while keys_tried < len(api_keys):
+        try:
+            # Use local client to avoid Streamlit thread crashes
+            current_key = api_keys[(start_idx + keys_tried) % len(api_keys)]
+            client = genai.Client(api_key=current_key)
+            response = client.models.generate_content(
+                model=model, 
+                contents=prompt
+            )
+            return index, response.text
+        except Exception as e:
+            if "429" in str(e):
+                keys_tried += 1
+                time.sleep(2)
+            elif "503" in str(e):
+                time.sleep(3)
+            else:
+                return index, f"Error: {e}"
+                
+    return index, None
+
 
 def get_blind_exam(topics_list, level, num_questions):
-    """Generates the exam by fetching questions in parallel to vastly improve speed."""
-    
-    # Difficulty calibration
+    """Generates the exam by fetching questions in parallel safely."""
     if level <= 5:
         difficulty_desc = "intuitive basics"
         complexity_guide = "focus on intuitive anatomy, obvious physiology, simple definitions"
@@ -230,16 +244,15 @@ def get_blind_exam(topics_list, level, num_questions):
     # Array to hold our parallel results in the correct order
     results = [None] * num_questions
     
-    # Fetch questions simultaneously (Max 5-8 workers is usually a sweet spot for API limits)
-    with concurrent.futures.ThreadPoolExecutor(max_workers=min(8, num_questions)) as executor:
+    # Use max 6 workers to balance speed and API concurrent connection limits
+    with concurrent.futures.ThreadPoolExecutor(max_workers=6) as executor:
         futures = [
             executor.submit(
                 generate_single_question, 
-                i, topics_list[i], level, difficulty_desc, complexity_guide
+                i, topics_list[i], level, difficulty_desc, complexity_guide, API_KEYS, EXAM_MODEL
             ) for i in range(num_questions)
         ]
         
-        # Collect results as they finish
         for future in concurrent.futures.as_completed(futures):
             idx, res = future.result()
             results[idx] = res
@@ -249,25 +262,31 @@ def get_blind_exam(topics_list, level, num_questions):
     keys = []
     
     for i, res in enumerate(results):
-        if not res:
+        if not res or "Error:" in res:
+            # Fallback if a thread completely fails so the UI doesn't crash
+            combined_exam += f"{i+1}. (Error generating question)\nA. N/A\nB. N/A\nC. N/A\nD. N/A\n\n"
+            keys.append("A")
             continue
             
-        # Extract the key
+        # Extract the key letter (A, B, C, or D)
         key_match = re.search(r'$$KEY:\s*([A-D])$$', res, re.IGNORECASE)
         if key_match:
             keys.append(key_match.group(1).upper())
             # Remove the key from the visible text
             q_text = re.sub(r'$$KEY:\s*[A-D]$$', '', res, flags=re.IGNORECASE).strip()
+            # Remove any leading numbers the AI might have accidentally added
+            q_text = re.sub(r'^\d+\.\s*', '', q_text) 
             combined_exam += f"{i+1}. {q_text}\n\n"
         else:
-            # Fallback if the AI messes up formatting
             keys.append("A")
-            combined_exam += f"{i+1}. {res.strip()}\n\n"
+            q_text = re.sub(r'^\d+\.\s*', '', res.strip())
+            combined_exam += f"{i+1}. {q_text}\n\n"
 
     # Append the master key to the bottom so your UI parsing splits it correctly
     combined_exam += f"[KEY: {', '.join(keys)}]"
     
     return combined_exam
+
 
 # Replace get_mnemonic with this:
 def get_deep_explanation(question_text):
