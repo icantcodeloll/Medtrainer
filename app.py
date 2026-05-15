@@ -362,7 +362,7 @@ model_choice = st.sidebar.select_slider(
     label="Choose your AI Speed:",
     label_visibility="collapsed", # Hides the default label to make it look cleaner
     options=["Fast", "Slow & Smart"],
-    value="🧠 Slow & Smart (Flash)" if st.session_state.exam_model == 'gemini-2.5-flash' else "⚡ Fast (Flash-Lite)"
+    value="Slow & Smart" if st.session_state.exam_model == 'gemini-2.5-flash' else "Fast"
 )
 
 # Update the memory based on where the slider is
