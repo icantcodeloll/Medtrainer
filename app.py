@@ -117,8 +117,8 @@ def call_gemini_with_rotation(prompt, model_to_use, use_search=False, timeout_pe
 # ==========================================
 # 2. CORE LOGIC FUNCTIONS
 # ==========================================
-def create_exam_pdf(exam_text, answer_key):
-    """Generates a PDF containing the exam questions and an answer key on the last page."""
+def create_exam_pdf(exam_text, answer_key, user_answers=None, score=None, max_score=None):
+    """Generates a PDF containing the exam questions, answer key, and optionally user selections."""
     if not FPDF:
         return None
         
@@ -128,7 +128,10 @@ def create_exam_pdf(exam_text, answer_key):
     
     # Title
     pdf.set_font("Arial", "B", 16)
-    pdf.cell(0, 10, "Practice Exam", ln=True, align="C")
+    if score is not None and max_score is not None:
+        pdf.cell(0, 10, f"Practice Exam Results - Score: {score}/{max_score}", ln=True, align="C")
+    else:
+        pdf.cell(0, 10, "Practice Exam", ln=True, align="C")
     pdf.ln(5)
     
     # Clean text to prevent Unicode encoding errors in FPDF
@@ -139,15 +142,21 @@ def create_exam_pdf(exam_text, answer_key):
     pdf.set_font("Arial", "", 12)
     pdf.multi_cell(0, 7, clean_text)
     
-    # Add Answer Key on a new page
+    # Add Answer Key & User Answers on a new page
     pdf.add_page()
     pdf.set_font("Arial", "B", 16)
-    pdf.cell(0, 10, "Answer Key", ln=True, align="C")
+    pdf.cell(0, 10, "Exam Summary", ln=True, align="C")
     pdf.ln(5)
     
     pdf.set_font("Arial", "", 12)
     for i, ans in enumerate(answer_key):
-        pdf.cell(0, 8, f"Question {i+1}: {ans}", ln=True)
+        text = f"Question {i+1}: Correct Key: {ans}"
+        if user_answers and i < len(user_answers):
+            u_ans = user_answers[i] if user_answers[i] else "No Answer"
+            match_text = " (CORRECT)" if u_ans == ans else " (INCORRECT)"
+            text += f" | Your Answer: {u_ans}{match_text}"
+            
+        pdf.cell(0, 8, text, ln=True)
         
     # Save to temp file and return bytes
     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
@@ -525,6 +534,7 @@ if st.session_state.current_exam:
             # Save this formatted version to session state
             st.session_state.last_user_input = user_input
             st.session_state.last_correct_key = correct_key_formatted
+            st.session_state.last_user_answers_list = user_answers # <-- ADD THIS LINE
             
             if len(user_answers) != len(correct_key):
                 st.error(f"Mismatch: The exam has {len(correct_key)} questions, but you entered {len(user_answers)} answers. Please fix your input.")
@@ -603,6 +613,25 @@ if st.session_state.current_exam:
             st.markdown(feedback)
 
         st.write("---")
+        
+        # --- ADDED: Download Graded Exam Button ---
+        if FPDF:
+            pdf_bytes_graded = create_exam_pdf(
+                st.session_state.current_exam, 
+                st.session_state.current_key,
+                user_answers=st.session_state.get('last_user_answers_list', []),
+                score=st.session_state.last_score,
+                max_score=st.session_state.num_questions
+            )
+            if pdf_bytes_graded:
+                st.download_button(
+                    label="📄 Download Results & Selections as PDF",
+                    data=pdf_bytes_graded,
+                    file_name="graded_practice_exam.pdf",
+                    mime="application/pdf",
+                    key="download_graded_pdf"
+                )
+        # ---------------------------------------------
         
 
 # Missed Questions Bank in Sidebar
