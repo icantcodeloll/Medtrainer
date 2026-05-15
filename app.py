@@ -33,7 +33,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
-API_KEYS = [st.secrets["GENAI_KEY_1"], st.secrets["GENAI_KEY_2"], st.secrets["GENAI_KEY_3"]] # (Keep your full list here)
+API_KEYS = [st.secrets["GENAI_KEY_1"]]#, st.secrets["GENAI_KEY_2"], st.secrets["GENAI_KEY_3"]] # (Keep your full list here)
 NOTES_FILE = "lecture_notes.csv"
 JOIN_COLUMN = "lecture_id"
 
