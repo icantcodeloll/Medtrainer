@@ -356,17 +356,19 @@ def get_blind_exam(topics_list, level, num_questions):
 st.title("Trainer")
 st.sidebar.header("Stats & Controls")
 
-# --- NEW: Model Slide Switch ---
-st.sidebar.subheader("AI Engine")
-model_choice = st.sidebar.select_slider(
-    label="Choose your AI Speed:",
-    label_visibility="collapsed", # Hides the default label to make it look cleaner
+# --- NEW: Double-Sided Model Switch ---
+st.sidebar.markdown("**Speed:**")
+model_choice = st.sidebar.radio(
+    label="AI Engine Speed",
+    label_visibility="collapsed", # Hides the label so it just looks like a switch
     options=["Fast", "Slow & Smart"],
-    value="Slow & Smart" if st.session_state.exam_model == 'gemini-2.5-flash' else "Fast"
+    index=1 if st.session_state.get('exam_model', 'gemini-2.5-flash') == 'gemini-2.5-flash' else 0,
+    horizontal=True, # This forces them side-by-side like a double switch!
+    help="Fast uses Flash-Lite. Slow & Smart uses Flash."
 )
 
-# Update the memory based on where the slider is
-st.session_state.exam_model = 'gemini-2.5-flash' if "Slow & Smart" in model_choice else 'gemini-2.5-flash-lite'
+# Update memory
+st.session_state.exam_model = 'gemini-2.5-flash' if "Slow" in model_choice else 'gemini-2.5-flash-lite'
 st.sidebar.markdown("---")
 # -------------------------------
 
