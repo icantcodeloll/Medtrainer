@@ -379,8 +379,26 @@ if st.sidebar.button("Generate New Exam"):
         samples = (samples_df['explanation'] + "\n[Notes: " + samples_df['content'].fillna('') + "]").tolist()
         
         with st.spinner(f"Generating {n} questions at Level {st.session_state.current_level}..."):
-            raw_response = get_blind_exam(samples, st.session_state.current_level, n)
-            if raw_response and "[KEY:" in raw_response:
+            max_retries = 3
+            is_valid = False
+            raw_response = ""
+            
+            # --- NEW: Retry Loop with Validation ---
+            for attempt in range(max_retries):
+                raw_response = get_blind_exam(samples, st.session_state.current_level, n)
+                
+                # Pass the AI response through your validation function
+                is_valid, validation_message = validate_exam_format(raw_response, n)
+                
+                if is_valid:
+                    break # Format is perfect, exit the retry loop
+                else:
+                    # Show a temporary warning and try again
+                    st.toast(f"Attempt {attempt + 1} failed: {validation_message}. Retrying...")
+                    time.sleep(1) # Brief pause before requesting again
+            # ---------------------------------------
+
+            if is_valid and "[KEY:" in raw_response:
                 # Use a split that keeps the questions separate from the key
                 text, key_part = raw_response.split("[KEY:")
                 
@@ -391,7 +409,7 @@ if st.sidebar.button("Generate New Exam"):
                 st.session_state.current_key = re.findall(r'[A-D]', key_part)
                 st.rerun()
             else:
-                st.error("Failed to generate a valid exam. The AI response was incomplete.")
+                st.error(f"Failed to generate a perfectly formatted exam after {max_retries} attempts. Please click generate again.")
     except Exception as e:
         st.error(f"File Error: Ensure {CSV_FILE} and {NOTES_FILE} are in the folder. ({e})")
 
