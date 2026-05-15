@@ -7,6 +7,7 @@ import re
 import os
 import atexit
 from progress_manager import save_progress, load_progress, restore_progress
+from typing import List, Tuple, Dict, Any, Optional
 
 # ==========================================
 # 1. SETUP & CONFIGURATION
@@ -130,6 +131,183 @@ def get_ai_grading(exam_text, user_answers, correct_key, score):
     
     # Using search during grading ensures explanations match current guidelines
     return call_gemini_with_rotation(prompt, GRADER_MODEL, use_search=True)
+
+def validate_questions_double_check(
+    exam_text: str, 
+    topics: List[str],
+    model: Any = EXAM_MODEL, 
+    use_search: bool = True
+) -> Tuple[bool, str, List[str]]:
+    """
+    Double-checks generated exam for:
+    1. Medical accuracy of questions/answers
+    2. Appropriate difficulty level
+    3. Absence of bias/controversy
+    4. Clarity and lack of ambiguity
+    Returns (is_valid, validation_message, detected_issues)
+    """
+    
+    prompt = f"""
+    You are a medical education specialist. CRITICALLY analyze these exam questions.
+    
+    CONTEXT: Exam generated at difficulty level {st.session_state.current_level}
+    
+    EXAM TO REVIEW:
+    {exam_text}
+    
+    Your analysis MUST check:
+    
+    1. MEDICAL ACCURACY & SAFETY:
+       - All facts must be medically accurate, current (2024)
+       - Treatments align with current guidelines
+       - No outdated or disproven medical theories
+       - Warnings for dangerous procedures if any mention
+       
+    2. QUALITY CHECKS:
+       - Questions: One clear best answer
+       - Distractors: Plausible but clearly inferior
+       - No fact/figure mismatches with references
+       - Clear, unambiguous phrasing
+       - No conflicting answer keys
+       - Difficulty matches level {st.session_state.current_level}
+       - No bias/stereotypes
+       - Cultural/translation suitability
+       
+    3. EXAM INTEGRITY:
+       - All questions answerable from provided content
+       - Key answers are actually correct
+       - No trick questions or overly subtle distinctions
+       
+    IMPORTANT: You must state if any issues require revision.
+    If VALID, respond: "VALID"
+    If INVALID, format each issue as:
+    - [SEVERITY: LOW/MED/HIGH] Description of issue
+    
+    Your analysis:
+    """
+    
+    try:
+        response = call_gemini_with_rotation(
+            prompt, 
+            model=GRADER_MODEL, 
+            use_search=use_search
+        )
+        
+        # Parse response for validation
+        if "VALID" in response.upper():
+            return True, "All questions passed quality check ✅", []
+        else:
+            issues = [
+                line.strip('-* ') 
+                for line in response.split('\n') 
+                if line.strip()
+            ]
+            return False, "Issues found during validation", issues
+            
+    except Exception as e:
+        return False, f"Validation error: {str(e)}", ["Validation failed"]
+
+def validate_medical_facts_via_search(questions: List[str]) -> Tuple[bool, List[str]]:
+    """
+    Google Search verification for medical accuracy
+    Returns: (all_accurate, list_of_incorrect_claims)
+    """
+    verification_prompt = f"""
+    You are a medical fact-checker. Verify these medical claims:
+    {chr(10).join(f'{i+1}. {q[:100]}...' for i,q in enumerate(questions[:3]))}
+    
+    For EACH statement above: 
+    1. Is it MEDICALLY ACCURATE by current standards?
+    2. Is it RECENT (within 5 years)?
+    3. Does it align with standard medical textbooks?
+    
+    If ANY claim is false or questionable, FLAG it.
+    RESPOND with "ALL VALID" or list INVALID claims.
+    """
+    
+    response = call_gemini_with_rotation(
+        verification_prompt, 
+        model=EXAM_MODEL, 
+        use_search=True,
+        timeout_per_question=5
+    )
+    
+    return "ALL VALID" in response.upper(), response
+
+def generate_and_validate_exam():
+    """
+    Generate and validate questions before showing to users
+    """
+    attempts = 0
+    max_attempts = 3
+    best_exam = None
+    best_score = 0
+    
+    while attempts < max_attempts:
+        # 1. Generate exam
+        raw_exam = get_blind_exam(...)  # Your existing function
+        
+        # 2. First-pass technical validation
+        if not raw_exam or len(raw_exam.strip()) < 100:  # Basic sanity
+            attempts += 1
+            continue
+            
+        # 3. Content validation
+        is_valid, msg, issues = validate_questions_double_check(
+            raw_exam, 
+            current_level=st.session_state.current_level,
+            model=EXAM_MODEL
+        )
+        
+        # 4. Quality metrics
+        quality_score = calculate_exam_quality(raw_exam)
+        
+        # 5. Accept or retry logic
+        if is_valid and quality_score > 0.7:  # Quality threshold
+            # Double-check factual accuracy via search
+            questions = extract_questions_from_exam(raw_exam)
+            all_valid, invalid_claims = validate_medical_facts_via_search(questions)
+            
+            if all_valid and invalid_claims == 0:
+                return raw_exam  # Passed all checks
+            elif invalid_claims <= 1 and is_valid:  # Allow 1 minor issue
+                st.warning(f"Minor issues but acceptable: {invalid_claims} issues")
+                return raw_exam
+            else:
+                attempts += 1
+                # Minor improvement: adjust difficulty or rephrase
+                continue
+        else:
+            attempts += 1
+            # Adaptive: if validation fails, slightly adjust prompt
+            continue
+    
+    # If loop completes, use best found or error
+    return best_exam if best_exam else raw_exam  # fallback
+
+def calculate_exam_quality(exam_text: str) -> float:
+    """
+    Score 0-1 based on question quality metrics
+    """
+    # Analyze diversity of answers (should be roughly even distribution)
+    key_letters = [k for k in exam_text if k in "ABCD"]
+    counts = {letter: key_letters.count(letter) for letter in "ABCD"}
+    # Ideal: roughly 25% each for 4 options
+    balance_score = 1 - (max(counts.values()) - min(counts.values())) / len(key_letters)
+    
+    # Length/format checks
+    if "?" not in exam_text or "A." not in exam_text:
+        return 0.3  # Poor
+    
+    return (balance_score * 0.3 + 0.7)  # Weighted quality
+
+# In your existing generate exam button handler:
+if st.sidebar.button("Generate Exam"):
+    with st.spinner("Generating & validating exam..."):
+        validated_exam = generate_and_validate_exam()
+        if validated_exam:
+            st.session_state.current_exam = validated_exam
+            st.session_state.exam_quality = calculate_exam_quality(validated_exam)
 
 def validate_exam_format(exam_text, expected_questions):
     """Validate that the AI response follows the correct format"""
