@@ -178,11 +178,22 @@ def get_ai_grading(exam_text, user_answers, correct_key, score):
     SCORE: {score}
 
     You are a medical instructor. Grade the student's performance.
+    
     ### GRADING PROTOCOL:
-    1. Compare the student's answer for each index (1 through 10) against the correct key.
-    2. USE GOOGLE SEARCH to check if the correct key is correct, 
-    3. If they match, it is correct. If they differ, it is incorrect.
-    4. Provide a brief explanation for any incorrect answers.
+    1. Compare the student's answer for each question against the correct key.
+    2. USE GOOGLE SEARCH to verify the current medical guidelines.
+    3. Focus ONLY on the questions the student got INCORRECT. 
+    
+    ### STRICT FORMATTING REQUIREMENTS:
+    You MUST output your response in clean Markdown. If the student got 100%, congratulate them and provide one high-yield clinical pearl.
+    Otherwise, for EVERY incorrect question, use this EXACT format:
+
+    ### ❌ Question [Insert Question Number]
+    **Your Answer:** [Letter] | **Correct Answer:** [Letter]
+    
+    * **Explanation:** [1-2 concise sentences explaining why the correct answer is right and the student's answer is wrong].
+    * **Clinical Pearl:** [A short, high-yield tip or memory hook for board exams].
+    ---
     """
     
     # Using search during grading ensures explanations match current guidelines
