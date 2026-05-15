@@ -6,7 +6,7 @@ import time
 import re
 import os
 import atexit
-from progress_manager import save_progress, load_progress, restore_progress
+from progress_manager import save_progress, load_progress
 import tempfile
 try:
     from fpdf import FPDF
@@ -300,19 +300,6 @@ def get_blind_exam(topics_list, level, num_questions):
     exam_text = call_gemini_with_rotation(prompt, EXAM_MODEL, use_search=True, timeout_per_question=3)
     return exam_text
 
-# Replace get_mnemonic with this:
-def get_deep_explanation(question_text):
-    prompt = f"""
-    Provide a comprehensive medical deep-dive for this question:
-    "{question_text}"
-    
-    Include:
-    1. **Pathophysiology**: Explain the underlying mechanism.
-    2. **Gold Standard**: Why the correct answer is the preferred clinical choice.
-    3. **Clinical Pearl**: A high-yield tip for board exams (e.g., 'Always look for X in a patient with Y').
-    """
-    return call_gemini_with_rotation(prompt, EXAM_MODEL, use_search=True)
-
 # ==========================================
 # 3. WEB INTERFACE
 # ==========================================
@@ -543,9 +530,10 @@ if st.session_state.current_exam:
             
             # --- ADDED: Load the CSV to update scores ---
             df_main = pd.read_csv(CSV_FILE)
-            
-            raw_chunks = re.split(r'\n(?=\d+\.)', st.session_state.current_exam.strip())
-            individual_questions = [q for q in raw_chunks if re.match(r'^\d+\.', q.strip())]     
+
+            if 'mastery_score' in df_main.columns:
+                # Convert mastery_score to integers for comparison
+                df_main['mastery_score'] = pd.to_numeric(df_main['mastery_score'], errors='coerce').fillna(1).astype(int)
 
             for i, (u_ans, correct) in enumerate(zip(user_answers, correct_key)):
                 # --- ADDED: Link the question back to the original CSV index ---
@@ -557,13 +545,11 @@ if st.session_state.current_exam:
                     # --- ADDED: Increase Mastery Score (Max 5) ---
                     if 'mastery_score' in df_main.columns:
                         # Convert mastery_score to integers for comparison
-                        df_main['mastery_score'] = pd.to_numeric(df_main['mastery_score'], errors='coerce').fillna(1).astype(int)
                         df_main.at[original_idx, 'mastery_score'] = min(5, df_main.at[original_idx, 'mastery_score']) + mastery_change
                 else:
                     # --- ADDED: Decrease Mastery Score (Min 1) ---
                     if 'mastery_score' in df_main.columns:
                         # Convert mastery_score to integers for comparison
-                        df_main['mastery_score'] = pd.to_numeric(df_main['mastery_score'], errors='coerce').fillna(1).astype(int)
                         df_main.at[original_idx, 'mastery_score'] = max(1, df_main.at[original_idx, 'mastery_score']) - mastery_change
                     
                     if i < len(individual_questions):
