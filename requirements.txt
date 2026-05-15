@@ -3,4 +3,3 @@ pandas
 google-genai
 google
 fpdf
-shutil
