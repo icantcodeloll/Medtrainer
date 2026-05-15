@@ -39,12 +39,12 @@ JOIN_COLUMN = "lecture_id"
 # ==========================================
 # 1A. PROFILE MANAGEMENT
 # ==========================================
-st.sidebar.header("👤 Select Profile")
+st.sidebar.header("Select Profile")
 
 if 'username' not in st.session_state:
     st.session_state.username = "Default"
 
-new_user = st.sidebar.text_input("Enter your name:", st.session_state.username)
+new_user = st.sidebar.text_input("Enter your username:", st.session_state.username)
 if st.sidebar.button("Switch / Create Profile"):
     st.session_state.username = new_user.strip()
     
