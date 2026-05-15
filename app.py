@@ -93,6 +93,8 @@ loaded_progress = load_progress(active_user)
 # Initialize Session States (with progress restoration)
 if 'current_level' not in st.session_state:
     st.session_state.current_level = loaded_progress.get("current_level", 1)
+if 'exam_model' not in st.session_state:
+    st.session_state.exam_model = 'gemini-2.5-flash-lite'
 if 'num_questions' not in st.session_state:
     st.session_state.num_questions = loaded_progress.get("num_questions", 5) 
 if 'missed_questions' not in st.session_state:
@@ -345,8 +347,8 @@ def get_blind_exam(topics_list, level, num_questions):
     REMEMBER: Start with '1. ' immediately. No introduction. End with [KEY: format].
     """
     
-    # Single call to the model
-    exam_text = call_gemini_with_rotation(prompt, EXAM_MODEL, use_search=True, timeout_per_question=3)
+    # Single call to the model using the TOGGLE'S value
+    exam_text = call_gemini_with_rotation(prompt, st.session_state.exam_model, use_search=True, timeout_per_question=3)
     return exam_text
 
 # ==========================================
@@ -355,13 +357,17 @@ def get_blind_exam(topics_list, level, num_questions):
 st.title("Trainer")
 st.sidebar.header("Stats & Controls")
 
-# --- ADD THIS: Focus Mode Dropdown ---
-df_sidebar = pd.read_csv(CSV_FILE)
-categories = df_sidebar['category'].fillna("Uncategorized").astype(str).unique().tolist()
-all_categories = ["All Topics"] + sorted(categories)
-focus_mode = st.sidebar.selectbox("Focus Mode:", all_categories)
+# --- NEW: Model Slide Switch ---
+is_premium = st.sidebar.toggle(
+    "⚡ Use Premium Model (Gemini 2.5 Flash)", 
+    value=(st.session_state.exam_model == 'gemini-2.5-flash'),
+    help="Turn ON for highest quality questions (Flash). Turn OFF for faster generation (Lite)."
+)
+st.session_state.exam_model = 'gemini-2.5-flash' if is_premium else 'gemini-2.5-flash-lite'
+st.sidebar.markdown("---")
+# -------------------------------
 
-# --- ADD THIS: Exam Filter Dropdown ---
+# --- ADD THIS: Focus Mode Dropdown ---
 if 'exam' in df_sidebar.columns:
     exams = df_sidebar['exam'].fillna("Uncategorized").astype(str).unique().tolist()
     all_exams = ["All Exams"] + sorted(exams)
