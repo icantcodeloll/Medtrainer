@@ -9,6 +9,7 @@ import atexit
 from progress_manager import save_progress, load_progress
 import shutil # Add this to your imports at the top of the file
 import tempfile
+import random
 try:
     from fpdf import FPDF
 except ImportError:
@@ -101,7 +102,8 @@ if 'current_exam' not in st.session_state:
 if 'current_key' not in st.session_state:
     st.session_state.current_key = loaded_progress.get("current_key", [])
 if 'key_index' not in st.session_state:
-    st.session_state.key_index = loaded_progress.get("key_index", 0)
+    # Give every user a random starting key to prevent collisions
+    st.session_state.key_index = loaded_progress.get("key_index", random.randint(0, len(API_KEYS) - 1))
 if 'current_categories' not in st.session_state:
     st.session_state.current_categories = loaded_progress.get("current_categories", [])
 if 'samples_df' not in st.session_state:
