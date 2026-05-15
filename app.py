@@ -108,6 +108,8 @@ if 'current_categories' not in st.session_state:
     st.session_state.current_categories = loaded_progress.get("current_categories", [])
 if 'samples_df' not in st.session_state:
     st.session_state.samples_df = loaded_progress.get("samples_df", None)
+if 'previous_test_data' not in st.session_state:
+    st.session_state.previous_test_data = {}
 
 # Register auto-save on app shutdown
 if st.sidebar.button("Save Progress", help="Manually save your current progress"):
@@ -368,6 +370,21 @@ else:
     exam_filter = "All Exams"
 
 if st.sidebar.button("Generate New Exam"):
+    # --- NEW: BACKUP THE CURRENT EXAM BEFORE OVERWRITING ---
+    if st.session_state.get('current_exam'):
+        st.session_state.previous_test_data = {
+            'current_exam': st.session_state.current_exam,
+            'current_key': st.session_state.current_key,
+            'user_selections': st.session_state.get('user_selections', {}),
+            'exam_submitted': st.session_state.get('exam_submitted', False),
+            'last_score': st.session_state.get('last_score', 0),
+            'last_user_input': st.session_state.get('last_user_input', ""),
+            'last_correct_key': st.session_state.get('last_correct_key', ""),
+            'last_user_answers_list': st.session_state.get('last_user_answers_list', []),
+            'current_categories': st.session_state.get('current_categories', []),
+            'samples_df': st.session_state.get('samples_df', None)
+        }
+    # -------------------------------------------------------
     st.session_state.exam_submitted = False  # Add this line
     st.session_state.last_score = 0
     st.session_state.user_selections = {}  # Clear previous selections
@@ -462,6 +479,45 @@ if st.sidebar.button("Generate New Exam"):
 
 # Move Active Level metric here
 st.sidebar.metric("Active Level", f"{st.session_state.current_level}/50")
+
+# --- NEW: RESTORE BACKUP BUTTON ---
+if st.session_state.get('previous_test_data'):
+    if st.sidebar.button("Load Previous Exam", help="Accidentally clicked generate? Restore the last exam.", use_container_width=True):
+        
+        # Take a snapshot of the active exam before swapping, so you can toggle back and forth!
+        current_backup = {}
+        if st.session_state.get('current_exam'):
+            current_backup = {
+                'current_exam': st.session_state.current_exam,
+                'current_key': st.session_state.current_key,
+                'user_selections': st.session_state.get('user_selections', {}),
+                'exam_submitted': st.session_state.get('exam_submitted', False),
+                'last_score': st.session_state.get('last_score', 0),
+                'last_user_input': st.session_state.get('last_user_input', ""),
+                'last_correct_key': st.session_state.get('last_correct_key', ""),
+                'last_user_answers_list': st.session_state.get('last_user_answers_list', []),
+                'current_categories': st.session_state.get('current_categories', []),
+                'samples_df': st.session_state.get('samples_df', None)
+            }
+        
+        # Load the backup into the live view
+        backup = st.session_state.previous_test_data
+        st.session_state.current_exam = backup.get('current_exam')
+        st.session_state.current_key = backup.get('current_key')
+        st.session_state.user_selections = backup.get('user_selections', {})
+        st.session_state.exam_submitted = backup.get('exam_submitted', False)
+        st.session_state.last_score = backup.get('last_score', 0)
+        st.session_state.last_user_input = backup.get('last_user_input', "")
+        st.session_state.last_correct_key = backup.get('last_correct_key', "")
+        st.session_state.last_user_answers_list = backup.get('last_user_answers_list', [])
+        st.session_state.current_categories = backup.get('current_categories', [])
+        st.session_state.samples_df = backup.get('samples_df', None)
+        
+        # Make the old current exam the new backup
+        st.session_state.previous_test_data = current_backup if current_backup else {}
+            
+        st.rerun()
+# ----------------------------------
 
 # Settings button for sliders
 if st.sidebar.button("Settings", use_container_width=True):
