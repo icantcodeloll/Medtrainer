@@ -188,7 +188,7 @@ def get_ai_grading(exam_text, user_answers, correct_key, score):
     You MUST output your response in clean Markdown. If the student got 100%, congratulate them and provide one high-yield clinical pearl.
     Otherwise, for EVERY incorrect question, use this EXACT format:
 
-    ### ❌ Question [Insert Question Number]
+    ### Question [Insert Question Number]
     **Your Answer:** [Letter] | **Correct Answer:** [Letter]
     
     * **Explanation:** [1-2 concise sentences explaining why the correct answer is right and the student's answer is wrong].
