@@ -74,8 +74,8 @@ CSV_FILE = USER_CSV # The rest of your code will now automatically read/write to
 
 # Models
 # Note: Google Search works best with Flash/Pro (Lite may have tool limitations)
-EXAM_MODEL = 'gemini-2.5-flash'
-GRADER_MODEL = 'gemini-2.5-flash'
+EXAM_MODEL = 'gemini-2.5-flash-lite'
+GRADER_MODEL = 'gemini-2.5-flash-lite'
 
 #Models that work: gemini-2.5-flash, gemini-2.5-flash-lite
 
