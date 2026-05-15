@@ -362,13 +362,13 @@ model_choice = st.sidebar.radio(
     label="Speed",
     label_visibility="collapsed", # Hides the label so it just looks like a switch
     options=["Fast", "Slow & Smart"],
-    index=1 if st.session_state.get('exam_model', 'gemini-2.5-pro') == 'gemini-2.5-pro' else 0,
+    index=1 if st.session_state.get('exam_model', 'gemini-2.5-flash') == 'gemini-2.5-flash' else 0,
     horizontal=True, # This forces them side-by-side like a double switch!
     help="Fast uses Flash-Lite. Slow & Smart uses Flash."
 )
 
 # Update memory
-st.session_state.exam_model = 'gemini-2.5-pro' if "Slow" in model_choice else 'gemini-2.5-flash-lite'
+st.session_state.exam_model = 'gemini-2.5-flash' if "Slow" in model_choice else 'gemini-2.5-flash-lite'
 st.sidebar.markdown("---")
 # -------------------------------
 
