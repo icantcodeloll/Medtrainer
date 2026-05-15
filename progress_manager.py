@@ -2,10 +2,17 @@ import json
 import os
 from datetime import datetime
 
-PROGRESS_FILE = "user_progress.json"
+def get_file_path(username):
+    """Generate a unique file path for each user."""
+    # This ensures the filename is safe and doesn't contain weird characters
+    clean_name = "".join([c for c in username if c.isalpha() or c.isdigit() or c=='_']).rstrip()
+    if not clean_name:
+        clean_name = "Default"
+    return f"{clean_name}_progress.json"
 
-def save_progress(session_state):
-    """Save all relevant progress data to JSON file"""
+def save_progress(session_state, username="Default"):
+    """Save all relevant progress data to JSON file for a specific user"""
+    file_path = get_file_path(username)
     try:
         progress_data = {
             "timestamp": datetime.now().isoformat(),
@@ -21,20 +28,21 @@ def save_progress(session_state):
             "samples_df": session_state.get("samples_df").to_dict() if session_state.get("samples_df") is not None else None
         }
         
-        with open(PROGRESS_FILE, 'w') as f:
+        with open(file_path, 'w') as f:
             json.dump(progress_data, f, indent=2)
         
-        print(f"Progress saved to {PROGRESS_FILE}")
+        print(f"Progress saved to {file_path}")
         return True
     except Exception as e:
         print(f"Error saving progress: {e}")
         return False
 
-def load_progress():
-    """Load progress data from JSON file"""
-    if os.path.exists(PROGRESS_FILE):
+def load_progress(username="Default"):
+    """Load progress data from JSON file for a specific user"""
+    file_path = get_file_path(username)
+    if os.path.exists(file_path):
         try:
-            with open(PROGRESS_FILE, 'r') as f:
+            with open(file_path, 'r') as f:
                 return json.load(f)
         except (json.JSONDecodeError, FileNotFoundError):
             return {}
