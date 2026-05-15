@@ -7,6 +7,7 @@ import re
 import os
 import atexit
 from progress_manager import save_progress, load_progress
+import shutil # Add this to your imports at the top of the file
 import tempfile
 try:
     from fpdf import FPDF
@@ -30,10 +31,45 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-API_KEYS = [st.secrets["GENAI_KEY_1"], st.secrets["GENAI_KEY_2"], st.secrets["GENAI_KEY_3"], st.secrets["GENAI_KEY_4"], st.secrets["GENAI_KEY_5"], st.secrets["GENAI_KEY_6"], st.secrets["GENAI_KEY_7"], st.secrets["GENAI_KEY_8"], st.secrets["GENAI_KEY_9"], st.secrets["GENAI_KEY_10"], st.secrets["GENAI_KEY_11"], st.secrets["GENAI_KEY_12"], st.secrets["GENAI_KEY_13"], st.secrets["GENAI_KEY_14"], st.secrets["GENAI_KEY_15"], st.secrets["GENAI_KEY_16"], st.secrets["GENAI_KEY_17"], st.secrets["GENAI_KEY_18"], st.secrets["GENAI_KEY_19"], st.secrets["GENAI_KEY_20"]]
-CSV_FILE = "learning_objectives_informative_reports.csv"
+
+API_KEYS = [st.secrets["GENAI_KEY_1"], st.secrets["GENAI_KEY_2"], st.secrets["GENAI_KEY_3"]] # (Keep your full list here)
 NOTES_FILE = "lecture_notes.csv"
 JOIN_COLUMN = "lecture_id"
+
+# ==========================================
+# 1A. PROFILE MANAGEMENT
+# ==========================================
+st.sidebar.header("👤 Select Profile")
+
+if 'username' not in st.session_state:
+    st.session_state.username = "Default"
+
+new_user = st.sidebar.text_input("Enter your name:", st.session_state.username)
+if st.sidebar.button("Switch / Create Profile"):
+    st.session_state.username = new_user.strip()
+    
+    # Wipe the screen clean so the new user's data can load
+    keys_to_clear = ['current_level', 'num_questions', 'missed_questions', 'current_exam', 'current_key', 'samples_df']
+    for k in keys_to_clear:
+        if k in st.session_state:
+            del st.session_state[k]
+    st.rerun()
+
+active_user = st.session_state.username
+st.sidebar.success(f"Logged in as: **{active_user}**")
+
+# Set up user-specific files
+MASTER_CSV = "learning_objectives_informative_reports.csv" # Your master template
+USER_CSV = f"{active_user}_objectives.csv"                 # Their personal copy
+
+# If they are a new user, give them a fresh copy of the master CSV
+if not os.path.exists(USER_CSV):
+    try:
+        shutil.copy(MASTER_CSV, USER_CSV)
+    except FileNotFoundError:
+        st.error(f"Master file '{MASTER_CSV}' not found in folder!")
+
+CSV_FILE = USER_CSV # The rest of your code will now automatically read/write to the user's specific CSV!
 
 # Models
 # Note: Google Search works best with Flash/Pro (Lite may have tool limitations)
@@ -51,7 +87,7 @@ else:
 
 
 # Load saved progress on startup
-loaded_progress = load_progress()
+loaded_progress = load_progress(active_user)
 
 # Initialize Session States (with progress restoration)
 if 'current_level' not in st.session_state:
@@ -72,10 +108,8 @@ if 'samples_df' not in st.session_state:
     st.session_state.samples_df = loaded_progress.get("samples_df", None)
 
 # Register auto-save on app shutdown
-atexit.register(save_progress, st.session_state)
-
 if st.sidebar.button("Save Progress", help="Manually save your current progress"):
-    if save_progress(st.session_state):
+    if save_progress(st.session_state, active_user):
         st.sidebar.success("Progress saved successfully!")
     else:
         st.sidebar.error("Failed to save progress")
