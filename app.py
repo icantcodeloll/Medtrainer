@@ -357,12 +357,16 @@ st.title("Trainer")
 st.sidebar.header("Stats & Controls")
 
 # --- NEW: Model Slide Switch ---
-is_premium = st.sidebar.toggle(
-    "⚡ Use Premium Model (Gemini 2.5 Flash)", 
-    value=(st.session_state.exam_model == 'gemini-2.5-flash'),
-    help="Turn ON for highest quality questions (Flash). Turn OFF for faster generation (Lite)."
+st.sidebar.subheader("AI Engine")
+model_choice = st.sidebar.select_slider(
+    label="Choose your AI Speed:",
+    label_visibility="collapsed", # Hides the default label to make it look cleaner
+    options=["Fast", "Slow & Smart"],
+    value="🧠 Slow & Smart (Flash)" if st.session_state.exam_model == 'gemini-2.5-flash' else "⚡ Fast (Flash-Lite)"
 )
-st.session_state.exam_model = 'gemini-2.5-flash' if is_premium else 'gemini-2.5-flash-lite'
+
+# Update the memory based on where the slider is
+st.session_state.exam_model = 'gemini-2.5-flash' if "Slow & Smart" in model_choice else 'gemini-2.5-flash-lite'
 st.sidebar.markdown("---")
 # -------------------------------
 
