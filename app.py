@@ -626,12 +626,7 @@ if st.session_state.current_exam:
                         })
             
             # --- ADDED: Save the changes back to your file ---
-            for _ in range(5):
-                try:
-                    df_main.to_csv(CSV_FILE, index=False)
-                    break
-                except PermissionError:
-                    time.sleep(random.uniform(0.1, 0.5)) # Wait and try again if file is locked
+            df_main.to_csv(CSV_FILE, index=False)
             
             # Save state so the feedback stays visible after submission
             st.session_state.exam_submitted = True
