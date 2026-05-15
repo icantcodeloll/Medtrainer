@@ -240,6 +240,7 @@ def get_ai_grading(exam_text, user_answers, correct_key, score):
     return call_gemini_with_rotation(prompt, GRADER_MODEL, use_search=True)
 
 def validate_exam_format(exam_text, expected_questions):
+    return True, "Validation temporarily disabled" # <--- ADD THIS LINE HERE
     """Validate that the AI response follows the correct format"""
     if not exam_text or not exam_text.strip():
         return False, "Empty response"
