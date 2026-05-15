@@ -7,6 +7,11 @@ import re
 import os
 import atexit
 from progress_manager import save_progress, load_progress, restore_progress
+import tempfile
+try:
+    from fpdf import FPDF
+except ImportError:
+    FPDF = None
 
 # ==========================================
 # 1. SETUP & CONFIGURATION
@@ -112,6 +117,49 @@ def call_gemini_with_rotation(prompt, model_to_use, use_search=False, timeout_pe
 # ==========================================
 # 2. CORE LOGIC FUNCTIONS
 # ==========================================
+def create_exam_pdf(exam_text, answer_key):
+    """Generates a PDF containing the exam questions and an answer key on the last page."""
+    if not FPDF:
+        return None
+        
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_auto_page_break(auto=True, margin=15)
+    
+    # Title
+    pdf.set_font("Arial", "B", 16)
+    pdf.cell(0, 10, "Practice Exam", ln=True, align="C")
+    pdf.ln(5)
+    
+    # Clean text to prevent Unicode encoding errors in FPDF
+    clean_text = exam_text.replace('\u2019', "'").replace('\u201c', '"').replace('\u201d', '"')
+    clean_text = clean_text.encode('latin-1', 'replace').decode('latin-1')
+    
+    # Print Questions
+    pdf.set_font("Arial", "", 12)
+    pdf.multi_cell(0, 7, clean_text)
+    
+    # Add Answer Key on a new page
+    pdf.add_page()
+    pdf.set_font("Arial", "B", 16)
+    pdf.cell(0, 10, "Answer Key", ln=True, align="C")
+    pdf.ln(5)
+    
+    pdf.set_font("Arial", "", 12)
+    for i, ans in enumerate(answer_key):
+        pdf.cell(0, 8, f"Question {i+1}: {ans}", ln=True)
+        
+    # Save to temp file and return bytes
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
+        pdf.output(tmp.name)
+        tmp_path = tmp.name
+        
+    with open(tmp_path, "rb") as f:
+        pdf_bytes = f.read()
+        
+    os.unlink(tmp_path) # Clean up temp file
+    return pdf_bytes
+
 def get_ai_grading(exam_text, user_answers, correct_key, score):
     prompt = f"""
     Here is the input:
@@ -400,10 +448,22 @@ if st.session_state.get('show_settings', False):
         st.sidebar.caption(f"{progress_val*100:.1f}% of curriculum at Mastery Level 5")
 
 # Display the Exam
-
 if st.session_state.current_exam:
     st.info("Select the best answer for each clinical scenario below.")
     
+    # --- ADDED: PDF Download Button ---
+    if FPDF:
+        pdf_bytes = create_exam_pdf(st.session_state.current_exam, st.session_state.current_key)
+        if pdf_bytes:
+            st.download_button(
+                label="📄 Download Exam as PDF",
+                data=pdf_bytes,
+                file_name="practice_exam.pdf",
+                mime="application/pdf"
+            )
+    else:
+        st.warning("Please install fpdf (`pip install fpdf`) to enable PDF downloads.")
+    # ----------------------------------
     # 1. CLEANING: Remove introductory fluff and trailing keys
     clean_text = st.session_state.current_exam.strip()
     # Remove common AI intros like "Here are your questions..."
