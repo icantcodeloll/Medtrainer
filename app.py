@@ -368,7 +368,7 @@ model_choice = st.sidebar.radio(
 )
 
 # Update memory
-st.session_state.exam_model = 'gemini-2.5-pro' if "Slow" in model_choice else 'gemini-2.5-flash-lite'
+st.session_state.exam_model = 'gemini-2.5-flash' if "Slow" in model_choice else 'gemini-2.5-flash-lite'
 st.sidebar.markdown("---")
 # -------------------------------
 
