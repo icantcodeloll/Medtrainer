@@ -357,7 +357,7 @@ st.title("Trainer")
 st.sidebar.header("Stats & Controls")
 
 # --- NEW: Double-Sided Model Switch ---
-st.sidebar.markdown("**AI Engine Speed:**")
+st.sidebar.markdown("**Speed:**")
 model_choice = st.sidebar.radio(
     label="Speed",
     label_visibility="collapsed", # Hides the label so it just looks like a switch
