@@ -112,6 +112,40 @@ def call_gemini_with_rotation(prompt, model_to_use, use_search=False, timeout_pe
 # ==========================================
 # 2. CORE LOGIC FUNCTIONS
 # ==========================================
+
+def get_client():
+    return genai.Client(api_key=API_KEYS[st.session_state.key_index])
+
+# FIX 1: Renamed 'model_to_use' to 'model' to fix the TypeError
+def call_gemini_with_rotation(prompt, model, use_search=False, timeout_per_question=3):
+    keys_tried = 0
+    tools = []
+    if use_search:
+        tools = [types.Tool(google_search=types.GoogleSearch())]
+    
+    while keys_tried < len(API_KEYS):
+        try:
+            client = get_client()
+            response = client.models.generate_content(
+                model=model, 
+                contents=prompt,
+                config=types.GenerateContentConfig(tools=tools) if tools else None
+            )
+            return response.text
+        except Exception as e:
+            if "429" in str(e):
+                keys_tried += 1
+                if keys_tried >= len(API_KEYS):
+                    st.error("All API keys exhausted. Quota reached.")
+                    return None
+                st.session_state.key_index = (st.session_state.key_index + 1) % len(API_KEYS)
+                time.sleep(1)
+            elif "503" in str(e):
+                time.sleep(5)
+            else:
+                st.error(f"Error: {e}")
+                return None
+
 def get_ai_grading(exam_text, user_answers, correct_key, score):
     prompt = f"""
     Here is the input:
@@ -127,7 +161,8 @@ def get_ai_grading(exam_text, user_answers, correct_key, score):
     3. If they match, it is correct. If they differ, it is incorrect.
     4. Provide a brief explanation for any incorrect answers.
     """
-    return call_gemini_with_rotation(prompt, GRADER_MODEL, use_search=True)
+    response = call_gemini_with_rotation(prompt, GRADER_MODEL, use_search=True)
+    return response if response else "Grading failed due to API limits. Please try again later."
 
 def validate_questions_double_check(
     exam_text: str, 
@@ -166,6 +201,11 @@ def validate_questions_double_check(
     """
     try:
         response = call_gemini_with_rotation(prompt, model=GRADER_MODEL, use_search=use_search)
+        
+        # FIX 2: Check if response is None before trying to use .upper()
+        if not response:
+            return False, "Validation bypassed due to API quota limit.", ["API Quota Exhausted"]
+            
         if "VALID" in response.upper():
             return True, "All questions passed quality check ✅", []
         else:
@@ -204,6 +244,10 @@ def validate_medical_facts_via_search(questions: List[str]) -> Tuple[bool, str]:
         timeout_per_question=5
     )
     
+    # FIX 3: Catch None responses from quota exhaustion
+    if not response:
+        return False, "Fact check failed due to API quota limits."
+        
     return "ALL VALID" in response.upper(), response
 
 def validate_exam_format(exam_text, expected_questions):
