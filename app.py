@@ -357,9 +357,9 @@ st.title("Trainer")
 st.sidebar.header("Stats & Controls")
 
 # --- NEW: Double-Sided Model Switch ---
-st.sidebar.markdown("**Speed:**")
+st.sidebar.markdown("**AI Engine Speed:**")
 model_choice = st.sidebar.radio(
-    label="AI Engine Speed",
+    label="Speed",
     label_visibility="collapsed", # Hides the label so it just looks like a switch
     options=["Fast", "Slow & Smart"],
     index=1 if st.session_state.get('exam_model', 'gemini-2.5-flash') == 'gemini-2.5-flash' else 0,
