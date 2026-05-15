@@ -7,8 +7,6 @@ import re
 import os
 import atexit
 from progress_manager import save_progress, load_progress, restore_progress
-from typing import List, Tuple, Dict, Any, Optional
-import json
 
 # ==========================================
 # 1. SETUP & CONFIGURATION
@@ -33,11 +31,19 @@ NOTES_FILE = "lecture_notes.csv"
 JOIN_COLUMN = "lecture_id"
 
 # Models
-EXAM_MODEL = 'gemini-2.5-flash-lite'
+# Note: Google Search works best with Flash/Pro (Lite may have tool limitations)
+EXAM_MODEL = 'gemini-2.5-flash'
 GRADER_MODEL = 'gemini-2.5-flash'
 
+#Models that work: gemini-2.5-flash, gemini-2.5-flash-lite
+
 mastery_mode = "off"
-mastery_change = 1 if mastery_mode == "on" else 0
+
+if mastery_mode == "on":
+    mastery_change = 1
+else:
+    mastery_change = 0
+
 
 # Load saved progress on startup
 loaded_progress = load_progress()
@@ -60,14 +66,6 @@ if 'current_categories' not in st.session_state:
 if 'samples_df' not in st.session_state:
     st.session_state.samples_df = loaded_progress.get("samples_df", None)
 
-# Initialize validation specific states
-if 'validation_issues' not in st.session_state:
-    st.session_state.validation_issues = None
-if 'fact_check_details' not in st.session_state:
-    st.session_state.fact_check_details = None
-if 'grading_feedback' not in st.session_state:
-    st.session_state.grading_feedback = None
-
 # Register auto-save on app shutdown
 atexit.register(save_progress, st.session_state)
 
@@ -82,6 +80,8 @@ def get_client():
 
 def call_gemini_with_rotation(prompt, model_to_use, use_search=False, timeout_per_question=3):
     keys_tried = 0
+    
+    # Configure Google Search Tool if requested
     tools = []
     if use_search:
         tools = [types.Tool(google_search=types.GoogleSearch())]
@@ -112,40 +112,6 @@ def call_gemini_with_rotation(prompt, model_to_use, use_search=False, timeout_pe
 # ==========================================
 # 2. CORE LOGIC FUNCTIONS
 # ==========================================
-
-def get_client():
-    return genai.Client(api_key=API_KEYS[st.session_state.key_index])
-
-# FIX 1: Renamed 'model_to_use' to 'model' to fix the TypeError
-def call_gemini_with_rotation(prompt, model, use_search=False, timeout_per_question=3):
-    keys_tried = 0
-    tools = []
-    if use_search:
-        tools = [types.Tool(google_search=types.GoogleSearch())]
-    
-    while keys_tried < len(API_KEYS):
-        try:
-            client = get_client()
-            response = client.models.generate_content(
-                model=model, 
-                contents=prompt,
-                config=types.GenerateContentConfig(tools=tools) if tools else None
-            )
-            return response.text
-        except Exception as e:
-            if "429" in str(e):
-                keys_tried += 1
-                if keys_tried >= len(API_KEYS):
-                    st.error("All API keys exhausted. Quota reached.")
-                    return None
-                st.session_state.key_index = (st.session_state.key_index + 1) % len(API_KEYS)
-                time.sleep(1)
-            elif "503" in str(e):
-                time.sleep(5)
-            else:
-                st.error(f"Error: {e}")
-                return None
-
 def get_ai_grading(exam_text, user_answers, correct_key, score):
     prompt = f"""
     Here is the input:
@@ -161,111 +127,31 @@ def get_ai_grading(exam_text, user_answers, correct_key, score):
     3. If they match, it is correct. If they differ, it is incorrect.
     4. Provide a brief explanation for any incorrect answers.
     """
-    response = call_gemini_with_rotation(prompt, GRADER_MODEL, use_search=True)
-    return response if response else "Grading failed due to API limits. Please try again later."
-
-def validate_questions_double_check(
-    exam_text: str, 
-    model: Any = EXAM_MODEL, 
-    use_search: bool = True
-) -> Tuple[bool, str, List[str]]:
     
-    prompt = f"""
-    You are a medical education specialist. CRITICALLY analyze these exam questions.
-    
-    CONTEXT: Exam generated at difficulty level {st.session_state.current_level}
-    
-    EXAM TO REVIEW:
-    {exam_text}
-    
-    Your analysis MUST check:
-    
-    1. MEDICAL ACCURACY & SAFETY:
-       - All facts must be medically accurate, current (2024)
-       - Treatments align with current guidelines
-       
-    2. QUALITY CHECKS:
-       - Questions: One clear best answer
-       - Distractors: Plausible but clearly inferior
-       - Difficulty matches level {st.session_state.current_level}
-       
-    3. EXAM INTEGRITY:
-       - All questions answerable from provided content
-       - Key answers are actually correct
-       
-    If VALID, respond: "VALID"
-    If INVALID, format each issue as:
-    - [SEVERITY: LOW/MED/HIGH] Description of issue
-    
-    Your analysis:
-    """
-    try:
-        response = call_gemini_with_rotation(prompt, model=GRADER_MODEL, use_search=use_search)
-        
-        # FIX 2: Check if response is None before trying to use .upper()
-        if not response:
-            return False, "Validation bypassed due to API quota limit.", ["API Quota Exhausted"]
-            
-        if "VALID" in response.upper():
-            return True, "All questions passed quality check ✅", []
-        else:
-            issues = [line.strip('-* ') for line in response.split('\n') if line.strip()]
-            return False, "Issues found during validation", issues
-    except Exception as e:
-        return False, f"Validation error: {str(e)}", ["Validation failed"]
-
-def extract_questions_from_exam(exam_text: str) -> List[str]:
-    """Extract individual questions from raw exam text for verification"""
-    if "[KEY:" in exam_text:
-        exam_text = exam_text.split("[KEY:")[0]
-        
-    clean_text = re.sub(r"^(Here are|Based on|Sure|I have generated).*?\n", "", exam_text.strip(), flags=re.IGNORECASE)
-    raw_questions = re.split(r'\n(?=\d+\.\s)', clean_text)
-    return [q.strip() for q in raw_questions if q.strip()]
-
-def validate_medical_facts_via_search(questions: List[str]) -> Tuple[bool, str]:
-    verification_prompt = f"""
-    You are a medical fact-checker. Verify these medical claims:
-    {chr(10).join(f'{i+1}. {q[:150]}...' for i,q in enumerate(questions))}
-    
-    For EACH statement above: 
-    1. Is it MEDICALLY ACCURATE by current standards?
-    2. Is it RECENT (within 5 years)?
-    3. Does it align with standard medical textbooks?
-    
-    If ANY claim is false or questionable, FLAG it.
-    RESPOND with "ALL VALID" or list INVALID claims.
-    """
-    
-    response = call_gemini_with_rotation(
-        verification_prompt, 
-        model=EXAM_MODEL, 
-        use_search=True,
-        timeout_per_question=5
-    )
-    
-    # FIX 3: Catch None responses from quota exhaustion
-    if not response:
-        return False, "Fact check failed due to API quota limits."
-        
-    return "ALL VALID" in response.upper(), response
+    # Using search during grading ensures explanations match current guidelines
+    return call_gemini_with_rotation(prompt, GRADER_MODEL, use_search=True)
 
 def validate_exam_format(exam_text, expected_questions):
+    """Validate that the AI response follows the correct format"""
     if not exam_text or not exam_text.strip():
         return False, "Empty response"
     
+    # Check if starts with question number
     if not re.match(r'^\s*1\.\s', exam_text.strip()):
         return False, "Does not start with '1. '"
     
+    # Check for correct number of questions
     question_pattern = r'^\s*\d+\.\s'
     questions = re.findall(question_pattern, exam_text, re.MULTILINE)
     if len(questions) != expected_questions:
         return False, f"Expected {expected_questions} questions, found {len(questions)}"
     
-    key_pattern = r'$$KEY:\s*[A-D,\s]+$$$'
+    # Check for answer key format
+    key_pattern = r'\[KEY:\s*[A-D,\s]+\]$'
     if not re.search(key_pattern, exam_text.strip()):
         return False, "Missing or malformed answer key"
     
+    # Check each question has A, B, C, D options
     lines = exam_text.split('\n')
     current_question = 0
     option_count = 0
@@ -283,9 +169,11 @@ def validate_exam_format(exam_text, expected_questions):
     
     return True, "Valid format"
 
+
 def get_blind_exam(topics_list, level, num_questions):
     combined_content = "\n\n".join([f"Source {i+1}: {t}" for i, t in enumerate(topics_list)])
     
+    # Difficulty calibration from intuitive basics to counterintuitive expert challenges
     if level <= 5:
         difficulty_desc = "intuitive basics - straightforward medical concepts that make logical sense"
         complexity_guide = "focus on intuitive anatomy, obvious physiology, simple definitions, core principles that follow common sense"
@@ -301,7 +189,7 @@ def get_blind_exam(topics_list, level, num_questions):
     elif level <= 45:
         difficulty_desc = "counterintuitive expert - knowledge that defies common medical assumptions"
         complexity_guide = "subspecialty expertise where textbook knowledge fails, paradoxical treatment responses, rare conditions that present opposite to expected patterns, cutting-edge research that contradicts established dogma"
-    else:  
+    else:  # 46-50
         difficulty_desc = "supreme counterintuition - advanced mastery of medical paradoxes and exceptions"
         complexity_guide = "multi-system integration where standard rules don't apply, latest research breakthroughs that overturn conventional wisdom, complex clinical reasoning requiring recognition of exceptions, niche subspecialty knowledge where intuitive answers are wrong, molecular-level pathophysiology that defies simple explanations, emerging treatment protocols with paradoxical mechanisms, rare disease patterns that mimic opposite conditions, advanced diagnostic challenges where the obvious answer is incorrect"
     
@@ -332,14 +220,41 @@ def get_blind_exam(topics_list, level, num_questions):
     5. NO extra text, warnings, or formatting notes anywhere in the response.
     6. The VERY LAST line must be: [KEY: A, B, C, D, A, B, C, D, A, B]
 
+    CONTENT REQUIREMENTS:
+    7. Use the STUDY MATERIAL provided below as the base.
+    8. USE GOOGLE SEARCH to supplement with latest medical guidelines and realistic clinical cases.
+    9. Ensure questions match difficulty level {level}:
+       - Level 1-5: Intuitive basics - straightforward concepts that follow common sense, obvious anatomy/physiology
+       - Level 6-15: Logical progression - predictable clinical patterns, standard protocols, common conditions with textbook presentations
+       - Level 16-25: Complex but predictable - applied knowledge with clear patterns, differential diagnosis with logical elimination
+       - Level 26-35: Challenging patterns - specialized knowledge with some counterintuitive elements, presentations deviating from textbook
+       - Level 36-45: Counterintuitive expert - knowledge that defies common medical assumptions, paradoxical responses, conditions presenting opposite to expected
+       - Level 46-50: Supreme counterintuition - medical paradoxes and exceptions where intuitive answers are wrong, conditions that mimic opposite presentations, treatments with paradoxical mechanisms, diagnostic challenges where obvious answer is incorrect
+    10. **STRICT ANSWER DISTRIBUTION**: Each letter (A, B, C, D) correct exactly 2-3 times.
+    11. All options must be plausible distractors.
+
     STUDY MATERIAL:
     {combined_content}
 
     REMEMBER: Start with '1. ' immediately. No introduction. End with [KEY: format].
     """
     
+    # Single call to the model
     exam_text = call_gemini_with_rotation(prompt, EXAM_MODEL, use_search=True, timeout_per_question=3)
     return exam_text
+
+# Replace get_mnemonic with this:
+def get_deep_explanation(question_text):
+    prompt = f"""
+    Provide a comprehensive medical deep-dive for this question:
+    "{question_text}"
+    
+    Include:
+    1. **Pathophysiology**: Explain the underlying mechanism.
+    2. **Gold Standard**: Why the correct answer is the preferred clinical choice.
+    3. **Clinical Pearl**: A high-yield tip for board exams (e.g., 'Always look for X in a patient with Y').
+    """
+    return call_gemini_with_rotation(prompt, EXAM_MODEL, use_search=True)
 
 # ==========================================
 # 3. WEB INTERFACE
@@ -347,11 +262,13 @@ def get_blind_exam(topics_list, level, num_questions):
 st.title("Trainer")
 st.sidebar.header("Stats & Controls")
 
+# --- ADD THIS: Focus Mode Dropdown ---
 df_sidebar = pd.read_csv(CSV_FILE)
 categories = df_sidebar['category'].fillna("Uncategorized").astype(str).unique().tolist()
 all_categories = ["All Topics"] + sorted(categories)
 focus_mode = st.sidebar.selectbox("Focus Mode:", all_categories)
 
+# --- ADD THIS: Exam Filter Dropdown ---
 if 'exam' in df_sidebar.columns:
     exams = df_sidebar['exam'].fillna("Uncategorized").astype(str).unique().tolist()
     all_exams = ["All Exams"] + sorted(exams)
@@ -360,31 +277,30 @@ else:
     exam_filter = "All Exams"
 
 if st.sidebar.button("Generate New Exam"):
-    st.session_state.exam_submitted = False  
+    st.session_state.exam_submitted = False  # Add this line
     st.session_state.last_score = 0
-    st.session_state.user_selections = {}
-    st.session_state.validation_issues = None
-    st.session_state.fact_check_details = None
-    st.session_state.grading_feedback = None
-
+    st.session_state.user_selections = {}  # Clear previous selections
     n = st.session_state.num_questions
     try:
         df_main = pd.read_csv(CSV_FILE)
         df_notes = pd.read_csv(NOTES_FILE)
         df = pd.merge(df_main, df_notes, on=JOIN_COLUMN, how='left')
                 
+        # --- ADD THIS: Filter by category ---
         if focus_mode != "All Topics":
             df = df[df['category'] == focus_mode]
             if df.empty:
                 st.error(f"No questions found for {focus_mode}. Check your CSV.")
                 st.stop()
 
+        # --- ADD THIS: Filter by exam ---
         if exam_filter != "All Exams" and 'exam' in df.columns:
             df = df[df['exam'] == exam_filter]
             if df.empty:
                 st.error(f"No questions found for {exam_filter}. Check your CSV.")
                 st.stop()
 
+        # --- TOGGLE LOGIC ---
         if 'include' in df.columns:
             df = df[df['include'].astype(str).str.lower().str.strip() == 'y']
             
@@ -392,8 +308,12 @@ if st.sidebar.button("Generate New Exam"):
                 st.error("No active objectives found. Mark some as 'y' in your CSV.")
                 st.stop()
     
+
+        # --- SMART SAMPLING (SRS) ---
         if 'mastery_score' in df.columns:
+            # Convert mastery_score to integers for comparison
             df['mastery_score'] = pd.to_numeric(df['mastery_score'], errors='coerce').fillna(1).astype(int)
+            # Prioritize items with mastery <= 3
             weak_pool = df[df['mastery_score'] <= 3]
             if len(weak_pool) >= n:
                 st.session_state.samples_df = weak_pool.sample(n)
@@ -403,7 +323,9 @@ if st.sidebar.button("Generate New Exam"):
         else:
             st.session_state.samples_df = df.sample(min(n, len(df)))
         
+        # Use the session state version for the rest of the generation
         samples_df = st.session_state.samples_df
+        # ----------------------------
 
         if 'category' in samples_df.columns:
             st.session_state.current_categories = samples_df['category'].fillna('General').tolist()
@@ -413,12 +335,15 @@ if st.sidebar.button("Generate New Exam"):
         samples = (samples_df['explanation'] + "\n[Notes: " + samples_df['content'].fillna('') + "]").tolist()
         
         with st.spinner(f"Generating {n} questions at Level {st.session_state.current_level}..."):
-            # Generates immediately. Validation happens after submission.
             raw_response = get_blind_exam(samples, st.session_state.current_level, n)
-            
             if raw_response and "[KEY:" in raw_response:
+                # Use a split that keeps the questions separate from the key
                 text, key_part = raw_response.split("[KEY:")
+                
+                # CLEANING: Remove the key section from the visible text 
+                # so it doesn't show up in the last radio button question
                 st.session_state.current_exam = text.strip() 
+                
                 st.session_state.current_key = re.findall(r'[A-D]', key_part)
                 st.rerun()
             else:
@@ -426,13 +351,16 @@ if st.sidebar.button("Generate New Exam"):
     except Exception as e:
         st.error(f"File Error: Ensure {CSV_FILE} and {NOTES_FILE} are in the folder. ({e})")
 
+# Move Active Level metric here
 st.sidebar.metric("Active Level", f"{st.session_state.current_level}/50")
 
+# Settings button for sliders
 if st.sidebar.button("Settings", use_container_width=True):
     if 'show_settings' not in st.session_state:
         st.session_state.show_settings = False
     st.session_state.show_settings = not st.session_state.show_settings
 
+# Show sliders only when settings is expanded
 if st.session_state.get('show_settings', False):
     st.session_state.current_level = st.sidebar.slider("Starting Level", 1, 50, st.session_state.current_level)
     st.session_state.num_questions = st.sidebar.slider("Number of Questions", 3, 20, st.session_state.num_questions)
@@ -441,6 +369,7 @@ if st.session_state.get('show_settings', False):
     if st.sidebar.button("Reset Progress", help="Clear all saved progress and reset to defaults"):
         if os.path.exists("user_progress.json"):
             os.remove("user_progress.json")
+            # Reset session state to defaults
             st.session_state.current_level = 10
             st.session_state.num_questions = 10
             st.session_state.missed_questions = []
@@ -451,9 +380,6 @@ if st.session_state.get('show_settings', False):
             st.session_state.exam_submitted = False
             st.session_state.current_categories = []
             st.session_state.samples_df = None
-            st.session_state.validation_issues = None
-            st.session_state.fact_check_details = None
-            st.session_state.grading_feedback = None
             st.sidebar.success("Progress reset successfully!")
             st.rerun()
         else:
@@ -461,7 +387,9 @@ if st.session_state.get('show_settings', False):
     
     st.sidebar.markdown("---")
     st.sidebar.subheader("Knowledge Bank")
+    # Use the df_sidebar we loaded earlier
     if 'mastery_score' in df_sidebar.columns:
+        # Convert mastery_score to integers for comparison
         df_sidebar['mastery_score'] = pd.to_numeric(df_sidebar['mastery_score'], errors='coerce').fillna(1).astype(int)
         total_objs = len(df_sidebar)
         mastered = len(df_sidebar[df_sidebar['mastery_score'] == 5])
@@ -472,13 +400,20 @@ if st.session_state.get('show_settings', False):
         st.sidebar.caption(f"{progress_val*100:.1f}% of curriculum at Mastery Level 5")
 
 # Display the Exam
+
 if st.session_state.current_exam:
     st.info("Select the best answer for each clinical scenario below.")
     
+    # 1. CLEANING: Remove introductory fluff and trailing keys
     clean_text = st.session_state.current_exam.strip()
+    # Remove common AI intros like "Here are your questions..."
     clean_text = re.sub(r"^(Here are|Based on|Sure|I have generated).*?\n", "", clean_text, flags=re.IGNORECASE)
 
+    # 2. SPLITTING: Look for "1. ", "2. ", etc. at the START of a line only
+    # This prevents it from splitting on "1." inside a sentence
     raw_questions = re.split(r'\n(?=\d+\.\s)', clean_text)
+    
+    # Remove any empty strings resulting from the split
     individual_questions = [q.strip() for q in raw_questions if q.strip()]
 
     if 'user_selections' not in st.session_state:
@@ -488,157 +423,147 @@ if st.session_state.current_exam:
         for i, q_text in enumerate(individual_questions):
             st.subheader(f"Question {i+1}")
             
+            # Enhanced formatting: Add line breaks after questions and options
+            # 1. Add single HTML line break after question text before options
             formatted_q = re.sub(r"(\d+\.\s[^A-D]*?)(?=A\.)", r"\1<br>", q_text)
+            # 2. Add single HTML line break after each option (A., B., C., D.)
             formatted_q = re.sub(r"([A-D]\.\s[^A-D]*?)(?=[A-D]\.|$)", r"\1<br>", formatted_q)
+            # 3. Replace newlines with HTML breaks for better rendering
             formatted_q = formatted_q.replace("\n", "<br>")
+            # 4. Clean up any multiple consecutive breaks to maximum 1
             formatted_q = re.sub(r"(<br>){2,}", "<br>", formatted_q)
             
+            # Use markdown with HTML allowed for proper line breaks
             st.markdown(formatted_q, unsafe_allow_html=True)
             
+            # This makes the radio buttons cleaner - use exam content for unique key
             exam_content = st.session_state.get('current_exam', '')
             exam_content_hash = hash(exam_content) if exam_content else 0
             st.session_state.user_selections[i] = st.radio(
-                label=f"Select answer for Question {i+1}", 
+                label=f"Select answer for Question {i+1}", # Provide a real label
                 options=["A", "B", "C", "D"],
                 key=f"q_radio_{i}_{abs(exam_content_hash) % 1000}",
                 horizontal=True,
                 index=None,
-                label_visibility="collapsed" 
+                label_visibility="collapsed" # This hides the label visually
             )
             st.write("---")
         
         submitted = st.form_submit_button("Submit for Grading")
-        
     if submitted:
-        num_actual_questions = len(raw_questions)
-        user_answers = [st.session_state.user_selections[i] for i in range(num_actual_questions)]
-        user_input = "\n".join([f"Q{i+1}: {ans if ans else 'No Answer'}" for i, ans in enumerate(user_answers)])
-        
-        correct_key = st.session_state.current_key[:num_actual_questions]
-        correct_key_formatted = "\n".join([f"Q{i+1}: {ans}" for i, ans in enumerate(correct_key)])
-
-        st.session_state.last_user_input = user_input
-        st.session_state.last_correct_key = correct_key_formatted
-        
-        if len(user_answers) != len(correct_key):
-            st.error(f"Mismatch: The exam has {len(correct_key)} questions, but you entered {len(user_answers)} answers. Please fix your input.")
-            st.stop() 
-        score = 0
-        
-        df_main = pd.read_csv(CSV_FILE)
-        
-        raw_chunks = re.split(r'\n(?=\d+\.)', st.session_state.current_exam.strip())
-        individual_questions = [q for q in raw_chunks if re.match(r'^\d+\.', q.strip())]     
-
-        for i, (u_ans, correct) in enumerate(zip(user_answers, correct_key)):
-            original_idx = st.session_state.samples_df.index[i]
+            # Use actual number of questions from current exam
+            num_actual_questions = len(raw_questions)
             
-            if u_ans == correct:
-                score += 1
-                if 'mastery_score' in df_main.columns:
-                    df_main['mastery_score'] = pd.to_numeric(df_main['mastery_score'], errors='coerce').fillna(1).astype(int)
-                    df_main.at[original_idx, 'mastery_score'] = min(5, df_main.at[original_idx, 'mastery_score']) + mastery_change
-            else:
-                if 'mastery_score' in df_main.columns:
-                    df_main['mastery_score'] = pd.to_numeric(df_main['mastery_score'], errors='coerce').fillna(1).astype(int)
-                    df_main.at[original_idx, 'mastery_score'] = max(1, df_main.at[original_idx, 'mastery_score']) - mastery_change
-                
-                if i < len(individual_questions):
-                    st.session_state.missed_questions.append({
-                        "question": individual_questions[i].strip(),
-                        "correct": correct,
-                        "yours": u_ans,
-                        "category": st.session_state.current_categories[i] if i < len(st.session_state.current_categories) else "General"
-                    })
-        
-        df_main.to_csv(CSV_FILE, index=False)
-        
-        st.session_state.exam_submitted = True
-        st.session_state.last_score = score
-        st.session_state.last_user_input = user_input
+            # Convert dictionary to a sorted list of answers
+            user_answers = [st.session_state.user_selections[i] for i in range(num_actual_questions)]
+            user_input = "\n".join([f"Q{i+1}: {ans if ans else 'No Answer'}" for i, ans in enumerate(user_answers)])
+            
+            # Use only the first num_actual_questions answers from current_key
+            correct_key = st.session_state.current_key[:num_actual_questions]
+            correct_key_formatted = "\n".join([f"Q{i+1}: {ans}" for i, ans in enumerate(correct_key)])
 
-        # ---------------------------------------------------------
-        # NEW POST-SUBMISSION GRADING & VALIDATION PIPELINE
-        # ---------------------------------------------------------
-        with st.spinner("Instructor is grading, checking facts, and validating questions..."):
-            # 1. Get Grading Feedback
-            st.session_state.grading_feedback = get_ai_grading(
+            # Save this formatted version to session state
+            st.session_state.last_user_input = user_input
+            st.session_state.last_correct_key = correct_key_formatted
+            
+            if len(user_answers) != len(correct_key):
+                st.error(f"Mismatch: The exam has {len(correct_key)} questions, but you entered {len(user_answers)} answers. Please fix your input.")
+                st.stop() # Stops the code before it hits the loop and crashes
+            score = 0
+            
+            # --- ADDED: Load the CSV to update scores ---
+            df_main = pd.read_csv(CSV_FILE)
+            
+            raw_chunks = re.split(r'\n(?=\d+\.)', st.session_state.current_exam.strip())
+            individual_questions = [q for q in raw_chunks if re.match(r'^\d+\.', q.strip())]     
+
+            for i, (u_ans, correct) in enumerate(zip(user_answers, correct_key)):
+                # --- ADDED: Link the question back to the original CSV index ---
+                # We use st.session_state.samples_df to avoid the NameError
+                original_idx = st.session_state.samples_df.index[i]
+                
+                if u_ans == correct:
+                    score += 1
+                    # --- ADDED: Increase Mastery Score (Max 5) ---
+                    if 'mastery_score' in df_main.columns:
+                        # Convert mastery_score to integers for comparison
+                        df_main['mastery_score'] = pd.to_numeric(df_main['mastery_score'], errors='coerce').fillna(1).astype(int)
+                        df_main.at[original_idx, 'mastery_score'] = min(5, df_main.at[original_idx, 'mastery_score']) + mastery_change
+                else:
+                    # --- ADDED: Decrease Mastery Score (Min 1) ---
+                    if 'mastery_score' in df_main.columns:
+                        # Convert mastery_score to integers for comparison
+                        df_main['mastery_score'] = pd.to_numeric(df_main['mastery_score'], errors='coerce').fillna(1).astype(int)
+                        df_main.at[original_idx, 'mastery_score'] = max(1, df_main.at[original_idx, 'mastery_score']) - mastery_change
+                    
+                    if i < len(individual_questions):
+                        st.session_state.missed_questions.append({
+                            "question": individual_questions[i].strip(),
+                            "correct": correct,
+                            "yours": u_ans,
+                            "category": st.session_state.current_categories[i] if i < len(st.session_state.current_categories) else "General"
+                        })
+            
+            # --- ADDED: Save the changes back to your file ---
+            df_main.to_csv(CSV_FILE, index=False)
+            
+            # Save state so the feedback stays visible after submission
+            st.session_state.exam_submitted = True
+            st.session_state.last_score = score
+            st.session_state.last_user_input = user_input
+
+            # Update Level based on performance
+            num_actual_questions = len(user_answers)
+            percentage_correct = (score / num_actual_questions) * 100
+            questions_wrong = num_actual_questions - score
+            
+            # Level up if: only 1 question wrong OR 80%+ correct (whichever is lower threshold)
+            if questions_wrong <= 1 or percentage_correct >= 80:
+                st.session_state.current_level = min(50, st.session_state.current_level + 1)
+                st.success(f"Level Up! Now at Level {st.session_state.current_level}")
+            # Level down if: less than half correct
+            elif percentage_correct < 50:
+                st.session_state.current_level = max(1, st.session_state.current_level - 1)
+                st.warning(f"Level Down. Now at Level {st.session_state.current_level}")
+            else:
+                st.info(f"Score: {score}/{st.session_state.num_questions} ({percentage_correct:.0f}%) - Level maintained")
+
+# 2. THE FEEDBACK (Outside the form)
+    if st.session_state.get('exam_submitted'):
+        st.subheader(f"Results: {st.session_state.last_score}/{st.session_state.num_questions}")
+        
+        with st.spinner("Instructor is searching for the latest feedback..."):
+            # This keeps your original answer comparison and AI explanation
+            feedback = get_ai_grading(
                 st.session_state.current_exam, 
                 st.session_state.last_user_input, 
                 st.session_state.last_correct_key,
                 st.session_state.last_score
             )
-            
-            # 2. Structural Double-Check
-            is_valid, msg, issues = validate_questions_double_check(st.session_state.current_exam)
-            st.session_state.validation_issues = issues if not is_valid else []
-
-            # 3. Fact Checking via Google Search
-            questions = extract_questions_from_exam(st.session_state.current_exam)
-            all_valid, fact_check_details = validate_medical_facts_via_search(questions)
-            st.session_state.fact_check_details = fact_check_details
-        # ---------------------------------------------------------
-
-        # Adjust Levels based on score
-        num_actual_questions = len(user_answers)
-        percentage_correct = (score / num_actual_questions) * 100
-        questions_wrong = num_actual_questions - score
-        
-        if questions_wrong <= 1 or percentage_correct >= 80:
-            st.session_state.current_level = min(50, st.session_state.current_level + 1)
-            st.success(f"Level Up! Now at Level {st.session_state.current_level}")
-        elif percentage_correct < 50:
-            st.session_state.current_level = max(1, st.session_state.current_level - 1)
-            st.warning(f"Level Down. Now at Level {st.session_state.current_level}")
-        else:
-            st.info(f"Score: {score}/{st.session_state.num_questions} ({percentage_correct:.0f}%) - Level maintained")
-
-    if st.session_state.get('exam_submitted'):
-        st.subheader(f"Results: {st.session_state.last_score}/{st.session_state.num_questions}")
-        
-        # Display Grading Output
-        if st.session_state.get('grading_feedback'):
-            st.markdown(st.session_state.grading_feedback)
+            st.markdown(feedback)
 
         st.write("---")
         
-        # Display Fact-Checking & Validation Output
-        st.subheader("🔎 Post-Exam Fact Check & Validation")
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            if st.session_state.get('validation_issues'):
-                st.warning("⚠️ Formatting or Structural Issues Detected:")
-                for issue in st.session_state.validation_issues:
-                    st.write(f"- {issue}")
-            else:
-                st.success("✅ Structural Quality Check Passed")
-                
-        with col2:
-            if st.session_state.get('fact_check_details'):
-                if "ALL VALID" in st.session_state.fact_check_details.upper():
-                    st.success("✅ Fact-Check Passed (Information aligns with latest guidelines)")
-                else:
-                    st.warning("⚠️ Fact-Check Flagged Potential Inaccuracies")
-                    
-        if st.session_state.get('fact_check_details'):
-            with st.expander("View Detailed Medical Fact-Check Report"):
-                st.markdown(st.session_state.fact_check_details)
 
+# Missed Questions Bank in Sidebar
 if st.session_state.missed_questions:
+    # 1. THE HEATMAP (Visual)
     st.write("---")
     st.header("Weakness Heatmap")
     m_df = pd.DataFrame(st.session_state.missed_questions)
     if 'category' in m_df.columns:
         st.bar_chart(m_df['category'].value_counts(), color="#ff4b4b")
 
+    # 2. YOUR ORIGINAL SIDEBAR EXPORT (Preserved)
     st.sidebar.markdown("---")
     st.sidebar.subheader(f"Missed Questions ({len(st.session_state.missed_questions)})")
     if st.sidebar.button("Export Mistakes to .txt"):
         with open("missed_questions.txt", "a") as f:
             f.write(f"\n\n=== WEB SESSION: {time.strftime('%Y-%m-%d %H:%M')} ===\n")
             for item in st.session_state.missed_questions:
+                # Upgraded text format to include category in the file
                 cat = item.get('category', 'General')
                 f.write(f"\n[{cat}] {item['question']}\n[CORRECT: {item['correct']} | YOURS: {item['yours']}]\n")
         st.sidebar.success("Saved to missed_questions.txt")
+
+
