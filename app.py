@@ -63,14 +63,48 @@ st.sidebar.success(f"Logged in as: **{active_user}**")
 MASTER_CSV = "learning_objectives_informative_reports.csv" # Your master template
 USER_CSV = f"{active_user}_objectives.csv"                 # Their personal copy
 
-# If they are a new user, give them a fresh copy of the master CSV
-if not os.path.exists(USER_CSV):
-    try:
-        shutil.copy(MASTER_CSV, USER_CSV)
-    except FileNotFoundError:
-        st.error(f"Master file '{MASTER_CSV}' not found in folder!")
+# ==========================================
+# SMART CSV SYNCHRONIZATION
+# ==========================================
+CSV_FILE = USER_CSV
 
-CSV_FILE = USER_CSV # The rest of your code will now automatically read/write to the user's specific CSV!
+try:
+    if not os.path.exists(MASTER_CSV):
+        st.error(f"Fatal Error: Master template file '{MASTER_CSV}' not found!")
+        st.stop()
+        
+    df_master = pd.read_csv(MASTER_CSV)
+
+    if not os.path.exists(USER_CSV):
+        # Brand new user: Give them a clean copy of the master template
+        df_master.to_csv(USER_CSV, index=False)
+    else:
+        # Existing user: Safely sync new columns or rows without overwriting user data
+        df_user = pd.read_csv(USER_CSV)
+        is_updated = False
+
+        # 1. Sync Missing Columns (e.g., adding 'system' or 'exam' columns later)
+        missing_cols = [col for col in df_master.columns if col not in df_user.columns]
+        if missing_cols:
+            for col in missing_cols:
+                # Map the new column data from master to user using the JOIN_COLUMN
+                mapping = df_master.set_index(JOIN_COLUMN)[col].to_dict()
+                df_user[col] = df_user[JOIN_COLUMN].map(mapping)
+            is_updated = True
+
+        # 2. Sync Missing Rows (e.g., if you add new learning objectives to the master file)
+        missing_rows = df_master[~df_master[JOIN_COLUMN].isin(df_user[JOIN_COLUMN])]
+        if not missing_rows.empty:
+            df_user = pd.concat([df_user, missing_rows], ignore_index=True)
+            is_updated = True
+
+        # Save back to their personal CSV file only if changes were made
+        if is_updated:
+            df_user.to_csv(USER_CSV, index=False)
+            st.toast(f"🔄 Profile updated with latest curriculum structure!")
+
+except Exception as e:
+    st.error(f"Error handling profile sync: {e}")
 
 # Models
 # Note: Google Search works best with Flash/Pro (Lite may have tool limitations)
