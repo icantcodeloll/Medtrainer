@@ -390,7 +390,7 @@ else:
 # --- ADD THIS: Systems Filter Dropdown ---
 if 'system' in df_sidebar.columns:
     system = df_sidebar['system'].fillna("Uncategorized").astype(str).unique().tolist()
-    all_systems = ["All Systems"] + sorted(exams)
+    all_systems = ["All Systems"] + sorted(system)
     system_filter = st.sidebar.selectbox("System Filter:", all_systems)
 else:
     system_filter = "All Systems"
