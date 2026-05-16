@@ -436,7 +436,7 @@ if st.sidebar.button("Generate New Exam"):
 
         # --- ADD THIS: Filter by system ---
         if system_filter != "All Systems" and 'system' in df.columns:
-            df = df[df['exam'] == system_filter]
+            df = df[df['system'] == system_filter]
             if df.empty:
                 st.error(f"No questions found for {system_filter}. Check your CSV.")
                 st.stop()
