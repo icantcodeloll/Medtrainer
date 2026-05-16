@@ -387,6 +387,14 @@ if 'exam' in df_sidebar.columns:
 else:
     exam_filter = "All Exams"
 
+# --- ADD THIS: Systems Filter Dropdown ---
+if 'system' in df_sidebar.columns:
+    system = df_sidebar['system'].fillna("Uncategorized").astype(str).unique().tolist()
+    all_systems = ["All Systems"] + sorted(exams)
+    system_filter = st.sidebar.selectbox("System Filter:", all_systems)
+else:
+    system_filter = "All Systems"
+
 if st.sidebar.button("Generate New Exam"):
     # --- NEW: BACKUP THE CURRENT EXAM BEFORE OVERWRITING ---
     if st.session_state.get('current_exam'):
@@ -426,6 +434,13 @@ if st.sidebar.button("Generate New Exam"):
                 st.error(f"No questions found for {exam_filter}. Check your CSV.")
                 st.stop()
 
+        # --- ADD THIS: Filter by system ---
+        if system_filter != "All Systems" and 'system' in df.columns:
+            df = df[df['exam'] == system_filter]
+            if df.empty:
+                st.error(f"No questions found for {system_filter}. Check your CSV.")
+                st.stop()
+        
         # --- TOGGLE LOGIC ---
         if 'include' in df.columns:
             df = df[df['include'].astype(str).str.lower().str.strip() == 'y']
