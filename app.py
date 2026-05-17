@@ -41,8 +41,6 @@ JOIN_COLUMN = "lecture_id"
 # ==========================================
 # 1A. PROFILE MANAGEMENT
 # ==========================================
-st.sidebar.header("Select Profile")
-
 if 'username' not in st.session_state:
     st.session_state.username = "Default"
 
@@ -653,7 +651,7 @@ if st.session_state.get('show_settings', False):
         value=False,  # Sets the default state to ON
         help="Turn off on fast mode."
     )
-    
+
     st.sidebar.markdown("---")
     if st.sidebar.button("Reset Progress", help="Clear all saved progress and reset to defaults"):
         if os.path.exists("user_progress.json"):
