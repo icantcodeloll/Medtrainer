@@ -553,6 +553,8 @@ if st.sidebar.button("Generate New Exam"):
     except Exception as e:
         st.error(f"File Error: Ensure {CSV_FILE} and {NOTES_FILE} are in the folder. ({e})")
 
+# Replace mastery_mode = "off" with this:
+mastery_mode = "on" if st.sidebar.checkbox("Mastery Mode", value=False) else "off"
 
 # --- NEW: Double-Sided Model Switch ---
 st.sidebar.markdown("**Speed:**")
