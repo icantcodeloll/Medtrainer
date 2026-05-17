@@ -113,6 +113,22 @@ GRADER_MODEL = 'gemini-3.1-flash-lite-preview'
 
 #Models that work: gemini-2.5-flash, gemini-2.5-flash-lite
 
+
+# ==========================================
+# 1B. EXAM WEIGHTINGS (Percentages or Relative Ratios)
+# ==========================================
+# Adjust these numbers to match your actual blueprint (e.g., USMLE, Board exams)
+EXAM_WEIGHTS = {
+    "Anatomy": 0.28, #42
+    "Physiology": 0.40, #62
+    "Pharmacology": 0.15, #23
+    "Nutrition": 0.06, #6
+    "Microbiology": 0.06, #9
+    "Immunology": 0.01, #2
+    "Uncategorized": 0.04      
+}
+
+
 mastery_mode = "off"
 
 if mastery_mode == "on":
@@ -490,22 +506,33 @@ if st.sidebar.button("Generate New Exam"):
                 st.error("No active objectives found. Mark some as 'y' in your CSV.")
                 st.stop()
     
-
-        # --- SMART SAMPLING (SRS) ---
-        if 'mastery_score' in df.columns:
-            # Convert mastery_score to integers for comparison
-            df['mastery_score'] = pd.to_numeric(df['mastery_score'], errors='coerce').fillna(1).astype(int)
-            # Prioritize items with mastery <= 3
-            weak_pool = df[df['mastery_score'] <= 3]
-            if len(weak_pool) >= n:
-                st.session_state.samples_df = weak_pool.sample(n)
-            else:
-                st.session_state.samples_df = df.sample(n)
-            st.sidebar.info("Smart Sampling: Prioritizing weak areas.")
-        else:
-            st.session_state.samples_df = df.sample(min(n, len(df)))
+        # --- SMART SAMPLING (EXAM WEIGHTED + SRS) ---
+        # 1. Map exam weights to the dataframe based on category
+        df['topic_weight'] = df['category'].map(EXAM_WEIGHTS).fillna(0.05)
         
-        # Use the session state version for the rest of the generation
+        # 2. Factor in Mastery Score if it exists
+        if 'mastery_score' in df.columns:
+            df['mastery_score'] = pd.to_numeric(df['mastery_score'], errors='coerce').fillna(1).astype(int)
+            
+            # Inverse mastery modifier: lower mastery (1-3) increases the chance of being picked
+            # e.g., Mastery 1 gets a 5x multiplier, Mastery 5 gets a 1x multiplier
+            df['mastery_modifier'] = 6 - df['mastery_score']
+            
+            # Combined sampling weight = Exam BluePrint Weight * Mastery Need
+            df['sampling_weight'] = df['topic_weight'] * df['mastery_modifier']
+        else:
+            df['sampling_weight'] = df['topic_weight']
+
+        # 3. Sample using the calculated weights
+        try:
+            # We use replace=False so we don't duplicate questions in the same exam
+            st.session_state.samples_df = df.sample(min(n, len(df)), weights='sampling_weight', replace=False)
+            st.sidebar.info("Smart Sampling: Balanced by Exam Weights & Weak Areas.")
+        except ValueError:
+            # Fallback if weights math fails (e.g., all weights are zero)
+            st.session_state.samples_df = df.sample(min(n, len(df)))
+            st.sidebar.warning("Fallback Sampling: Standard random generation used.")
+        
         samples_df = st.session_state.samples_df
         # ----------------------------
 
