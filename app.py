@@ -408,7 +408,7 @@ st.session_state.exam_model = 'gemini-2.5-flash' if "Slow" in model_choice else 
 st.sidebar.markdown("**Grounding:**")
 st.session_state.use_search = st.sidebar.toggle(
     label="Enable Google Search",
-    value=True,  # Sets the default state to ON
+    value=False,  # Sets the default state to ON
     help="Turn off on fast mode."
 )
 
