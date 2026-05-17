@@ -407,50 +407,8 @@ def get_blind_exam(topics_list, level, num_questions):
 st.title("Trainer")
 st.sidebar.header("Stats & Controls")
 
-# --- NEW: Double-Sided Model Switch ---
-st.sidebar.markdown("**Speed:**")
-model_choice = st.sidebar.radio(
-    label="Speed",
-    label_visibility="collapsed", # Hides the label so it just looks like a switch
-    options=["Fast", "Slow & Smart"],
-    index=1 if st.session_state.get('exam_model', 'gemini-2.5-flash') == 'gemini-2.5-flash' else 0,
-    horizontal=True, # This forces them side-by-side like a double switch!
-    help="Fast uses Flash-Lite. Slow & Smart uses Flash."
-)
-
-# Update memory
-st.session_state.exam_model = 'gemini-2.5-flash' if "Slow" in model_choice else 'gemini-3.1-flash-lite-preview'
-
-st.sidebar.markdown("**Grounding:**")
-st.session_state.use_search = st.sidebar.toggle(
-    label="Enable Google Search",
-    value=False,  # Sets the default state to ON
-    help="Turn off on fast mode."
-)
-
-st.sidebar.markdown("---")
-
-# --- ADD THIS: Focus Mode Dropdown ---
-df_sidebar = pd.read_csv(CSV_FILE)
-categories = df_sidebar['category'].fillna("Uncategorized").astype(str).unique().tolist()
-all_categories = ["All Topics"] + sorted(categories)
-focus_mode = st.sidebar.selectbox("Focus Mode:", all_categories)
-
-# --- ADD THIS: Exam Filter Dropdown ---
-if 'exam' in df_sidebar.columns:
-    exams = df_sidebar['exam'].fillna("Uncategorized").astype(str).unique().tolist()
-    all_exams = ["All Exams"] + sorted(exams)
-    exam_filter = st.sidebar.selectbox("Exam Filter:", all_exams)
-else:
-    exam_filter = "All Exams"
-
-# --- ADD THIS: Systems Filter Dropdown ---
-if 'system' in df_sidebar.columns:
-    system = df_sidebar['system'].fillna("Uncategorized").astype(str).unique().tolist()
-    all_systems = ["All Systems"] + sorted(system)
-    system_filter = st.sidebar.selectbox("System Filter:", all_systems)
-else:
-    system_filter = "All Systems"
+# Move Active Level metric here
+st.sidebar.metric("Active Level", f"{st.session_state.current_level}/50")
 
 if st.sidebar.button("Generate New Exam"):
     # --- NEW: BACKUP THE CURRENT EXAM BEFORE OVERWRITING ---
@@ -578,8 +536,52 @@ if st.sidebar.button("Generate New Exam"):
     except Exception as e:
         st.error(f"File Error: Ensure {CSV_FILE} and {NOTES_FILE} are in the folder. ({e})")
 
-# Move Active Level metric here
-st.sidebar.metric("Active Level", f"{st.session_state.current_level}/50")
+
+# --- NEW: Double-Sided Model Switch ---
+st.sidebar.markdown("**Speed:**")
+model_choice = st.sidebar.radio(
+    label="Speed",
+    label_visibility="collapsed", # Hides the label so it just looks like a switch
+    options=["Fast", "Slow & Smart"],
+    index=1 if st.session_state.get('exam_model', 'gemini-2.5-flash') == 'gemini-2.5-flash' else 0,
+    horizontal=True, # This forces them side-by-side like a double switch!
+    help="Fast uses Flash-Lite. Slow & Smart uses Flash."
+)
+
+# Update memory
+st.session_state.exam_model = 'gemini-2.5-flash' if "Slow" in model_choice else 'gemini-3.1-flash-lite-preview'
+
+st.sidebar.markdown("**Grounding:**")
+st.session_state.use_search = st.sidebar.toggle(
+    label="Enable Google Search",
+    value=False,  # Sets the default state to ON
+    help="Turn off on fast mode."
+)
+
+st.sidebar.markdown("---")
+
+# --- ADD THIS: Focus Mode Dropdown ---
+df_sidebar = pd.read_csv(CSV_FILE)
+categories = df_sidebar['category'].fillna("Uncategorized").astype(str).unique().tolist()
+all_categories = ["All Topics"] + sorted(categories)
+focus_mode = st.sidebar.selectbox("Focus Mode:", all_categories)
+
+# --- ADD THIS: Exam Filter Dropdown ---
+if 'exam' in df_sidebar.columns:
+    exams = df_sidebar['exam'].fillna("Uncategorized").astype(str).unique().tolist()
+    all_exams = ["All Exams"] + sorted(exams)
+    exam_filter = st.sidebar.selectbox("Exam Filter:", all_exams)
+else:
+    exam_filter = "All Exams"
+
+# --- ADD THIS: Systems Filter Dropdown ---
+if 'system' in df_sidebar.columns:
+    system = df_sidebar['system'].fillna("Uncategorized").astype(str).unique().tolist()
+    all_systems = ["All Systems"] + sorted(system)
+    system_filter = st.sidebar.selectbox("System Filter:", all_systems)
+else:
+    system_filter = "All Systems"
+
 
 # --- NEW: RESTORE BACKUP BUTTON ---
 if st.session_state.get('previous_test_data'):
