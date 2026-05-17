@@ -271,7 +271,7 @@ def get_ai_grading(exam_text, user_answers, correct_key, score):
     """
     
     # Using search during grading ensures explanations match current guidelines
-    return call_gemini_with_rotation(prompt, GRADER_MODEL, use_search=True)
+    return call_gemini_with_rotation(prompt, GRADER_MODEL, use_search=st.session_state.use_search)
 
 def validate_exam_format(exam_text, expected_questions):
     return True, "Validation temporarily disabled" # <--- ADD THIS LINE HERE
@@ -383,7 +383,7 @@ def get_blind_exam(topics_list, level, num_questions):
     """
     
     # Single call to the model using the TOGGLE'S value
-    exam_text = call_gemini_with_rotation(prompt, st.session_state.exam_model, use_search=False, timeout_per_question=3)
+    exam_text = call_gemini_with_rotation(prompt, st.session_state.exam_model, use_search=st.session_state.use_search, timeout_per_question=3)
     return exam_text
 # ==========================================
 # 3. WEB INTERFACE
@@ -404,8 +404,15 @@ model_choice = st.sidebar.radio(
 
 # Update memory
 st.session_state.exam_model = 'gemini-2.5-flash' if "Slow" in model_choice else 'gemini-3.1-flash-lite-preview'
+
+st.sidebar.markdown("**Grounding:**")
+st.session_state.use_search = st.sidebar.toggle(
+    label="Enable Google Search",
+    value=True,  # Sets the default state to ON
+    help="Turn off to save API quota or speed up generation. Turn on for real-time medical guidelines."
+)
+
 st.sidebar.markdown("---")
-# -------------------------------
 
 # --- ADD THIS: Focus Mode Dropdown ---
 df_sidebar = pd.read_csv(CSV_FILE)
