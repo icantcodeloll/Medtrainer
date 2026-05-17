@@ -769,39 +769,44 @@ if st.session_state.current_exam:
                 st.stop() # Stops the code before it hits the loop and crashes
             score = 0
             
-            # --- ADDED: Load the CSV to update scores ---
+            # --- FIXED: Load the CSV to update scores ---
             df_main = pd.read_csv(CSV_FILE)
 
             if 'mastery_score' in df_main.columns:
-                # Convert mastery_score to integers for comparison
                 df_main['mastery_score'] = pd.to_numeric(df_main['mastery_score'], errors='coerce').fillna(1).astype(int)
 
             for i, (u_ans, correct) in enumerate(zip(user_answers, correct_key)):
-                # --- ADDED: Link the question back to the original CSV index ---
-                # We use st.session_state.samples_df to avoid the NameError
+                # Link the question back to the original CSV index
                 original_idx = st.session_state.samples_df.index[i]
+                
+                # Fetch the current score safely before modifying it
+                current_score = int(df_main.at[original_idx, 'mastery_score']) if 'mastery_score' in df_main.columns else 1
                 
                 if u_ans == correct:
                     score += 1
-                    # --- ADDED: Increase Mastery Score (Max 5) ---
-                    if 'mastery_score' in df_main.columns:
-                        # Convert mastery_score to integers for comparison
-                        df_main.at[original_idx, 'mastery_score'] = min(5, df_main.at[original_idx, 'mastery_score']) + mastery_change
+                    # Increase Mastery Score safely (Hard Cap at 5)
+                    if 'mastery_score' in df_main.columns and mastery_mode == "on":
+                        new_score = min(5, current_score + 1)
+                        df_main.at[original_idx, 'mastery_score'] = new_score
                 else:
-                    # --- ADDED: Decrease Mastery Score (Min 1) ---
-                    if 'mastery_score' in df_main.columns:
-                        # Convert mastery_score to integers for comparison
-                        df_main.at[original_idx, 'mastery_score'] = max(1, df_main.at[original_idx, 'mastery_score']) - mastery_change
+                    # Decrease Mastery Score safely (Floor Cap at 1)
+                    if 'mastery_score' in df_main.columns and mastery_mode == "on":
+                        new_score = max(1, current_score - 1)
+                        df_main.at[original_idx, 'mastery_score'] = new_score
                     
                     if i < len(individual_questions):
                         st.session_state.missed_questions.append({
                             "question": individual_questions[i].strip(),
                             "correct": correct,
                             "yours": u_ans,
-                            "category": st.session_state.current_categories[i] if i < len(st.session_state.current_categories) else "General"
+                            "category": st.session_state.current_categories[i] if i < len(st.session_state.current_categories) else "General",
                         })
             
-            # --- ADDED: Save the changes back to your file ---
+            # --- Ensure the column keeps its clean integer type before saving ---
+            if 'mastery_score' in df_main.columns:
+                df_main['mastery_score'] = df_main['mastery_score'].astype(int)
+
+            # Save the changes back to your file
             df_main.to_csv(CSV_FILE, index=False)
             
             # Save state so the feedback stays visible after submission
