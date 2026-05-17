@@ -556,27 +556,6 @@ if st.sidebar.button("Generate New Exam"):
 # Replace mastery_mode = "off" with this:
 mastery_mode = "on" if st.sidebar.checkbox("Mastery Mode", value=False) else "off"
 
-# --- NEW: Double-Sided Model Switch ---
-st.sidebar.markdown("**Speed:**")
-model_choice = st.sidebar.radio(
-    label="Speed",
-    label_visibility="collapsed", # Hides the label so it just looks like a switch
-    options=["Fast", "Slow & Smart"],
-    index=1 if st.session_state.get('exam_model', 'gemini-2.5-flash') == 'gemini-2.5-flash' else 0,
-    horizontal=True, # This forces them side-by-side like a double switch!
-    help="Fast uses Flash-Lite. Slow & Smart uses Flash."
-)
-
-# Update memory
-st.session_state.exam_model = 'gemini-2.5-flash' if "Slow" in model_choice else 'gemini-3.1-flash-lite-preview'
-
-st.sidebar.markdown("**Grounding:**")
-st.session_state.use_search = st.sidebar.toggle(
-    label="Enable Google Search",
-    value=False,  # Sets the default state to ON
-    help="Turn off on fast mode."
-)
-
 st.sidebar.markdown("---")
 
 # --- ADD THIS: Focus Mode Dropdown ---
@@ -651,6 +630,29 @@ if st.sidebar.button("Settings", use_container_width=True):
 if st.session_state.get('show_settings', False):
     st.session_state.current_level = st.sidebar.slider("Starting Level", 1, 50, st.session_state.current_level)
     st.session_state.num_questions = st.sidebar.slider("Number of Questions", 1, 50, st.session_state.num_questions)
+    
+    st.sidebar.markdown("---")
+    
+    # --- NEW: Double-Sided Model Switch ---
+    st.sidebar.markdown("**Speed:**")
+    model_choice = st.sidebar.radio(
+        label="Speed",
+        label_visibility="collapsed", # Hides the label so it just looks like a switch
+        options=["Fast", "Slow & Smart"],
+        index=1 if st.session_state.get('exam_model', 'gemini-2.5-flash') == 'gemini-2.5-flash' else 0,
+        horizontal=True, # This forces them side-by-side like a double switch!
+        help="Fast uses Flash-Lite. Slow & Smart uses Flash."
+    )
+
+    # Update memory
+    st.session_state.exam_model = 'gemini-2.5-flash' if "Slow" in model_choice else 'gemini-3.1-flash-lite-preview'
+
+    st.sidebar.markdown("**Grounding:**")
+    st.session_state.use_search = st.sidebar.toggle(
+        label="Enable Google Search",
+        value=False,  # Sets the default state to ON
+        help="Turn off on fast mode."
+    )
     
     st.sidebar.markdown("---")
     if st.sidebar.button("Reset Progress", help="Clear all saved progress and reset to defaults"):
