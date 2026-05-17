@@ -10,6 +10,7 @@ from progress_manager import save_progress, load_progress
 import shutil # Add this to your imports at the top of the file
 import tempfile
 import random
+import datetime
 try:
     from fpdf import FPDF
 except ImportError:
@@ -62,6 +63,22 @@ st.sidebar.success(f"Logged in as: **{active_user}**")
 # Set up user-specific files
 MASTER_CSV = "learning_objectives_informative_reports.csv" # Your master template
 USER_CSV = f"{active_user}_objectives.csv"                 # Their personal copy
+
+def backup_user_data(user_csv):
+    """Creates a timestamped backup of the user's data before any processing happens."""
+    if os.path.exists(user_csv):
+        backup_dir = "user_backups"
+        os.makedirs(backup_dir, exist_ok=True)
+        
+        # Generates a timestamp like: 20260518_085900
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        backup_filename = f"{os.path.basename(user_csv)}.{timestamp}.bak"
+        backup_path = os.path.join(backup_dir, backup_filename)
+        
+        shutil.copy(user_csv, backup_path)
+
+# Run the backup immediately right here!
+backup_user_data(USER_CSV)
 
 # ==========================================
 # SMART CSV SYNCHRONIZATION
