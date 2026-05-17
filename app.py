@@ -409,7 +409,7 @@ st.sidebar.markdown("**Grounding:**")
 st.session_state.use_search = st.sidebar.toggle(
     label="Enable Google Search",
     value=True,  # Sets the default state to ON
-    help="Turn off to save API quota or speed up generation. Turn on for real-time medical guidelines."
+    help="Turn off on fast mode."
 )
 
 st.sidebar.markdown("---")
