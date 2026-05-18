@@ -510,18 +510,19 @@ if st.sidebar.button("Generate New Exam"):
         # 1. Map exam weights to the dataframe based on category
         df['topic_weight'] = df['category'].map(EXAM_WEIGHTS).fillna(0.05)
         
-        # 2. Factor in Mastery Score if it exists
-        if 'mastery_score' in df.columns:
+        # Factor in Mastery Score ONLY if column exists AND Mastery Mode is toggled ON
+        if mastery_mode == "on" and 'mastery_score' in df.columns:
             df['mastery_score'] = pd.to_numeric(df['mastery_score'], errors='coerce').fillna(1).astype(int)
-            
-            # Inverse mastery modifier: lower mastery (1-3) increases the chance of being picked
-            # e.g., Mastery 1 gets a 5x multiplier, Mastery 5 gets a 1x multiplier
+
+            # Inverse mastery modifier: lower mastery (1-3) increases chance of being picked
             df['mastery_modifier'] = 6 - df['mastery_score']
-            
+
             # Combined sampling weight = Exam BluePrint Weight * Mastery Need
             df['sampling_weight'] = df['topic_weight'] * df['mastery_modifier']
         else:
+            # Standard blueprint sampling when mastery mode is off
             df['sampling_weight'] = df['topic_weight']
+    
 
         # 3. Sample using the calculated weights
         try:
