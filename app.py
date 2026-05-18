@@ -165,7 +165,7 @@ if 'num_questions' not in st.session_state:
 if 'missed_questions' not in st.session_state:
     st.session_state.missed_questions = loaded_progress.get("missed_questions", [])
 if 'current_exam' not in st.session_state:
-    st.session_state.current_exam = loaded_progress.get("current_exam", None)
+    st.session_state.current_exam = loaded_progress.get("current_exam", "")
 if 'current_key' not in st.session_state:
     st.session_state.current_key = loaded_progress.get("current_key", [])
 if 'key_index' not in st.session_state:
@@ -174,16 +174,19 @@ if 'key_index' not in st.session_state:
 if 'current_categories' not in st.session_state:
     st.session_state.current_categories = loaded_progress.get("current_categories", [])
 if 'samples_df' not in st.session_state:
-    st.session_state.samples_df = loaded_progress.get("samples_df", None)
+    st.session_state.samples_df = loaded_progress.get("samples_df", pd.DataFrame())
 if 'previous_test_data' not in st.session_state:
     st.session_state.previous_test_data = {}
 
 # Register auto-save on app shutdown
 if st.sidebar.button("Save Progress", help="Manually save your current progress"):
-    if save_progress(st.session_state, active_user):
-        st.sidebar.success("Progress saved successfully!")
-    else:
-        st.sidebar.error("Failed to save progress")
+    try:
+        if save_progress(st.session_state, active_user):
+            st.sidebar.success("Progress saved successfully!")
+        else:
+            st.sidebar.error("Failed to save progress")
+    except Exception as e:
+        st.sidebar.error(f"Serialization Error: Could not save progress yet. ({e})")
 
 def get_client():
     return genai.Client(api_key=API_KEYS[st.session_state.key_index])
