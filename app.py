@@ -217,25 +217,17 @@ if st.session_state.current_exam:
             st.session_state.last_user_answers_list = user_answers
             
             score = 0
-            
-            # Load the user profile dataframe 
+        
             df_main = pd.read_csv(USER_CSV)
-            
-            # Clean up the column names just in case
             df_main.columns = df_main.columns.str.strip().str.lower()
             
             for i, (u_ans, correct) in enumerate(zip(user_answers, correct_key)):
-                # 1. Get the exact lecture_id for this question from your sample tracker
+                # Match the question safely by its unique lecture_id string instead of integer position
                 current_lecture_id = st.session_state.samples_df.iloc[i]['lecture_id']
-                
-                # 2. Find exactly where that lecture_id lives in the master profile
                 row_mask = df_main['lecture_id'] == current_lecture_id
                 
                 if row_mask.any():
-                    # Get the index label of that matching row safely
                     target_idx = df_main[row_mask].index[0]
-                    
-                    # Read current score
                     c_score = int(df_main.at[target_idx, 'mastery_score']) if 'mastery_score' in df_main.columns else 1
                     
                     if u_ans == correct:
@@ -245,7 +237,6 @@ if st.session_state.current_exam:
                     else:
                         if 'mastery_score' in df_main.columns and mastery_mode == "on": 
                             df_main.at[target_idx, 'mastery_score'] = max(1, c_score - 1)
-                            
                         st.session_state.missed_questions.append({
                             "question": individual_questions[i], 
                             "correct": correct, 
@@ -253,11 +244,11 @@ if st.session_state.current_exam:
                             "category": st.session_state.current_categories[i]
                         })
                 else:
-                    # Fallback just in case row can't be matched by ID
                     if u_ans == correct:
                         score += 1
             
-            # 3. Save the score changes back to your profile tracking CSV
+            if 'mastery_score' in df_main.columns: 
+                df_main['mastery_score'] = df_main['mastery_score'].astype(int)
             df_main.to_csv(USER_CSV, index=False)
             
             st.session_state.exam_submitted = True
