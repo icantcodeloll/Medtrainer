@@ -75,13 +75,16 @@ if 'current_key' not in st.session_state: st.session_state.current_key = []
 if 'key_index' not in st.session_state: st.session_state.key_index = random.randint(0, len(API_KEYS) - 1)
 if 'previous_test_data' not in st.session_state: st.session_state.previous_test_data = {}
 
-# 2. Hand off restoration to progress_manager.py
+# 2. Hand off restoration to progress_manager.py (wipes out missing fields)
 if loaded_progress:
     restore_progress(st.session_state, loaded_progress)
 
-# 3. FORCE INITIALIZE THE MODEL HERE (Safe from being overwritten by step 2!)
+# 3. FORCE INITIALIZE UNTRACKED CONFIGS HERE (Safe from step 2!)
 if 'exam_model' not in st.session_state or not st.session_state.exam_model:
-    st.session_state.exam_model = 'gemini-3.1-flash-lite-preview'
+    st.session_state.exam_model = 'gemini-2.5-flash-lite'
+
+if 'use_search' not in st.session_state:
+    st.session_state.use_search = False  # Default Google Search option to False
 
 if st.sidebar.button("Save Progress", help="Manually save your current progress"):
     # Pass the session state context and active username string explicitly
