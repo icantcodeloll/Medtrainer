@@ -112,9 +112,20 @@ if st.session_state.get('show_settings', False):
     st.session_state.current_level = st.sidebar.slider("Starting Level", 1, 50, st.session_state.current_level)
     st.session_state.num_questions = st.sidebar.slider("Number of Questions", 1, 50, st.session_state.num_questions)
 
-model_choice = st.sidebar.radio("Speed", options=["Fast", "Slow & Smart"], index=1, horizontal=True, label_visibility="collapsed")
-st.session_state.exam_model = 'gemini-2.5-flash' if "Slow" in model_choice else 'gemini-3.1-flash-lite-preview'
-st.session_state.use_search = st.sidebar.toggle("Enable Google Search", value=False)
+    model_choice = st.sidebar.radio("Speed", options=["Fast", "Slow & Smart"], index=1, horizontal=True, label_visibility="collapsed")
+    st.session_state.exam_model = 'gemini-2.5-flash' if "Slow" in model_choice else 'gemini-3.1-flash-lite-preview'
+    st.session_state.use_search = st.sidebar.toggle("Enable Google Search", value=False)
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("Knowledge Bank")
+    if 'mastery_score' in df_sidebar.columns:
+        df_sidebar['mastery_score'] = pd.to_numeric(df_sidebar['mastery_score'], errors='coerce').fillna(1).astype(int)
+        total_objs = len(df_sidebar)
+        mastered = len(df_sidebar[df_sidebar['mastery_score'] == 5])
+        progress_val = mastered / total_objs if total_objs > 0 else 0
+        
+        st.sidebar.write(f"Mastered: {mastered} / {total_objs}")
+        st.sidebar.progress(progress_val)
+        st.sidebar.caption(f"{progress_val*100:.1f}% of curriculum at Mastery Level 5")
 
 if st.sidebar.button("Reset Progress"):
     if os.path.exists("user_progress.json"): os.remove("user_progress.json")
