@@ -425,6 +425,30 @@ st.sidebar.header("Stats & Controls")
 # Move Active Level metric here
 st.sidebar.metric("Active Level", f"{st.session_state.current_level}/50")
 
+# --- ADD THIS: Focus Mode Dropdown ---
+df_sidebar = pd.read_csv(CSV_FILE)
+categories = df_sidebar['category'].fillna("Uncategorized").astype(str).unique().tolist()
+all_categories = ["All Topics"] + sorted(categories)
+focus_mode = st.sidebar.selectbox("Focus Mode:", all_categories)
+
+# --- ADD THIS: Exam Filter Dropdown ---
+if 'exam' in df_sidebar.columns:
+    exams = df_sidebar['exam'].fillna("Uncategorized").astype(str).unique().tolist()
+    all_exams = ["All Exams"] + sorted(exams)
+    exam_filter = st.sidebar.selectbox("Exam Filter:", all_exams)
+else:
+    exam_filter = "All Exams"
+
+# --- ADD THIS: Systems Filter Dropdown ---
+if 'system' in df_sidebar.columns:
+    system = df_sidebar['system'].fillna("Uncategorized").astype(str).unique().tolist()
+    all_systems = ["All Systems"] + sorted(system)
+    system_filter = st.sidebar.selectbox("System Filter:", all_systems)
+else:
+    system_filter = "All Systems"
+
+
+
 if st.sidebar.button("Generate New Exam"):
     # --- NEW: BACKUP THE CURRENT EXAM BEFORE OVERWRITING ---
     if st.session_state.get('current_exam'):
@@ -555,28 +579,6 @@ if st.sidebar.button("Generate New Exam"):
 mastery_mode = "on" if st.sidebar.checkbox("Mastery Mode", value=False) else "off"
 
 st.sidebar.markdown("---")
-
-# --- ADD THIS: Focus Mode Dropdown ---
-df_sidebar = pd.read_csv(CSV_FILE)
-categories = df_sidebar['category'].fillna("Uncategorized").astype(str).unique().tolist()
-all_categories = ["All Topics"] + sorted(categories)
-focus_mode = st.sidebar.selectbox("Focus Mode:", all_categories)
-
-# --- ADD THIS: Exam Filter Dropdown ---
-if 'exam' in df_sidebar.columns:
-    exams = df_sidebar['exam'].fillna("Uncategorized").astype(str).unique().tolist()
-    all_exams = ["All Exams"] + sorted(exams)
-    exam_filter = st.sidebar.selectbox("Exam Filter:", all_exams)
-else:
-    exam_filter = "All Exams"
-
-# --- ADD THIS: Systems Filter Dropdown ---
-if 'system' in df_sidebar.columns:
-    system = df_sidebar['system'].fillna("Uncategorized").astype(str).unique().tolist()
-    all_systems = ["All Systems"] + sorted(system)
-    system_filter = st.sidebar.selectbox("System Filter:", all_systems)
-else:
-    system_filter = "All Systems"
 
 
 # --- NEW: RESTORE BACKUP BUTTON ---
