@@ -74,9 +74,13 @@ if 'current_key' not in st.session_state: st.session_state.current_key = []
 if 'key_index' not in st.session_state: st.session_state.key_index = random.randint(0, 0) # Adjust based on API key count
 if 'previous_test_data' not in st.session_state: st.session_state.previous_test_data = {}
 
-# 2. Automatically inject saved progress data into the active session
+# In app.py inside your startup progress restoration section:
 if loaded_progress:
     restore_progress(st.session_state, loaded_progress)
+    
+    # FORCE RESET EXAM SUBMISSION ON FRESH BOOT OR PROFILE SWITCH
+    st.session_state.exam_submitted = False
+    st.session_state.current_exam = ""  # Clears out old exam blocks
 
 if st.sidebar.button("Save Progress", help="Manually save your current progress"):
     # Pass the session state context and active username string explicitly
