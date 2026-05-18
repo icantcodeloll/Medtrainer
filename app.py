@@ -148,9 +148,15 @@ if st.sidebar.button("Generate New Exam"):
     if st.session_state.get('current_exam'):
         st.session_state.previous_test_data = {k: st.session_state.get(k) for k in ['current_exam', 'current_key', 'user_selections', 'exam_submitted', 'last_score', 'last_user_input', 'last_correct_key', 'last_user_answers_list', 'current_categories', 'samples_df']}
     
+    # 1. Clear submission tracking and data tables immediately
     st.session_state.exam_submitted = False
     st.session_state.last_score = 0
     st.session_state.user_selections = {}
+    
+    # 2. Obliterate Streamlit's internal radio widget value cache
+    for key in list(st.session_state.keys()):
+        if key.startswith("qr_"):
+            del st.session_state[key]
     
     samples_df, err = data_manager.get_weighted_sample(USER_CSV, NOTES_FILE, JOIN_COLUMN, focus_mode, exam_filter, system_filter, EXAM_WEIGHTS, mastery_mode, st.session_state.num_questions)
     if err:
