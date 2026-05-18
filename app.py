@@ -1,131 +1,688 @@
-# app.py
 import streamlit as st
 import pandas as pd
+from google import genai
+from google.genai import types 
 import time
 import re
-import random
 import os
+import atexit
+from progress_manager import save_progress, load_progress
+import shutil # Add this to your imports at the top of the file
+import tempfile
+import random
+import datetime
+try:
+    from fpdf import FPDF
+except ImportError:
+    FPDF = None
 
-# Custom Imports
-import data_manager
-import ai_engine
-import pdf_generator
-from progress_manager import save_progress, load_progress, restore_progress
+# ==========================================
+# 1. SETUP & CONFIGURATION
+# ==========================================
+st.set_page_config(page_title="Trainer", page_icon="🩺", layout="wide")
 
-st.set_page_config(page_title="Trainer", page_icon=" 🩺 ", layout="wide")
-
-# Styling Fixes
+# Safari compatibility fixes
 st.markdown("""
 <style>
-.stButton > button { width: 100%; }
-.stSelectbox > div > div > select { width: 100%; }
+.stButton > button {
+    width: 100%;
+}
+.stSelectbox > div > div > select {
+    width: 100%;
+}
 </style>
 """, unsafe_allow_html=True)
 
-API_KEYS = [st.secrets["GENAI_KEY_1"]]
-MASTER_CSV = "learning_objectives_informative_reports.csv"
+
+API_KEYS = [st.secrets["GENAI_KEY_1"]]#, st.secrets["GENAI_KEY_2"], st.secrets["GENAI_KEY_3"]] # (Keep your full list here)
 NOTES_FILE = "lecture_notes.csv"
 JOIN_COLUMN = "lecture_id"
 
-EXAM_WEIGHTS = {
-    "Anatomy": 0.28, "Physiology": 0.40, "Pharmacology": 0.15,
-    "Nutrition": 0.06, "Microbiology": 0.06, "Immunology": 0.01, "Uncategorized": 0.04
-}
-
-# --- PROFILE MANAGEMENT ---
+# ==========================================
+# 1A. PROFILE MANAGEMENT
+# ==========================================
 if 'username' not in st.session_state:
     st.session_state.username = "Default"
 
 new_user = st.sidebar.text_input("Enter your username:", st.session_state.username)
 if st.sidebar.button("Switch / Create Profile"):
     st.session_state.username = new_user.strip()
-    for k in ['current_level', 'num_questions', 'missed_questions', 'current_exam', 'current_key', 'samples_df']:
-        if k in st.session_state: del st.session_state[k]
+    
+    # Wipe the screen clean so the new user's data can load
+    keys_to_clear = ['current_level', 'num_questions', 'missed_questions', 'current_exam', 'current_key', 'samples_df']
+    for k in keys_to_clear:
+        if k in st.session_state:
+            del st.session_state[k]
     st.rerun()
 
 active_user = st.session_state.username
 st.sidebar.success(f"Logged in as: **{active_user}**")
 
-USER_CSV = f"{active_user}_objectives.csv"
-data_manager.backup_user_data(USER_CSV)
+# Set up user-specific files
+MASTER_CSV = "learning_objectives_informative_reports.csv" # Your master template
+USER_CSV = f"{active_user}_objectives.csv"                 # Their personal copy
 
-# Sync Profile System
+def backup_user_data(user_csv):
+    """Creates a timestamped backup of the user's data before any processing happens."""
+    if os.path.exists(user_csv):
+        backup_dir = "user_backups"
+        os.makedirs(backup_dir, exist_ok=True)
+        
+        # Generates a timestamp like: 20260518_085900
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        backup_filename = f"{os.path.basename(user_csv)}.{timestamp}.bak"
+        backup_path = os.path.join(backup_dir, backup_filename)
+        
+        shutil.copy(user_csv, backup_path)
+
+# Run the backup immediately right here!
+backup_user_data(USER_CSV)
+
+# ==========================================
+# SMART CSV SYNCHRONIZATION
+# ==========================================
+CSV_FILE = USER_CSV
+
 try:
-    if data_manager.synchronize_profile(MASTER_CSV, USER_CSV, JOIN_COLUMN):
-        st.toast(" 🔄 Profile updated with latest curriculum structure!")
+    if not os.path.exists(MASTER_CSV):
+        st.error(f"Fatal Error: Master template file '{MASTER_CSV}' not found!")
+        st.stop()
+        
+    df_master = pd.read_csv(MASTER_CSV)
+
+    if not os.path.exists(USER_CSV):
+        # Brand new user: Give them a clean copy of the master template
+        df_master.to_csv(USER_CSV, index=False)
+    else:
+        # Existing user: Safely sync new columns or rows without overwriting user data
+        df_user = pd.read_csv(USER_CSV)
+        is_updated = False
+
+        # 1. Sync Missing Columns (e.g., adding 'system' or 'exam' columns later)
+        missing_cols = [col for col in df_master.columns if col not in df_user.columns]
+        if missing_cols:
+            for col in missing_cols:
+                # Map the new column data from master to user using the JOIN_COLUMN
+                mapping = df_master.set_index(JOIN_COLUMN)[col].to_dict()
+                df_user[col] = df_user[JOIN_COLUMN].map(mapping)
+            is_updated = True
+
+        # 2. Sync Missing Rows (e.g., if you add new learning objectives to the master file)
+        missing_rows = df_master[~df_master[JOIN_COLUMN].isin(df_user[JOIN_COLUMN])]
+        if not missing_rows.empty:
+            df_user = pd.concat([df_user, missing_rows], ignore_index=True)
+            is_updated = True
+
+        # Save back to their personal CSV file only if changes were made
+        if is_updated:
+            df_user.to_csv(USER_CSV, index=False)
+            st.toast(f"🔄 Profile updated with latest curriculum structure!")
+
 except Exception as e:
     st.error(f"Error handling profile sync: {e}")
 
-# --- INITIALIZE SESSION STATES & RESTORE PROGRESS ---
-active_user = st.session_state.get("username", "Default")
+# Models
+# Note: Google Search works best with Flash/Pro (Lite may have tool limitations)
+EXAM_MODEL = 'gemini-3.1-flash-lite-preview'
+GRADER_MODEL = 'gemini-3.1-flash-lite-preview'
+
+#Models that work: gemini-2.5-flash, gemini-2.5-flash-lite
+
+
+# ==========================================
+# 1B. EXAM WEIGHTINGS (Percentages or Relative Ratios)
+# ==========================================
+# Adjust these numbers to match your actual blueprint (e.g., USMLE, Board exams)
+EXAM_WEIGHTS = {
+    "Anatomy": 0.28, #42
+    "Physiology": 0.40, #62
+    "Pharmacology": 0.15, #23
+    "Nutrition": 0.06, #6
+    "Microbiology": 0.06, #9
+    "Immunology": 0.01, #2
+    "Uncategorized": 0.04      
+}
+
+
+mastery_mode = "off"
+
+if mastery_mode == "on":
+    mastery_change = 1
+else:
+    mastery_change = 0
+
+
+# Load saved progress on startup
 loaded_progress = load_progress(active_user)
 
-# 1. Establish basic defaults
-if 'current_level' not in st.session_state: st.session_state.current_level = 1
-if 'num_questions' not in st.session_state: st.session_state.num_questions = 5
-if 'last_score' not in st.session_state: st.session_state.last_score = 0
-if 'missed_questions' not in st.session_state: st.session_state.missed_questions = []
-if 'last_user_input' not in st.session_state: st.session_state.last_user_input = ""
-if 'last_correct_key' not in st.session_state: st.session_state.last_correct_key = ""
-if 'exam_submitted' not in st.session_state: st.session_state.exam_submitted = False
-if 'current_categories' not in st.session_state: st.session_state.current_categories = []
-if 'samples_df' not in st.session_state: st.session_state.samples_df = None
-if 'current_exam' not in st.session_state: st.session_state.current_exam = ""
-if 'current_key' not in st.session_state: st.session_state.current_key = []
-if 'key_index' not in st.session_state: st.session_state.key_index = random.randint(0, len(API_KEYS) - 1)
-if 'previous_test_data' not in st.session_state: st.session_state.previous_test_data = {}
+# Initialize Session States (with progress restoration)
+if 'current_level' not in st.session_state:
+    st.session_state.current_level = loaded_progress.get("current_level", 1)
+if 'exam_model' not in st.session_state:
+    st.session_state.exam_model = 'gemini-3.1-flash-lite-preview'
+if 'num_questions' not in st.session_state:
+    st.session_state.num_questions = loaded_progress.get("num_questions", 5) 
+if 'missed_questions' not in st.session_state:
+    st.session_state.missed_questions = loaded_progress.get("missed_questions", [])
+if 'current_exam' not in st.session_state:
+    st.session_state.current_exam = loaded_progress.get("current_exam", "")
+if 'current_key' not in st.session_state:
+    st.session_state.current_key = loaded_progress.get("current_key", [])
+if 'key_index' not in st.session_state:
+    # Give every user a random starting key to prevent collisions
+    st.session_state.key_index = loaded_progress.get("key_index", random.randint(0, len(API_KEYS) - 1))
+if 'current_categories' not in st.session_state:
+    st.session_state.current_categories = loaded_progress.get("current_categories", [])
+if 'samples_df' not in st.session_state:
+    st.session_state.samples_df = loaded_progress.get("samples_df", pd.DataFrame())
+if 'previous_test_data' not in st.session_state:
+    st.session_state.previous_test_data = {}
 
-# 2. Hand off restoration to progress_manager.py (wipes out missing fields)
-if loaded_progress:
-    restore_progress(st.session_state, loaded_progress)
-
-# 3. FORCE INITIALIZE UNTRACKED CONFIGS HERE (Safe from step 2!)
-if 'exam_model' not in st.session_state or not st.session_state.exam_model:
-    st.session_state.exam_model = 'gemini-2.5-flash-lite'
-
-if 'use_search' not in st.session_state:
-    st.session_state.use_search = False  # Default Google Search option to False
-
+# Register auto-save on app shutdown
 if st.sidebar.button("Save Progress", help="Manually save your current progress"):
-    # Pass the session state context and active username string explicitly
-    if save_progress(st.session_state, st.session_state.username): 
-        st.sidebar.success("Progress saved successfully!")
-    else:
-        st.sidebar.error("Failed to save progress")
+    try:
+        if save_progress(st.session_state, active_user):
+            st.sidebar.success("Progress saved successfully!")
+        else:
+            st.sidebar.error("Failed to save progress")
+    except Exception as e:
+        st.sidebar.error(f"Serialization Error: Could not save progress yet. ({e})")
 
-# --- FILTERS AND CONTROLS ---
+def get_client():
+    return genai.Client(api_key=API_KEYS[st.session_state.key_index])
+
+def call_gemini_with_rotation(prompt, model_to_use, use_search=False, timeout_per_question=3):
+    keys_tried = 0
+    
+    # Configure Google Search Tool if requested
+    tools = []
+    if use_search:
+        tools = [types.Tool(google_search=types.GoogleSearch())]
+    
+    while keys_tried < len(API_KEYS):
+        try:
+            client = get_client()
+            response = client.models.generate_content(
+                model=model_to_use, 
+                contents=prompt,
+                config=types.GenerateContentConfig(tools=tools) if tools else None
+            )
+            return response.text
+        except Exception as e:
+            if "429" in str(e):
+                keys_tried += 1
+                if keys_tried >= len(API_KEYS):
+                    st.error("All API keys exhausted.")
+                    return None
+                st.session_state.key_index = (st.session_state.key_index + 1) % len(API_KEYS)
+                time.sleep(1)
+            elif "503" in str(e):
+                time.sleep(5)
+            else:
+                st.error(f"Error: {e}")
+                return None
+
+# ==========================================
+# 2. CORE LOGIC FUNCTIONS
+# ==========================================
+def create_exam_pdf(exam_text, answer_key, user_answers=None, score=None, max_score=None):
+    """Generates a PDF containing the exam questions, answer key, and optionally user selections."""
+    if not FPDF:
+        return None
+        
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_auto_page_break(auto=True, margin=15)
+    
+    # Title
+    pdf.set_font("Arial", "B", 16)
+    if score is not None and max_score is not None:
+        pdf.cell(0, 10, f"Practice Exam Results - Score: {score}/{max_score}", ln=True, align="C")
+    else:
+        pdf.cell(0, 10, "Practice Exam", ln=True, align="C")
+    pdf.ln(5)
+    
+    # Clean text to prevent Unicode encoding errors in FPDF
+    clean_text = exam_text.replace('\u2019', "'").replace('\u201c', '"').replace('\u201d', '"')
+    clean_text = clean_text.encode('latin-1', 'replace').decode('latin-1')
+    
+    # Print Questions
+    pdf.set_font("Arial", "", 12)
+    pdf.multi_cell(0, 7, clean_text)
+    
+    # Add Answer Key & User Answers on a new page
+    pdf.add_page()
+    pdf.set_font("Arial", "B", 16)
+    pdf.cell(0, 10, "Exam Summary", ln=True, align="C")
+    pdf.ln(5)
+    
+    pdf.set_font("Arial", "", 12)
+    for i, ans in enumerate(answer_key):
+        text = f"Question {i+1}: Correct Key: {ans}"
+        if user_answers and i < len(user_answers):
+            u_ans = user_answers[i] if user_answers[i] else "No Answer"
+            match_text = " (CORRECT)" if u_ans == ans else " (INCORRECT)"
+            text += f" | Your Answer: {u_ans}{match_text}"
+            
+        pdf.cell(0, 8, text, ln=True)
+        
+    # Save to temp file and return bytes
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
+        pdf.output(tmp.name)
+        tmp_path = tmp.name
+        
+    with open(tmp_path, "rb") as f:
+        pdf_bytes = f.read()
+        
+    os.unlink(tmp_path) # Clean up temp file
+    return pdf_bytes
+
+def get_ai_grading(exam_text, user_answers, correct_key, score):
+    prompt = f"""
+    Here is the input:
+    EXAM QUESTIONS: {exam_text}
+    CORRECT KEY: {correct_key}
+    STUDENT ANSWERS: {user_answers}
+    SCORE: {score}
+
+    You are a medical instructor. Grade the student's performance.
+    
+    ### GRADING PROTOCOL:
+    1. Compare the student's answer for each question against the correct key.
+    2. USE GOOGLE SEARCH to verify the current medical guidelines.
+    3. Focus ONLY on the questions the student got INCORRECT. 
+    
+    ### STRICT FORMATTING REQUIREMENTS:
+    You MUST output your response in clean Markdown. If the student got 100%, congratulate them and provide one high-yield clinical pearl.
+    Otherwise, for EVERY incorrect question, use this EXACT format:
+
+    ### Question [Insert Question Number]
+    **Your Answer:** [Letter] | **Correct Answer:** [Letter]
+    
+    * **Explanation:** [1-2 concise sentences explaining why the correct answer is right and the student's answer is wrong].
+    * **Clinical Pearl:** [A short, high-yield tip or memory hook for board exams].
+    ---
+    """
+    
+    # Using search during grading ensures explanations match current guidelines
+    return call_gemini_with_rotation(prompt, GRADER_MODEL, use_search=st.session_state.use_search)
+
+def validate_exam_format(exam_text, expected_questions):
+    return True, "Validation temporarily disabled" # <--- ADD THIS LINE HERE
+    """Validate that the AI response follows the correct format"""
+    if not exam_text or not exam_text.strip():
+        return False, "Empty response"
+    
+    # Check if starts with question number
+    if not re.match(r'^\s*1\.\s', exam_text.strip()):
+        return False, "Does not start with '1. '"
+    
+    # Check for correct number of questions
+    question_pattern = r'^\s*\d+\.\s'
+    questions = re.findall(question_pattern, exam_text, re.MULTILINE)
+    if len(questions) != expected_questions:
+        return False, f"Expected {expected_questions} questions, found {len(questions)}"
+    
+    # Check for answer key format
+    key_pattern = r'\[KEY:\s*[A-D,\s]+\]$'
+    if not re.search(key_pattern, exam_text.strip()):
+        return False, "Missing or malformed answer key"
+    
+    # Check each question has A, B, C, D options
+    lines = exam_text.split('\n')
+    current_question = 0
+    option_count = 0
+    
+    for line in lines:
+        line = line.strip()
+        if re.match(r'^\d+\.\s', line):
+            current_question += 1
+            option_count = 0
+        elif re.match(r'^[A-D]\.\s', line):
+            option_count += 1
+    
+    if current_question != expected_questions:
+        return False, f"Question count mismatch: {current_question} vs {expected_questions}"
+    
+    return True, "Valid format"
+
+
+def get_blind_exam(topics_list, level, num_questions):
+    combined_content = "\n\n".join([f"Source {i+1}: {t}" for i, t in enumerate(topics_list)])
+    
+    # Difficulty calibration from intuitive basics to counterintuitive expert challenges
+    if level <= 5:
+        difficulty_desc = "intuitive basics - straightforward medical concepts that make logical sense"
+        complexity_guide = "focus on intuitive anatomy, obvious physiology, simple definitions, core principles that follow common sense"
+    elif level <= 15:
+        difficulty_desc = "logical progression - clinical applications that follow standard patterns"
+        complexity_guide = "include common diseases with predictable presentations, standard treatments, straightforward clinical reasoning"
+    elif level <= 25:
+        difficulty_desc = "complex but predictable - applied knowledge with some nuance"
+        complexity_guide = "complex clinical cases with clear patterns, differential diagnosis with logical elimination, treatment with expected responses"
+    elif level <= 35:
+        difficulty_desc = "challenging patterns - specialized knowledge requiring deeper analysis"
+        complexity_guide = "specialty-specific conditions with some counterintuitive elements, advanced therapeutics with unexpected side effects, presentations that deviate from textbook patterns"
+    elif level <= 45:
+        difficulty_desc = "counterintuitive expert - knowledge that defies common medical assumptions"
+        complexity_guide = "subspecialty expertise where textbook knowledge fails, paradoxical treatment responses, rare conditions that present opposite to expected patterns, cutting-edge research that contradicts established dogma"
+    else:  # 46-50
+        difficulty_desc = "supreme counterintuition - advanced mastery of medical paradoxes and exceptions"
+        complexity_guide = "multi-system integration where standard rules don't apply, latest research breakthroughs that overturn conventional wisdom, complex clinical reasoning requiring recognition of exceptions, niche subspecialty knowledge where intuitive answers are wrong, molecular-level pathophysiology that defies simple explanations, emerging treatment protocols with paradoxical mechanisms, rare disease patterns that mimic opposite conditions, advanced diagnostic challenges where the obvious answer is incorrect"
+    
+    prompt = f"""
+    You are a medical board examiner. 
+    TASK: Generate EXACTLY {num_questions} Multiple Choice Questions (1 per snippet provided below).
+    DIFFICULTY LEVEL: {level}/50.
+    DIFFICULTY DESCRIPTION: {difficulty_desc}.
+    COMPLEXITY GUIDANCE: {complexity_guide}.
+
+    CRITICAL BIAS PREVENTION:
+    1. AVOID confirmation bias - Ensure each option could plausibly be correct
+    2. NO obvious "red herrings" - All distractors must be medically plausible
+    3. BALANCED difficulty - Correct answer should not be obviously easier/harder than others
+    4. MEDICAL ACCURACY - Verify all information with current medical guidelines
+    5. CLARITY over trickery - Questions should test knowledge, not reading comprehension
+
+    CRITICAL FORMATTING REQUIREMENTS:
+    1. START IMMEDIATELY with '1. ' followed by the question text. NO preamble.
+    2. ABSOLUTELY NO introductory text, explanations, or meta-commentary.
+    3. Each question MUST follow this EXACT format:
+       "X. [Question text]
+       A. [Option A]
+       B. [Option B] 
+       C. [Option C]
+       D. [Option D]"
+    4. Every question MUST start with its number and period (e.g., '1.', '2.', '3.').
+    5. NO extra text, warnings, or formatting notes anywhere in the response.
+    6. The VERY LAST line must be: [KEY: A, B, C, D, A, B, C, D, A, B]
+
+    CONTENT REQUIREMENTS:
+    7. Use the STUDY MATERIAL provided below as the base.
+    8. USE GOOGLE SEARCH to supplement with latest medical guidelines and realistic clinical cases.
+    9. Ensure questions match difficulty level {level}:
+       - Level 1-5: Intuitive basics - straightforward concepts that follow common sense, obvious anatomy/physiology
+       - Level 6-15: Logical progression - predictable clinical patterns, standard protocols, common conditions with textbook presentations
+       - Level 16-25: Complex but predictable - applied knowledge with clear patterns, differential diagnosis with logical elimination
+       - Level 26-35: Challenging patterns - specialized knowledge with some counterintuitive elements, presentations deviating from textbook
+       - Level 36-45: Counterintuitive expert - knowledge that defies common medical assumptions, paradoxical responses, conditions presenting opposite to expected
+       - Level 46-50: Supreme counterintuition - medical paradoxes and exceptions where intuitive answers are wrong, conditions that mimic opposite presentations, treatments with paradoxical mechanisms, diagnostic challenges where obvious answer is incorrect
+    10. **STRICT ANSWER DISTRIBUTION**: Each letter (A, B, C, D) correct exactly 2-3 times.
+    11. All options must be plausible distractors.
+
+    STUDY MATERIAL:
+    {combined_content}
+
+    REMEMBER: Start with '1. ' immediately. No introduction. End with [KEY: format].
+    """
+    
+    # Single call to the model using the TOGGLE'S value
+    exam_text = call_gemini_with_rotation(prompt, st.session_state.exam_model, use_search=st.session_state.use_search, timeout_per_question=3)
+    return exam_text
+# ==========================================
+# 3. WEB INTERFACE
+# ==========================================
 st.title("Trainer")
 st.sidebar.header("Stats & Controls")
+
+# Move Active Level metric here
 st.sidebar.metric("Active Level", f"{st.session_state.current_level}/50")
 
-df_sidebar = pd.read_csv(USER_CSV)
+# --- ADD THIS: Focus Mode Dropdown ---
+df_sidebar = pd.read_csv(CSV_FILE)
 categories = df_sidebar['category'].fillna("Uncategorized").astype(str).unique().tolist()
-focus_mode = st.sidebar.selectbox("Focus Mode:", ["All Topics"] + sorted(categories))
+all_categories = ["All Topics"] + sorted(categories)
+focus_mode = st.sidebar.selectbox("Focus Mode:", all_categories)
 
-exam_filter = st.sidebar.selectbox("Exam Filter:", ["All Exams"] + sorted(df_sidebar['exam'].fillna("Uncategorized").astype(str).unique().tolist())) if 'exam' in df_sidebar.columns else "All Exams"
-system_filter = st.sidebar.selectbox("System Filter:", ["All Systems"] + sorted(df_sidebar['system'].fillna("Uncategorized").astype(str).unique().tolist())) if 'system' in df_sidebar.columns else "All Systems"
+# --- ADD THIS: Exam Filter Dropdown ---
+if 'exam' in df_sidebar.columns:
+    exams = df_sidebar['exam'].fillna("Uncategorized").astype(str).unique().tolist()
+    all_exams = ["All Exams"] + sorted(exams)
+    exam_filter = st.sidebar.selectbox("Exam Filter:", all_exams)
+else:
+    exam_filter = "All Exams"
+
+# --- ADD THIS: Systems Filter Dropdown ---
+if 'system' in df_sidebar.columns:
+    system = df_sidebar['system'].fillna("Uncategorized").astype(str).unique().tolist()
+    all_systems = ["All Systems"] + sorted(system)
+    system_filter = st.sidebar.selectbox("System Filter:", all_systems)
+else:
+    system_filter = "All Systems"
+
+
+
+if st.sidebar.button("Generate New Exam"):
+    # --- NEW: BACKUP THE CURRENT EXAM BEFORE OVERWRITING ---
+    if st.session_state.get('current_exam'):
+        st.session_state.previous_test_data = {
+            'current_exam': st.session_state.current_exam,
+            'current_key': st.session_state.current_key,
+            'user_selections': st.session_state.get('user_selections', {}),
+            'exam_submitted': st.session_state.get('exam_submitted', False),
+            'last_score': st.session_state.get('last_score', 0),
+            'last_user_input': st.session_state.get('last_user_input', ""),
+            'last_correct_key': st.session_state.get('last_correct_key', ""),
+            'last_user_answers_list': st.session_state.get('last_user_answers_list', []),
+            'current_categories': st.session_state.get('current_categories', []),
+            'samples_df': st.session_state.get('samples_df', None)
+        }
+    # -------------------------------------------------------
+    st.session_state.exam_submitted = False  # Add this line
+    st.session_state.last_score = 0
+    st.session_state.user_selections = {}  # Clear previous selections
+    n = st.session_state.num_questions
+    try:
+        df_main = pd.read_csv(CSV_FILE)
+        df_notes = pd.read_csv(NOTES_FILE)
+        df = pd.merge(df_main, df_notes, on=JOIN_COLUMN, how='left')
+                
+        # --- ADD THIS: Filter by category ---
+        if focus_mode != "All Topics":
+            df = df[df['category'] == focus_mode]
+            if df.empty:
+                st.error(f"No questions found for {focus_mode}. Check your CSV.")
+                st.stop()
+
+        # --- ADD THIS: Filter by exam ---
+        if exam_filter != "All Exams" and 'exam' in df.columns:
+            df = df[df['exam'] == exam_filter]
+            if df.empty:
+                st.error(f"No questions found for {exam_filter}. Check your CSV.")
+                st.stop()
+
+        # --- ADD THIS: Filter by system ---
+        if system_filter != "All Systems" and 'system' in df.columns:
+            df = df[df['system'] == system_filter]
+            if df.empty:
+                st.error(f"No questions found for {system_filter}. Check your CSV.")
+                st.stop()
+        
+        # --- TOGGLE LOGIC ---
+        if 'include' in df.columns:
+            df = df[df['include'].astype(str).str.lower().str.strip() == 'y']
+            
+            if df.empty:
+                st.error("No active objectives found. Mark some as 'y' in your CSV.")
+                st.stop()
+    
+        # --- SMART SAMPLING (EXAM WEIGHTED + SRS) ---
+        # 1. Map exam weights to the dataframe based on category
+        df['topic_weight'] = df['category'].map(EXAM_WEIGHTS).fillna(0.05)
+        
+        # Factor in Mastery Score ONLY if column exists AND Mastery Mode is toggled ON
+        if mastery_mode == "on" and 'mastery_score' in df.columns:
+            df['mastery_score'] = pd.to_numeric(df['mastery_score'], errors='coerce').fillna(1).astype(int)
+
+            # Inverse mastery modifier: lower mastery (1-3) increases chance of being picked
+            df['mastery_modifier'] = 6 - df['mastery_score']
+
+            # Combined sampling weight = Exam BluePrint Weight * Mastery Need
+            df['sampling_weight'] = df['topic_weight'] * df['mastery_modifier']
+        else:
+            # Standard blueprint sampling when mastery mode is off
+            df['sampling_weight'] = df['topic_weight']
+    
+
+        # 3. Sample using the calculated weights
+        try:
+            # We use replace=False so we don't duplicate questions in the same exam
+            st.session_state.samples_df = df.sample(min(n, len(df)), weights='sampling_weight', replace=False)
+            st.sidebar.info("Smart Sampling: Balanced by Exam Weights & Weak Areas.")
+        except ValueError:
+            # Fallback if weights math fails (e.g., all weights are zero)
+            st.session_state.samples_df = df.sample(min(n, len(df)))
+            st.sidebar.warning("Fallback Sampling: Standard random generation used.")
+        
+        samples_df = st.session_state.samples_df
+        # ----------------------------
+
+        if 'category' in samples_df.columns:
+            st.session_state.current_categories = samples_df['category'].fillna('General').tolist()
+        else:
+            st.session_state.current_categories = ['General'] * n
+
+        samples = (samples_df['explanation'] + "\n[Notes: " + samples_df['content'].fillna('') + "]").tolist()
+        
+        with st.spinner(f"Generating {n} questions at Level {st.session_state.current_level}..."):
+            max_retries = 3
+            is_valid = False
+            raw_response = ""
+            
+            # --- NEW: Retry Loop with Validation ---
+            for attempt in range(max_retries):
+                raw_response = get_blind_exam(samples, st.session_state.current_level, n)
+                
+                # Pass the AI response through your validation function
+                is_valid, validation_message = validate_exam_format(raw_response, n)
+                
+                if is_valid:
+                    break # Format is perfect, exit the retry loop
+                else:
+                    # Show a temporary warning and try again
+                    st.toast(f"Attempt {attempt + 1} failed: {validation_message}. Retrying...")
+                    time.sleep(1) # Brief pause before requesting again
+            # ---------------------------------------
+
+            if is_valid and "[KEY:" in raw_response:
+                # Use a split that keeps the questions separate from the key
+                text, key_part = raw_response.split("[KEY:")
+                
+                # CLEANING: Remove the key section from the visible text 
+                # so it doesn't show up in the last radio button question
+                st.session_state.current_exam = text.strip() 
+                
+                st.session_state.current_key = re.findall(r'[A-D]', key_part)
+                st.rerun()
+            else:
+                st.error(f"Failed to generate a perfectly formatted exam after {max_retries} attempts. Please click generate again.")
+    except Exception as e:
+        st.error(f"File Error: Ensure {CSV_FILE} and {NOTES_FILE} are in the folder. ({e})")
+
+# Replace mastery_mode = "off" with this:
 mastery_mode = "on" if st.sidebar.checkbox("Mastery Mode", value=False) else "off"
 
-# Backup/Restore Layouts
-if st.session_state.get('previous_test_data') and st.sidebar.button("Load Previous Exam", use_container_width=True):
-    current_backup = {k: st.session_state.get(k) for k in ['current_exam', 'current_key', 'user_selections', 'exam_submitted', 'last_score', 'last_user_input', 'last_correct_key', 'last_user_answers_list', 'current_categories', 'samples_df']}
-    for k, v in st.session_state.previous_test_data.items(): st.session_state[k] = v
-    st.session_state.previous_test_data = current_backup
-    st.rerun()
+st.sidebar.markdown("---")
 
+
+# --- NEW: RESTORE BACKUP BUTTON ---
+if st.session_state.get('previous_test_data'):
+    if st.sidebar.button("Load Previous Exam", help="Accidentally clicked generate? Restore the last exam.", use_container_width=True):
+        
+        # Take a snapshot of the active exam before swapping, so you can toggle back and forth!
+        current_backup = {}
+        if st.session_state.get('current_exam'):
+            current_backup = {
+                'current_exam': st.session_state.current_exam,
+                'current_key': st.session_state.current_key,
+                'user_selections': st.session_state.get('user_selections', {}),
+                'exam_submitted': st.session_state.get('exam_submitted', False),
+                'last_score': st.session_state.get('last_score', 0),
+                'last_user_input': st.session_state.get('last_user_input', ""),
+                'last_correct_key': st.session_state.get('last_correct_key', ""),
+                'last_user_answers_list': st.session_state.get('last_user_answers_list', []),
+                'current_categories': st.session_state.get('current_categories', []),
+                'samples_df': st.session_state.get('samples_df', None)
+            }
+        
+        # Load the backup into the live view
+        backup = st.session_state.previous_test_data
+        st.session_state.current_exam = backup.get('current_exam')
+        st.session_state.current_key = backup.get('current_key')
+        st.session_state.user_selections = backup.get('user_selections', {})
+        st.session_state.exam_submitted = backup.get('exam_submitted', False)
+        st.session_state.last_score = backup.get('last_score', 0)
+        st.session_state.last_user_input = backup.get('last_user_input', "")
+        st.session_state.last_correct_key = backup.get('last_correct_key', "")
+        st.session_state.last_user_answers_list = backup.get('last_user_answers_list', [])
+        st.session_state.current_categories = backup.get('current_categories', [])
+        st.session_state.samples_df = backup.get('samples_df', None)
+        
+        # Make the old current exam the new backup
+        st.session_state.previous_test_data = current_backup if current_backup else {}
+            
+        st.rerun()
+# ----------------------------------
+
+# Settings button for sliders
 if st.sidebar.button("Settings", use_container_width=True):
-    st.session_state.show_settings = not st.session_state.get('show_settings', False)
+    if 'show_settings' not in st.session_state:
+        st.session_state.show_settings = False
+    st.session_state.show_settings = not st.session_state.show_settings
 
+# Show sliders only when settings is expanded
 if st.session_state.get('show_settings', False):
     st.session_state.current_level = st.sidebar.slider("Starting Level", 1, 50, st.session_state.current_level)
     st.session_state.num_questions = st.sidebar.slider("Number of Questions", 1, 50, st.session_state.num_questions)
+    
+    st.sidebar.markdown("---")
+    
+    # --- NEW: Double-Sided Model Switch ---
+    st.sidebar.markdown("**Speed:**")
+    model_choice = st.sidebar.radio(
+        label="Speed",
+        label_visibility="collapsed", # Hides the label so it just looks like a switch
+        options=["Fast", "Slow & Smart"],
+        index=1 if st.session_state.get('exam_model', 'gemini-2.5-flash') == 'gemini-2.5-flash' else 0,
+        horizontal=True, # This forces them side-by-side like a double switch!
+        help="Fast uses Flash-Lite. Slow & Smart uses Flash."
+    )
 
-    model_choice = st.sidebar.radio("Speed", options=["Fast", "Slow & Smart"], index=1, horizontal=True, label_visibility="collapsed")
+    # Update memory
     st.session_state.exam_model = 'gemini-2.5-flash' if "Slow" in model_choice else 'gemini-3.1-flash-lite-preview'
-    st.session_state.use_search = st.sidebar.toggle("Enable Google Search", value=False)
+
+    st.sidebar.markdown("**Grounding:**")
+    st.session_state.use_search = st.sidebar.toggle(
+        label="Enable Google Search",
+        value=False,  # Sets the default state to ON
+        help="Turn off on fast mode."
+    )
+
+    st.sidebar.markdown("---")
+    if st.sidebar.button("Reset Progress", help="Clear all saved progress and reset to defaults"):
+        if os.path.exists("user_progress.json"):
+            os.remove("user_progress.json")
+            # Reset session state to defaults
+            st.session_state.current_level = 10
+            st.session_state.num_questions = 10
+            st.session_state.missed_questions = []
+            st.session_state.current_exam = None
+            st.session_state.current_key = []
+            st.session_state.last_score = 0
+            st.session_state.user_selections = {}
+            st.session_state.exam_submitted = False
+            st.session_state.current_categories = []
+            st.session_state.samples_df = None
+            st.sidebar.success("Progress reset successfully!")
+            st.rerun()
+        else:
+            st.sidebar.info("No saved progress to reset")
+    
     st.sidebar.markdown("---")
     st.sidebar.subheader("Knowledge Bank")
+    # Use the df_sidebar we loaded earlier
     if 'mastery_score' in df_sidebar.columns:
+        # Convert mastery_score to integers for comparison
         df_sidebar['mastery_score'] = pd.to_numeric(df_sidebar['mastery_score'], errors='coerce').fillna(1).astype(int)
         total_objs = len(df_sidebar)
         mastered = len(df_sidebar[df_sidebar['mastery_score'] == 5])
@@ -135,171 +692,187 @@ if st.session_state.get('show_settings', False):
         st.sidebar.progress(progress_val)
         st.sidebar.caption(f"{progress_val*100:.1f}% of curriculum at Mastery Level 5")
 
-if st.sidebar.button("Reset Progress"):
-    if os.path.exists("user_progress.json"): os.remove("user_progress.json")
-    st.session_state.current_level, st.session_state.num_questions = 10, 10
-    st.session_state.missed_questions, st.session_state.current_key, st.session_state.current_categories = [], [], []
-    st.session_state.current_exam, st.session_state.samples_df = None, None
-    st.session_state.exam_submitted = False
-    st.rerun()
-
-# --- EXAM GENERATION CORE ---
-if st.sidebar.button("Generate New Exam"):
-    if st.session_state.get('current_exam'):
-        st.session_state.previous_test_data = {k: st.session_state.get(k) for k in ['current_exam', 'current_key', 'user_selections', 'exam_submitted', 'last_score', 'last_user_input', 'last_correct_key', 'last_user_answers_list', 'current_categories', 'samples_df']}
-    
-    # 1. Clear submission tracking and data tables immediately
-    st.session_state.exam_submitted = False
-    st.session_state.last_score = 0
-    st.session_state.user_selections = {}
-    
-    # 2. Obliterate Streamlit's internal radio widget value cache
-    for key in list(st.session_state.keys()):
-        if key.startswith("qr_"):
-            del st.session_state[key]
-    
-    samples_df, err = data_manager.get_weighted_sample(USER_CSV, NOTES_FILE, JOIN_COLUMN, focus_mode, exam_filter, system_filter, EXAM_WEIGHTS, mastery_mode, st.session_state.num_questions)
-    if err:
-        st.error(err)
-        st.stop()
-        
-    st.session_state.samples_df = samples_df
-    st.session_state.current_categories = samples_df['category'].fillna('General').tolist() if 'category' in samples_df.columns else ['General'] * len(samples_df)
-    samples = (samples_df['explanation'] + "\n[Notes: " + samples_df['content'].fillna('') + "]").tolist()
-
-    with st.spinner("Generating exam items..."):
-        max_retries = 3
-        for attempt in range(max_retries):
-            raw_res, new_idx = ai_engine.get_blind_exam(samples, st.session_state.current_level, st.session_state.num_questions, st.session_state.exam_model, API_KEYS, st.session_state.key_index, use_search=st.session_state.use_search)
-            st.session_state.key_index = new_idx
-            is_valid, _ = ai_engine.validate_exam_format(raw_res, st.session_state.num_questions)
-            if is_valid: break
-            st.toast(f"Attempt {attempt + 1} failed validation. Retrying...")
-            time.sleep(1)
-
-        if is_valid and "[KEY:" in raw_res:
-            text, key_part = raw_res.split("[KEY:")
-            st.session_state.current_exam = text.strip()
-            st.session_state.current_key = re.findall(r'[A-D]', key_part)
-            st.rerun()
-        else:
-            st.error("Failed to generate a cleanly formatted exam item. Please retry.")
-
-# --- RENDER MAIN INTERFACE EXAM FORM ---
+# Display the Exam
 if st.session_state.current_exam:
     st.info("Select the best answer for each clinical scenario below.")
-    if pdf_generator.has_pdf_support():
-        pdf_bytes = pdf_generator.create_exam_pdf(st.session_state.current_exam, st.session_state.current_key)
-        if pdf_bytes: st.download_button(" 📄 Download Exam as PDF", data=pdf_bytes, file_name="practice_exam.pdf", mime="application/pdf")
     
-    clean_text = re.sub(r"^(Here are|Based on|Sure|I have generated).*?\n", "", st.session_state.current_exam.strip(), flags=re.IGNORECASE)
-    individual_questions = [q.strip() for q in re.split(r'\n(?=\d+\.\s)', clean_text) if q.strip()]
+    # --- ADDED: PDF Download Button ---
+    if FPDF:
+        pdf_bytes = create_exam_pdf(st.session_state.current_exam, st.session_state.current_key)
+        if pdf_bytes:
+            st.download_button(
+                label="📄 Download Exam as PDF",
+                data=pdf_bytes,
+                file_name="practice_exam.pdf",
+                mime="application/pdf"
+            )
+    else:
+        st.warning("Please install fpdf (`pip install fpdf`) to enable PDF downloads.")
+    # ----------------------------------
+    # 1. CLEANING: Remove introductory fluff and trailing keys
+    clean_text = st.session_state.current_exam.strip()
+    # Remove common AI intros like "Here are your questions..."
+    clean_text = re.sub(r"^(Here are|Based on|Sure|I have generated).*?\n", "", clean_text, flags=re.IGNORECASE)
+
+    # 2. SPLITTING: Look for "1. ", "2. ", etc. at the START of a line only
+    # This prevents it from splitting on "1." inside a sentence
+    raw_questions = re.split(r'\n(?=\d+\.\s)', clean_text)
     
-    if 'user_selections' not in st.session_state: st.session_state.user_selections = {}
-    
+    # Remove any empty strings resulting from the split
+    individual_questions = [q.strip() for q in raw_questions if q.strip()]
+
+    if 'user_selections' not in st.session_state:
+        st.session_state.user_selections = {}
+
     with st.form("grading_form"):
         for i, q_text in enumerate(individual_questions):
             st.subheader(f"Question {i+1}")
+            
+            # Enhanced formatting: Add line breaks after questions and options
+            # 1. Add single HTML line break after question text before options
             formatted_q = re.sub(r"(\d+\.\s[^A-D]*?)(?=A\.)", r"\1<br>", q_text)
-            formatted_q = re.sub(r"([A-D]\.\s[^A-D]*?)(?=[A-D]\.|$)", r"\1<br>", formatted_q).replace("\n", "<br>")
-            st.markdown(re.sub(r"(<br>){2,}", "<br>", formatted_q), unsafe_allow_html=True)
+            # 2. Add single HTML line break after each option (A., B., C., D.)
+            formatted_q = re.sub(r"([A-D]\.\s[^A-D]*?)(?=[A-D]\.|$)", r"\1<br>", formatted_q)
+            # 3. Replace newlines with HTML breaks for better rendering
+            formatted_q = formatted_q.replace("\n", "<br>")
+            # 4. Clean up any multiple consecutive breaks to maximum 1
+            formatted_q = re.sub(r"(<br>){2,}", "<br>", formatted_q)
             
-            st.session_state.user_selections[i] = st.radio(f"Select answer {i+1}", ["A", "B", "C", "D"], key=f"qr_{i}_{abs(hash(st.session_state.current_exam)) % 1000}", horizontal=True, index=None, label_visibility="collapsed")
+            # Use markdown with HTML allowed for proper line breaks
+            st.markdown(formatted_q, unsafe_allow_html=True)
+            
+            # This makes the radio buttons cleaner - use exam content for unique key
+            exam_content = st.session_state.get('current_exam', '')
+            exam_content_hash = hash(exam_content) if exam_content else 0
+            st.session_state.user_selections[i] = st.radio(
+                label=f"Select answer for Question {i+1}", # Provide a real label
+                options=["A", "B", "C", "D"],
+                key=f"q_radio_{i}_{abs(exam_content_hash) % 1000}",
+                horizontal=True,
+                index=None,
+                label_visibility="collapsed" # This hides the label visually
+            )
             st.write("---")
-            
-        if st.form_submit_button("Submit for Grading"):
-            num_actual = len(individual_questions)
-            
-            # SYNCHRONIZED LOOKUP: Read straight from Streamlit's radio input element trackers
-            user_answers = []
-            for i in range(num_actual):
-                radio_state_key = f"qr_{i}"
-                
-                # Check if the selection exists in the widget's active state memory
-                if radio_state_key in st.session_state:
-                    ans = st.session_state[radio_state_key]
-                else:
-                    ans = "No Answer"
-                    
-                user_answers.append(ans)
-                
-            correct_key = st.session_state.current_key[:num_actual]
-            
-            # Lock the answers explicitly into the session trackers
-            st.session_state.user_selections = {i: user_answers[i] for i in range(num_actual)}
-            st.session_state.last_user_answers_list = user_answers
-            
-            st.session_state.last_user_input = "\n".join([f"Q{i+1}: {ans}" for i, ans in enumerate(user_answers)])
-            st.session_state.last_correct_key = "\n".join([f"Q{i+1}: {ans}" for i, ans in enumerate(correct_key)])
-                
-            correct_key = st.session_state.current_key[:num_actual]
-            
-            # Track user choices for the feedback renderer to consume
-            st.session_state.user_selections = {i: user_answers[i] for i in range(num_actual)}
-            st.session_state.last_user_answers_list = user_answers
-            
-            st.session_state.last_user_input = "\n".join([f"Q{i+1}: {ans}" for i, ans in enumerate(user_answers)])
-            st.session_state.last_correct_key = "\n".join([f"Q{i+1}: {ans}" for i, ans in enumerate(correct_key)])
-            
-            score = 0
         
-            df_main = pd.read_csv(USER_CSV)
-            df_main.columns = df_main.columns.str.strip().str.lower()
+        submitted = st.form_submit_button("Submit for Grading")
+    if submitted:
+            # Use actual number of questions from current exam
+            num_actual_questions = len(raw_questions)
             
+            # Convert dictionary to a sorted list of answers
+            user_answers = [st.session_state.user_selections[i] for i in range(num_actual_questions)]
+            user_input = "\n".join([f"Q{i+1}: {ans if ans else 'No Answer'}" for i, ans in enumerate(user_answers)])
+            
+            # Use only the first num_actual_questions answers from current_key
+            correct_key = st.session_state.current_key[:num_actual_questions]
+            correct_key_formatted = "\n".join([f"Q{i+1}: {ans}" for i, ans in enumerate(correct_key)])
+
+            # Save this formatted version to session state
+            st.session_state.last_user_input = user_input
+            st.session_state.last_correct_key = correct_key_formatted
+            st.session_state.last_user_answers_list = user_answers # <-- ADD THIS LINE
+            
+            if len(user_answers) != len(correct_key):
+                st.error(f"Mismatch: The exam has {len(correct_key)} questions, but you entered {len(user_answers)} answers. Please fix your input.")
+                st.stop() # Stops the code before it hits the loop and crashes
+            score = 0
+            
+            # --- FIXED: Load the CSV to update scores ---
+            df_main = pd.read_csv(CSV_FILE)
+
+            if 'mastery_score' in df_main.columns:
+                df_main['mastery_score'] = pd.to_numeric(df_main['mastery_score'], errors='coerce').fillna(1).astype(int)
+
             for i, (u_ans, correct) in enumerate(zip(user_answers, correct_key)):
-                # Match the question safely by its unique lecture_id string instead of integer position
-                current_lecture_id = st.session_state.samples_df.iloc[i]['lecture_id']
-                row_mask = df_main['lecture_id'] == current_lecture_id
+                # Link the question back to the original CSV index
+                original_idx = st.session_state.samples_df.index[i]
                 
-                if row_mask.any():
-                    target_idx = df_main[row_mask].index[0]
-                    c_score = int(df_main.at[target_idx, 'mastery_score']) if 'mastery_score' in df_main.columns else 1
-                    
-                    if u_ans == correct:
-                        score += 1
-                        if 'mastery_score' in df_main.columns and mastery_mode == "on": 
-                            df_main.at[target_idx, 'mastery_score'] = min(5, c_score + 1)
-                    else:
-                        if 'mastery_score' in df_main.columns and mastery_mode == "on": 
-                            df_main.at[target_idx, 'mastery_score'] = max(1, c_score - 1)
-                        st.session_state.missed_questions.append({
-                            "question": individual_questions[i], 
-                            "correct": correct, 
-                            "yours": u_ans, 
-                            "category": st.session_state.current_categories[i]
-                        })
+                # Fetch the current score safely before modifying it
+                current_score = int(df_main.at[original_idx, 'mastery_score']) if 'mastery_score' in df_main.columns else 1
+                
+                if u_ans == correct:
+                    score += 1
+                    # Increase Mastery Score safely (Hard Cap at 5)
+                    if 'mastery_score' in df_main.columns and mastery_mode == "on":
+                        new_score = min(5, current_score + 1)
+                        df_main.at[original_idx, 'mastery_score'] = new_score
                 else:
-                    if u_ans == correct:
-                        score += 1
+                    # Decrease Mastery Score safely (Floor Cap at 1)
+                    if 'mastery_score' in df_main.columns and mastery_mode == "on":
+                        new_score = max(1, current_score - 1)
+                        df_main.at[original_idx, 'mastery_score'] = new_score
+                    
+                    if i < len(individual_questions):
+                        st.session_state.missed_questions.append({
+                            "question": individual_questions[i].strip(),
+                            "correct": correct,
+                            "yours": u_ans,
+                            "category": st.session_state.current_categories[i] if i < len(st.session_state.current_categories) else "General",
+                        })
             
-            if 'mastery_score' in df_main.columns: 
+            # --- Ensure the column keeps its clean integer type before saving ---
+            if 'mastery_score' in df_main.columns:
                 df_main['mastery_score'] = df_main['mastery_score'].astype(int)
-            df_main.to_csv(USER_CSV, index=False)
+
+            # Save the changes back to your file
+            df_main.to_csv(CSV_FILE, index=False)
             
+            # Save state so the feedback stays visible after submission
             st.session_state.exam_submitted = True
             st.session_state.last_score = score
+            st.session_state.last_user_input = user_input
+
+            # Update Level based on performance
+            num_actual_questions = len(user_answers)
+            percentage_correct = (score / num_actual_questions) * 100
+            questions_wrong = num_actual_questions - score
             
-            # Level adjustments calculation
-            pct = (score / num_actual) * 100
-            if (num_actual - score) <= 1 or pct >= 80: 
+            # Level up if: only 1 question wrong OR 80%+ correct (whichever is lower threshold)
+            if questions_wrong <= 1 or percentage_correct >= 80:
                 st.session_state.current_level = min(50, st.session_state.current_level + 1)
-            elif pct < 50: 
+                st.success(f"Level Up! Now at Level {st.session_state.current_level}")
+            # Level down if: less than half correct
+            elif percentage_correct < 50:
                 st.session_state.current_level = max(1, st.session_state.current_level - 1)
-                
-            st.rerun()
+                st.warning(f"Level Down. Now at Level {st.session_state.current_level}")
+            else:
+                st.info(f"Score: {score}/{st.session_state.num_questions} ({percentage_correct:.0f}%) - Level maintained")
 
-# --- GRADING INTERFACE OUTSIDE FORM ---
-if st.session_state.get('exam_submitted'):
-    st.subheader(f"Results: {st.session_state.last_score}/{st.session_state.num_questions}")
-    with st.spinner("Instructor processing evaluation..."):
-        feedback, new_idx = ai_engine.get_ai_grading(st.session_state.current_exam, st.session_state.last_user_input, st.session_state.last_correct_key, st.session_state.last_score, 'gemini-3.1-flash-lite-preview', API_KEYS, st.session_state.key_index, use_search=st.session_state.use_search)
-        st.session_state.key_index = new_idx
-        st.markdown(feedback)
+# 2. THE FEEDBACK (Outside the form)
+    if st.session_state.get('exam_submitted'):
+        st.subheader(f"Results: {st.session_state.last_score}/{st.session_state.num_questions}")
         
-    if pdf_generator.has_pdf_support():
-        pdf_bytes_graded = pdf_generator.create_exam_pdf(st.session_state.current_exam, st.session_state.current_key, user_answers=st.session_state.get('last_user_answers_list', []), score=st.session_state.last_score, max_score=st.session_state.num_questions)
-        if pdf_bytes_graded: st.download_button(" 📄 Download Results as PDF", data=pdf_bytes_graded, file_name="graded_exam.pdf", mime="application/pdf", key="download_graded_pdf")
+        with st.spinner("Instructor is searching for the latest feedback..."):
+            # This keeps your original answer comparison and AI explanation
+            feedback = get_ai_grading(
+                st.session_state.current_exam, 
+                st.session_state.last_user_input, 
+                st.session_state.last_correct_key,
+                st.session_state.last_score
+            )
+            st.markdown(feedback)
 
+        st.write("---")
+        
+        # --- ADDED: Download Graded Exam Button ---
+        if FPDF:
+            pdf_bytes_graded = create_exam_pdf(
+                st.session_state.current_exam, 
+                st.session_state.current_key,
+                user_answers=st.session_state.get('last_user_answers_list', []),
+                score=st.session_state.last_score,
+                max_score=st.session_state.num_questions
+            )
+            if pdf_bytes_graded:
+                st.download_button(
+                    label="📄 Download Results & Selections as PDF",
+                    data=pdf_bytes_graded,
+                    file_name="graded_practice_exam.pdf",
+                    mime="application/pdf",
+                    key="download_graded_pdf"
+                )
+        # ---------------------------------------------
+        
 
 # Missed Questions Bank in Sidebar
 if st.session_state.missed_questions:
@@ -321,3 +894,5 @@ if st.session_state.missed_questions:
                 cat = item.get('category', 'General')
                 f.write(f"\n[{cat}] {item['question']}\n[CORRECT: {item['correct']} | YOURS: {item['yours']}]\n")
         st.sidebar.success("Saved to missed_questions.txt")
+
+
