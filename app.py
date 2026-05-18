@@ -10,8 +10,7 @@ import os
 import data_manager
 import ai_engine
 import pdf_generator
-from progress_manager import save_progress, load_progress
-
+from progress_manager import save_progress, load_progress, restore_progress
 
 st.set_page_config(page_title="Trainer", page_icon=" 🩺 ", layout="wide")
 
