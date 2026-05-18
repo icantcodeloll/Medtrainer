@@ -232,3 +232,16 @@ if st.session_state.missed_questions:
     st.write("---")
     st.header("Weakness Heatmap")
     st.bar_chart(pd.DataFrame(st.session_state.missed_questions)['category'].value_counts(), color="#ff4b4b")
+
+    # Insert this at the very bottom of app.py inside the "if st.session_state.missed_questions:" block:
+    st.sidebar.markdown("---")
+    st.sidebar.subheader(f"Missed Questions ({len(st.session_state.missed_questions)})")
+
+    if st.sidebar.button("Export Mistakes to .txt"):
+        with open("missed_questions.txt", "a") as f:
+            f.write(f"\n\n=== WEB SESSION: {time.strftime('%Y-%m-%d %H:%M')} ===\n")
+            for item in st.session_state.missed_questions:
+                cat = item.get('category', 'General')
+                q_clean = item['question'].replace('<br>', '\n')
+                f.write(f"Category: {cat}\n{q_clean}\nYour Ans: {item['yours']} | Correct: {item['correct']}\n-------------------\n")
+        st.sidebar.success("Mistakes appended to missed_questions.txt!")
