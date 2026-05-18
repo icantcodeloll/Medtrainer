@@ -238,21 +238,24 @@ if st.session_state.get('exam_submitted'):
         pdf_bytes_graded = pdf_generator.create_exam_pdf(st.session_state.current_exam, st.session_state.current_key, user_answers=st.session_state.get('last_user_answers_list', []), score=st.session_state.last_score, max_score=st.session_state.num_questions)
         if pdf_bytes_graded: st.download_button(" 📄 Download Results as PDF", data=pdf_bytes_graded, file_name="graded_exam.pdf", mime="application/pdf", key="download_graded_pdf")
 
-# Weakness Charts rendering
+
+# Missed Questions Bank in Sidebar
 if st.session_state.missed_questions:
+    # 1. THE HEATMAP (Visual)
     st.write("---")
     st.header("Weakness Heatmap")
-    st.bar_chart(pd.DataFrame(st.session_state.missed_questions)['category'].value_counts(), color="#ff4b4b")
+    m_df = pd.DataFrame(st.session_state.missed_questions)
+    if 'category' in m_df.columns:
+        st.bar_chart(m_df['category'].value_counts(), color="#ff4b4b")
 
-    # Insert this at the very bottom of app.py inside the "if st.session_state.missed_questions:" block:
+    # 2. YOUR ORIGINAL SIDEBAR EXPORT (Preserved)
     st.sidebar.markdown("---")
     st.sidebar.subheader(f"Missed Questions ({len(st.session_state.missed_questions)})")
-
     if st.sidebar.button("Export Mistakes to .txt"):
         with open("missed_questions.txt", "a") as f:
             f.write(f"\n\n=== WEB SESSION: {time.strftime('%Y-%m-%d %H:%M')} ===\n")
             for item in st.session_state.missed_questions:
+                # Upgraded text format to include category in the file
                 cat = item.get('category', 'General')
-                q_clean = item['question'].replace('<br>', '\n')
-                f.write(f"Category: {cat}\n{q_clean}\nYour Ans: {item['yours']} | Correct: {item['correct']}\n-------------------\n")
-        st.sidebar.success("Mistakes appended to missed_questions.txt!")
+                f.write(f"\n[{cat}] {item['question']}\n[CORRECT: {item['correct']} | YOURS: {item['yours']}]\n")
+        st.sidebar.success("Saved to missed_questions.txt")
