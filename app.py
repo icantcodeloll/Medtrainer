@@ -144,13 +144,6 @@ EXAM_WEIGHTS = {
 }
 
 
-mastery_mode = "off"
-
-if mastery_mode == "on":
-    mastery_change = 1
-else:
-    mastery_change = 0
-
 
 # Load saved progress on startup
 loaded_progress = load_progress(active_user)
@@ -430,6 +423,18 @@ st.sidebar.metric("Active Level", f"{st.session_state.current_level}/50")
 
 # --- ADD THIS: Focus Mode Dropdown ---
 df_sidebar = pd.read_csv(CSV_FILE)
+
+# --- MASTERY MODE INITIALIZATION ---
+if 'mastery_mode' not in st.session_state:
+    st.session_state.mastery_mode = False
+
+st.session_state.mastery_mode = st.sidebar.checkbox(
+    "Mastery Mode", 
+    value=st.session_state.mastery_mode,
+    help="Enable Spaced Repetition (SRS) based on your weak areas."
+)
+
+
 categories = df_sidebar['category'].fillna("Uncategorized").astype(str).unique().tolist()
 all_categories = ["All Topics"] + sorted(categories)
 focus_mode = st.sidebar.selectbox("Focus Mode:", all_categories)
@@ -511,7 +516,7 @@ if st.sidebar.button("Generate New Exam"):
         df['topic_weight'] = df['category'].map(EXAM_WEIGHTS).fillna(0.05)
         
         # Factor in Mastery Score ONLY if column exists AND Mastery Mode is toggled ON
-        if mastery_mode == "on" and 'mastery_score' in df.columns:
+        if st.session_state.mastery_mode and 'mastery_score' in df.columns:
             df['mastery_score'] = pd.to_numeric(df['mastery_score'], errors='coerce').fillna(1).astype(int)
 
             # Inverse mastery modifier: lower mastery (1-3) increases chance of being picked
@@ -578,9 +583,6 @@ if st.sidebar.button("Generate New Exam"):
                 st.error(f"Failed to generate a perfectly formatted exam after {max_retries} attempts. Please click generate again.")
     except Exception as e:
         st.error(f"File Error: Ensure {CSV_FILE} and {NOTES_FILE} are in the folder. ({e})")
-
-# Replace mastery_mode = "off" with this:
-mastery_mode = "on" if st.sidebar.checkbox("Mastery Mode", value=False) else "off"
 
 st.sidebar.markdown("---")
 
@@ -793,12 +795,12 @@ if st.session_state.current_exam:
                 if u_ans == correct:
                     score += 1
                     # Increase Mastery Score safely (Hard Cap at 5)
-                    if 'mastery_score' in df_main.columns and mastery_mode == "on":
+                    if 'mastery_score' in df_main.columns and st.session_state.mastery_mode:
                         new_score = min(5, current_score + 1)
                         df_main.at[original_idx, 'mastery_score'] = new_score
                 else:
                     # Decrease Mastery Score safely (Floor Cap at 1)
-                    if 'mastery_score' in df_main.columns and mastery_mode == "on":
+                    if 'mastery_score' in df_main.columns and st.session_state.mastery_mode:
                         new_score = max(1, current_score - 1)
                         df_main.at[original_idx, 'mastery_score'] = new_score
                     
