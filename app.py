@@ -171,6 +171,9 @@ if 'samples_df' not in st.session_state:
 if 'previous_test_data' not in st.session_state:
     st.session_state.previous_test_data = {}
 # Place this in your sidebar logic (e.g., around line 450)
+# --- INITIALIZE COMMON SYSTEM STATES ---
+if "use_search" not in st.session_state:
+    st.session_state.use_search = False
 if 'thinking_level' not in st.session_state:
     st.session_state.thinking_level = "MEDIUM"
 
