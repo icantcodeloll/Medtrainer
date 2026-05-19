@@ -170,6 +170,16 @@ if 'samples_df' not in st.session_state:
     st.session_state.samples_df = loaded_progress.get("samples_df", pd.DataFrame())
 if 'previous_test_data' not in st.session_state:
     st.session_state.previous_test_data = {}
+# Place this in your sidebar logic (e.g., around line 450)
+if 'thinking_level' not in st.session_state:
+    st.session_state.thinking_level = "MEDIUM"
+
+st.session_state.thinking_level = st.sidebar.selectbox(
+    "Gemini Thinking Level",
+    options=["MINIMAL", "LOW", "MEDIUM", "HIGH"],
+    index=2, # Defaults to MEDIUM
+    help="Control how deeply the model deliberates before generating questions or grading."
+)
 
 # Register auto-save on app shutdown
 if st.sidebar.button("Save Progress", help="Manually save your current progress"):
@@ -187,18 +197,27 @@ def get_client():
 def call_gemini_with_rotation(prompt, model_to_use, use_search=False, timeout_per_question=3):
     keys_tried = 0
     
-    # Configure Google Search Tool if requested
+    # Define your basic tools
     tools = []
     if use_search:
         tools = [types.Tool(google_search=types.GoogleSearch())]
     
+    # NEW: Construct the comprehensive generation config with thinking levels
+    config_args = {
+        "thinking_config": types.ThinkingConfig(thinking_level=st.session_state.thinking_level)
+    }
+    if tools:
+        config_args["tools"] = tools
+        
+    generation_config = types.GenerateContentConfig(**config_args)
+
     while keys_tried < len(API_KEYS):
         try:
             client = get_client()
             response = client.models.generate_content(
-                model=model_to_use, 
+                model=model_to_use,
                 contents=prompt,
-                config=types.GenerateContentConfig(tools=tools) if tools else None
+                config=generation_config # <-- Passes the level to the SDK
             )
             return response.text
         except Exception as e:
@@ -214,7 +233,6 @@ def call_gemini_with_rotation(prompt, model_to_use, use_search=False, timeout_pe
             else:
                 st.error(f"Error: {e}")
                 return None
-
 # ==========================================
 # 2. CORE LOGIC FUNCTIONS
 # ==========================================
