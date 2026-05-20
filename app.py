@@ -200,27 +200,34 @@ def get_client():
 def call_gemini_with_rotation(prompt, model_to_use, use_search=False, timeout_per_question=3):
     keys_tried = 0
     
-    # Define your basic tools
+    # 1. Establish tool rules: Google Search ONLY applies to Gemini 2.5 Flash
     tools = []
-    if use_search:
+    if use_search and "2.5-flash" in model_to_use.lower():
         tools = [types.Tool(google_search=types.GoogleSearch())]
     
-    # NEW: Construct the comprehensive generation config with thinking levels
-    config_args = {
-        "thinking_config": types.ThinkingConfig(thinking_level=st.session_state.thinking_level)
-    }
+    # 2. Build configuration arguments dynamically
+    config_args = {}
+    
     if tools:
         config_args["tools"] = tools
         
+    # 3. Establish reasoning rules: Thinking Level ONLY applies to Gemini 3.1 Flash Lite Preview
+    if "3.1-flash-lite" in model_to_use.lower():
+        # Safeguard default state if UI component hasn't rendered yet
+        current_level = st.session_state.get("thinking_level", "MEDIUM")
+        config_args["thinking_config"] = types.ThinkingConfig(thinking_level=current_level)
+
+    # Pack arguments into the structural API configuration object
     generation_config = types.GenerateContentConfig(**config_args)
 
+    # --- REST OF YOUR CONTINUOUS API LOOP ---
     while keys_tried < len(API_KEYS):
         try:
             client = get_client()
             response = client.models.generate_content(
                 model=model_to_use,
                 contents=prompt,
-                config=generation_config # <-- Passes the level to the SDK
+                config=generation_config
             )
             return response.text
         except Exception as e:
@@ -234,7 +241,7 @@ def call_gemini_with_rotation(prompt, model_to_use, use_search=False, timeout_pe
             elif "503" in str(e):
                 time.sleep(5)
             else:
-                st.error(f"Error: {e}")
+                st.error(f"Error during generation: {e}")
                 return None
 # ==========================================
 # 2. CORE LOGIC FUNCTIONS
