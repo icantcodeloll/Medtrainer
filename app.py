@@ -11,6 +11,17 @@ import shutil # Add this to your imports at the top of the file
 import tempfile
 import random
 import datetime
+import threading
+
+# Global thread lock to prevent simultaneous CSV write operations
+csv_write_lock = threading.Lock()
+
+def thread_safe_to_csv(df, filepath):
+    """Acquires a thread lock before writing to disk to prevent file collisions."""
+    with csv_write_lock:
+        df.to_csv(filepath, index=False)
+
+
 try:
     from fpdf import FPDF
 except ImportError:
@@ -76,8 +87,9 @@ def backup_user_data(user_csv):
         shutil.copy(user_csv, backup_path)
 
 # Run the backup immediately right here!
-backup_user_data(USER_CSV)
-
+if f"backed_up_{active_user}" not in st.session_state:
+    backup_user_data(USER_CSV)
+    st.session_state[f"backed_up_{active_user}"] = True
 # ==========================================
 # SMART CSV SYNCHRONIZATION
 # ==========================================
@@ -92,7 +104,7 @@ try:
 
     if not os.path.exists(USER_CSV):
         # Brand new user: Give them a clean copy of the master template
-        df_master.to_csv(USER_CSV, index=False)
+        thread_safe_to_csv(df_master, USER_CSV)
     else:
         # Existing user: Safely sync new columns or rows without overwriting user data
         df_user = pd.read_csv(USER_CSV)
@@ -115,7 +127,7 @@ try:
 
         # Save back to their personal CSV file only if changes were made
         if is_updated:
-            df_user.to_csv(USER_CSV, index=False)
+            thread_safe_to_csv(df_user, USER_CSV)
             st.toast(f"Profile updated!")
 
 except Exception as e:
@@ -692,8 +704,10 @@ if st.session_state.get('show_settings', False):
 
     st.sidebar.markdown("---")
     if st.sidebar.button("Reset Progress", help="Clear all saved progress and reset to defaults"):
-        if os.path.exists("user_progress.json"):
-            os.remove("user_progress.json")
+    # Target the specific user's progress file instead of a global file
+        user_specific_progress = f"{active_user}_progress.json"
+        if os.path.exists(user_specific_progress):
+            os.remove(user_specific_progress)
             # Reset session state to defaults
             st.session_state.current_level = 10
             st.session_state.num_questions = 10
@@ -851,7 +865,7 @@ if st.session_state.current_exam:
                 df_main['mastery_score'] = df_main['mastery_score'].astype(int)
 
             # Save the changes back to your file
-            df_main.to_csv(CSV_FILE, index=False)
+            thread_safe_to_csv(df_main, CSV_FILE)
             
             # Save state so the feedback stays visible after submission
             st.session_state.exam_submitted = True
@@ -922,13 +936,18 @@ if st.session_state.missed_questions:
     # 2. YOUR ORIGINAL SIDEBAR EXPORT (Preserved)
     st.sidebar.markdown("---")
     st.sidebar.subheader(f"Missed Questions ({len(st.session_state.missed_questions)})")
-    if st.sidebar.button("Export Mistakes to .txt"):
-        with open("missed_questions.txt", "a") as f:
-            f.write(f"\n\n=== WEB SESSION: {time.strftime('%Y-%m-%d %H:%M')} ===\n")
-            for item in st.session_state.missed_questions:
-                # Upgraded text format to include category in the file
-                cat = item.get('category', 'General')
-                f.write(f"\n[{cat}] {item['question']}\n[CORRECT: {item['correct']} | YOURS: {item['yours']}]\n")
-        st.sidebar.success("Saved to missed_questions.txt")
+    # Prepare the missed questions text content dynamically in memory
+    export_text = f"=== WEB SESSION: {time.strftime('%Y-%m-%d %H:%M')} ===\n"
+    for item in st.session_state.missed_questions:
+        cat = item.get('category', 'General')
+        export_text += f"\n[{cat}] {item['question']}\n[CORRECT: {item['correct']} | YOURS: {item['yours']}]\n"
 
+    # Offer the file directly as a local browser download
+    st.sidebar.download_button(
+        label="📥 Download Mistakes to .txt",
+        data=export_text,
+        file_name=f"{active_user}_missed_questions.txt",
+        mime="text/plain",
+        key=f"download_mistakes_{active_user}"
+    )
 
