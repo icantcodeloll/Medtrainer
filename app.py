@@ -116,7 +116,7 @@ try:
         # Save back to their personal CSV file only if changes were made
         if is_updated:
             df_user.to_csv(USER_CSV, index=False)
-            st.toast(f"🔄 Profile updated with latest curriculum structure!")
+            st.toast(f"Profile updated!")
 
 except Exception as e:
     st.error(f"Error handling profile sync: {e}")
