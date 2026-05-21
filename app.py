@@ -815,9 +815,13 @@ if st.session_state.current_exam:
             if 'mastery_score' in df_main.columns:
                 df_main['mastery_score'] = pd.to_numeric(df_main['mastery_score'], errors='coerce').fillna(1).astype(int)
 
-            for i, (u_ans, correct) in enumerate(zip(user_answers, correct_key)):
-                # Link the question back to the original CSV index
-                original_idx = st.session_state.samples_df.index[i]
+            for i, original_idx in enumerate(st.session_state.samples_df.index):
+            # Guard against situations where the user provided fewer answers than questions
+                if i >= len(user_answers):
+                    break
+                
+                u_ans = user_answers[i]
+                correct = correct_key[i] if i < len(correct_key) else None
                 
                 # Fetch the current score safely before modifying it
                 current_score = int(df_main.at[original_idx, 'mastery_score']) if 'mastery_score' in df_main.columns else 1
