@@ -1610,10 +1610,165 @@ In the ""Triple Whammy"" mechanism, {{c1::diuretics}} decrease {{c2::blood volum
 Pulmonary hypertension can be treated with {{c1::Sildenafil}}, which improves the {{c2::nitric oxide (NO)}} signaling cascade to cause vasodilation. [cite: 39] | Extra: It acts by inhibiting PDE5, increasing cGMP levels in the pulmonary vasculature. [cite: 39]
 {{c1::Prostacyclins}} are used in pulmonary hypertension to induce {{c2::dilation}} of the pulmonary circulation. [cite: 40] | Extra: These are synthetic versions of the natural vasodilator prostaglandin I2. [cite: 40]"
 Diuretics and pharmacological treatment of renal disorders,,
-Acid/base disorders and compensation,,
-Acute kidney injury and chronic kidney disease,,
-Components of the endocrine system,,
-The hypothalamus and pituitary gland,,
+Acid/base disorders and compensation,,"Respiratory acid-base disorders are characterized primarily by a change in {{c1::CO2::gas}} levels. | Respiratory disorders alter carbon dioxide levels due to changes in ventilation, directly impacting the carbonic acid equilibrium.
+Metabolic acid-base disorders are characterized primarily by a change in {{c1::HCO3-::ion}} levels. | Metabolic disorders affect bicarbonate concentration directly through renal or metabolic processes.
+The immediate physiological ways to restore pH include chemical {{c1::buffers}}, respiratory mechanisms, and renal mechanisms. | The body employs chemical buffering followed by respiratory and renal adjustments to correct deviations in pH.
+An example of a primary extracellular fluid (ECF) buffer is the {{c1::bicarbonate}} buffer. | Chemical buffers are the first line of defense against pH alterations.
+Respiratory mechanisms restore pH by changing {{c1::alveolar ventilation}} to adjust CO2 production. | Increasing or decreasing alveolar ventilation alters the excretion of volatile acid (CO2).
+One major renal mechanism to restore pH is to reabsorb {{c1::bicarbonate}} from the filtrate. | Reabsorbing bicarbonate prevents the loss of essential base reserves through the urine.
+Another major renal mechanism to restore pH is to secrete {{c1::H+ (hydrogen ions)}} into the filtrate for excretion. | Active secretion of protons allows the kidneys to eliminate excess fixed acids from the body.
+In respiratory acidosis, the partial pressure of carbon dioxide (PaCO2) is {{c1::inversely}} proportional to the minute volume. | A decrease in minute volume leads to a failure in expelling CO2, raising PaCO2 and causing acidosis.
+{{c1::Acute}} respiratory acidosis is characterized by failed ventilation caused by factors like drugs or muscle/nerve disorders. | Acute respiratory acidosis occurs suddenly, leaving insufficient time for renal compensation to occur.
+Examples of underlying factors that can cause failed ventilation in acute respiratory acidosis include {{c1::drugs, muscle disorders, or nerve disorders::3 categories}}. | Acute respiratory acidosis occurs when ventilation suddenly fails before renal compensation can take effect.
+{{c1::Chronic}} respiratory acidosis is typically caused by long-standing lung disease. | Chronic respiratory acidosis develops over time, allowing the kidneys to compensate by retaining bicarbonate.
+In diabetic ketoacidosis, a deficiency in {{c1::insulin}} triggers the breakdown of fats, forming ketoacids. | This metabolic process leads to an accumulation of unmeasured anions and a high anion gap.
+Liver failure can cause metabolic acidosis specifically by leading to {{c1::lactic}} acidosis. | The liver's failure to clear or metabolize lactate results in its systemic accumulation.
+The anion gap is a clinical measure representing the balance of electrolytes, calculated as {{c1::Na - (Cl + HCO3)}}. | It helps determine if a metabolic acidosis is caused by an accumulation of unmeasured anions or loss of bicarbonate.
+The normal value for the serum anion gap is typically {{c1::9-14}} mM. | Values within this range are considered a normal anion gap, whereas higher values indicate unmeasured anions.
+The fundamental purpose of calculating the anion gap is to determine if there is an imbalance in {{c1::unmeasured anions}}. | An elevated anion gap confirms the presence of additional metabolic fixed acids.
+A high anion gap metabolic acidosis signifies the accumulation of non-volatile acids, remembered by the acronym {{c1::LKTR}}. | LKTR stands for lactates, ketones, toxins, and renal failure.
+In the high-anion-gap acidosis acronym LKTR, the letters stand for {{c1::lactates, ketones, toxins, renal failure}}. | These four categories represent the major sources of unmeasured non-volatile acids.
+A metabolic acidosis characterized by a decrease in bicarbonate paired with an increase in chloride is called {{c1::hyperchloremic}} acidosis. | Because chloride increases to balance the loss of bicarbonate, the overall calculated anion gap remains normal.
+Respiratory alkalosis is primarily driven by {{c1::hyperventilation}}. | Hyperventilation causes an excessive loss of CO2, driving blood pH upward.
+Metabolic alkalosis involves a loss of H+ or a gain of {{c1::bicarbonate (HCO3-)}}. | This state elevates systemic pH through direct changes in metabolic or renal electrolyte handling.
+Two physiological conditions associated with metabolic alkalosis development or maintenance are {{c1::hypervolemia}} and kidney disease. | Both conditions affect the kidneys' ability to properly regulate and excrete bicarbonate ions.
+During respiratory compensation for a low pH, the body {{c1::increases::increases or decreases?}} the breathing rate to expel CO2. | Conversely, if pH is too high, the breathing rate decreases to retain CO2.
+During renal compensation for a low pH, the kidneys secrete more {{c1::H+}} and retain more {{c2::HCO3-}}. | Conversely, if pH is too high, the kidneys reduce H+ secretion and increase HCO3- excretion.
+A fundamental rule of acid-base balance is that a respiratory change is compensated by a {{c1::renal}} mechanism, and vice versa. | The two primary physiological regulatory systems work in tandem to counteract each other's primary deviations.
+The {{c1::Boston bedside rules}} are clinical guidelines used to determine how much compensatory response is occurring. | These rules quantify whether a secondary change is an appropriate compensation or a mixed disorder.
+According to the Boston bedside rules, there are {{c1::4}} rules for respiratory disturbances and {{c2::2}} rules for renal disturbances. | These precise calculations predict the expected change in HCO3- or PaCO2.
+A graphical tool utilized to evaluate both simple and mixed acid-base disturbances is a {{c1::nomogram}}. | It maps pH, PaCO2, and bicarbonate concentrations into specific diagnostic bands.
+On an acid-base nomogram, mixed disturbances are identified because they lie {{c1::outside}} the range of the 'flower'. | Points falling within the designated 'flower' zones indicate simple, expected compensatory patterns."
+Acute kidney injury and chronic kidney disease,,"Protein is usually kept out of the glomerular filtrate by a {{c1::negative ion charge::charge type}} barrier [cite: 2]. | Protein filtration barrier in the kidney [cite: 2].
+{{c1::Pre-renal}} AKI is caused by an interruption to blood flow affecting GFR [cite: 4]. | Causes of Acute Kidney Injury (AKI) [cite: 3, 4].
+Pre-renal AKI involves an interruption to blood flow that consequently reduces the {{c1::GFR::abbreviation}} [cite: 4]. | GFR stands for Glomerular Filtration Rate [cite: 4].
+In pre-renal conditions, decreased blood flow leads to increased ADH, which causes {{c1::increased reabsorption of water}} [cite: 5]. | Compensatory mechanism in pre-renal AKI to preserve fluid volume [cite: 5].
+Reduced renal blood flow triggers {{c1::increased ADH}} secretion, resulting in increased water reabsorption [cite: 5]. | Hormonal control of volume in pre-renal AKI [cite: 5].
+When pre-renal AKI is caused by heart issues, it can be treated with {{c1::diuretics}} [cite: 6]. | Heart failure management in the context of cardiorenal syndrome [cite: 6].
+When pre-renal AKI is due to sepsis shock, clinical management involves using {{c1::vasoconstrictors}} [cite: 7]. | Restoring systemic vascular resistance and perfusion pressure [cite: 7].
+{{c1::Intrarenal}} AKI is associated with direct damage to the kidney tissue, often due to toxins [cite: 8]. | Classification of AKI causes [cite: 3, 8].
+In intrarenal AKI, dead cells form {{c1::casts}} which clog up tubules [cite: 9]. | Pathophysiology of cellular destruction within renal tubules [cite: 9].
+Tubular clogging by cellular casts results in high pressure in tubules, leading to a {{c1::reduced GFR}} [cite: 9]. | Mechanism of GFR reduction in intrarenal AKI [cite: 9].
+In intrarenal AKI, dead cells form casts that clog up tubules, creating {{c1::high pressure in tubules}} which reduces GFR [cite: 9]. | Intratubular hydrostatic pressure changes [cite: 9].
+{{c1::Post-renal}} AKI is primarily characterized by an obstruction [cite: 10]. | Classification of AKI causes [cite: 3, 10].
+Post-renal obstruction leads to increased {{c1::intraluminal pressure}}, creating pressure and stress on the endothelial wall, which lowers GFR [cite: 11]. | Mechanics of post-renal kidney injury [cite: 11].
+Post-renal obstruction causes increased intraluminal pressure, which exerts pressure and stress on the {{c1::endothelial wall}}, leading to a low GFR [cite: 11]. | Structural targets of obstructive uropathy [cite: 11].
+Increased intraluminal pressure and endothelial cell injury from obstruction trigger the release of {{c1::inflammatory mediators}} [cite: 11, 12]. | Cellular response to obstructive injury [cite: 11, 12].
+The response to post-renal obstruction includes the release of inflammatory mediators along with {{c1::endothelial cell injury}} [cite: 11, 12]. | Pathological cascades in obstructive uropathy [cite: 11, 12].
+Inflammatory mediators released during kidney injury promote {{c1::vasoconstriction}} and cellular/interstitial edema [cite: 13]. | Vascular changes secondary to inflammation [cite: 13].
+The action of inflammatory mediators in AKI leads to vasoconstriction as well as {{c1::cellular/interstitial edema}} [cite: 13]. | Tissue changes secondary to inflammation [cite: 13].
+AKI staging is clinically determined based on two parameters: {{c1::serum creatinine}} and urine output [cite: 14, 15]. | Diagnostic staging criteria for acute kidney injury [cite: 14, 15].
+AKI staging is clinically determined based on two parameters: serum creatinine and {{c1::urine output}} [cite: 14, 15]. | Diagnostic staging criteria for acute kidney injury [cite: 14, 15].
+For diagnosing renal conditions, checking {{c1::fractional sodium excretion}} helps indicate a pre-renal vs post-renal etiology [cite: 16, 17]. | Excretory indices for differential diagnosis [cite: 16, 17].
+The diagnosis of Chronic Kidney Disease (CKD) requires looking at {{c1::GFR}} and albuminuria [cite: 18, 19]. | Core clinical indicators for diagnosing CKD [cite: 18, 19].
+The diagnosis of Chronic Kidney Disease (CKD) requires looking at GFR and {{c1::albuminuria}} [cite: 18, 19]. | Core clinical indicators for diagnosing CKD [cite: 18, 19].
+A systemic complication of CKD is {{c1::hypertension}} because the kidney fails to control fluid volume [cite: 20, 21]. | Volume overload effects in chronic kidney failure [cite: 20, 21].
+Hypertension develops in CKD because the kidney does not control {{c1::fluid volume}} [cite: 20, 21]. | Pathophysiology of CKD-induced hypertension [cite: 20, 21].
+A critical complication of CKD involving potassium balance is {{c1::hyperkalemia}} [cite: 20, 22]. | Electrolyte retention due to diminished nephron function [cite: 20, 22].
+Advanced CKD leads to the accumulation of nitrogenous wastes, a clinical syndrome known as {{c1::uremia}} [cite: 20, 23]. | Toxemia due to inadequate filtration of metabolic waste [cite: 20, 23].
+CKD causes issues with {{c1::erythropoietin::EPO}} production, directly resulting in anemia [cite: 20, 24]. | Endocrine function deficits in chronic renal disease [cite: 20, 24].
+Impaired erythropoietin production in CKD directly leads to the development of {{c1::anemia}} [cite: 20, 24]. | Hematologic complications of renal failure [cite: 20, 24].
+Patients with CKD develop acid-base issues because the kidney loses its capacity to remove {{c1::H+::hydrogen}} ions [cite: 20, 25]. | Metabolic acidosis development in renal failure [cite: 20, 25].
+Endocrine dysfunction in CKD manifests as {{c1::Vitamin D activation}} issues [cite: 20, 26]. | Imbalances in bone and mineral metabolism due to renal failure [cite: 20, 26].
+One of the two main structural pathologies underlying CKD is {{c1::glomerulosclerosis}} [cite: 27, 28]. | Pathohistological hallmarks of irreversible chronic kidney damage [cite: 27, 28].
+One of the two main structural pathologies underlying CKD is {{c1::tubulointerstitial fibrosis}} [cite: 27, 29]. | Pathohistological hallmarks of irreversible chronic kidney damage [cite: 27, 29].
+In CKD, {{c1::RAAS::abbreviation}} activity increases, driving hypertension and creating further kidney injury [cite: 30]. | Renin-Angiotensin-Aldosterone System chronic up-regulation [cite: 30].
+Increased RAAS activity in CKD creates a progressive cycle of harm by causing {{c1::hypertension}} and more kidney injury [cite: 30]. | Cardiorenal and intrinsic damage feedback loops [cite: 30].
+When differentiating AKI from CKD, a change in serum {{c1::calcium}} levels typically takes a while to manifest [cite: 31, 32]. | Diagnostic differentiation using chronic mineral bone biomarkers [cite: 31, 32].
+A notable decrease in {{c1::Hb::hemoglobin}} takes a long time to occur, helping differentiate CKD from AKI [cite: 31, 33]. | Differentiating chronic vs acute anemia status in kidney disease [cite: 31, 33].
+The concept of {{c1::renal reserve}} explains why a person can live normally after donating a kidney, since the second kidney serves as a backup [cite: 34, 35]. | Nephron functional redundancy and hypertrophy backup [cite: 34, 35]."
+Components of the endocrine system,,"The {{c1::pineal gland}} secretes {{c2::melatonin}}, which regulates circadian rhythms. | Pineal gland & Melatonin [cite: 3, 4]<br>Pitfall: Do not confuse the pineal gland with the pituitary gland.
+The hypothalamus secretes {{c1::thyrotropin-releasing hormone (TRH)}}, which stimulates the anterior pituitary to release {{c2::TSH}}. | Hypothalamic TRH [cite: 5, 6, 124]
+The hypothalamus releases {{c1::dopamine}}, an amine hormone that functions to {{c2::inhibit prolactin production}} in the anterior pituitary. | Hypothalamic Dopamine [cite: 5, 7, 113]
+The hypothalamus secretes {{c1::growth hormone-releasing hormone (GHRH)}} and its inhibitory counterpart, {{c2::somatostatin}}, to regulate growth hormone. | Hypothalamic Somatostatin [cite: 5, 8, 9]
+The hypothalamus secretes {{c1::gonadotropin-releasing hormone (GnRH)}} to control the release of LH and FSH from the anterior pituitary. | Hypothalamic GnRH [cite: 5, 10]
+The hypothalamus secretes {{c1::corticotropin-releasing hormone (CRH)}} to stimulate the release of ACTH from the anterior pituitary. | Hypothalamic CRH [cite: 5, 11]
+The posterior pituitary stores and releases {{c1::oxytocin}} and {{c2::vasopressin (ADH)}}, which are synthesized in the {{c3::hypothalamus}}. | Posterior Pituitary Hormones [cite: 5, 12, 13, 21, 22, 23]
+The six primary hormones synthesized and secreted by the anterior pituitary are {{c1::GH, TSH, ACTH, FSH, LH, and prolactin}}. | Anterior Pituitary Hormones [cite: 14, 15, 16, 17, 18, 19, 20]
+The thyroid gland produces the lipophilic amine hormones {{c1::T3 (triiodothyronine)}} and {{c2::T4 (thyroxine)}}. | Thyroid Hormones [cite: 24, 25, 26, 109]<br>Note: Despite being amine hormones, T3 and T4 are lipophilic and act on intracellular receptors.
+In response to growth hormone, the {{c1::liver}} secretes {{c2::insulin-like growth factor (IGF)}}. | Liver and IGF [cite: 27, 28]
+The gastrointestinal tract (GIT) secretes five key hormones to regulate digestion and metabolism: {{c1::gastrin, ghrelin, secretin, cholecystokinin (CCK), and GLP-1/GIP}}. | GIT Hormones [cite: 29, 30, 31, 32, 33, 34]
+Adipose tissue (fat) functions as an endocrine organ by secreting {{c1::leptin}} and various {{c2::adipokines}}. | Fat Tissue Endocrine Function [cite: 35, 36, 37]
+The endocrine pancreas secretes {{c1::insulin}} from beta cells, {{c2::glucagon}} from alpha cells, and {{c3::somatostatin}} from delta cells. | Pancreatic Hormones [cite: 38, 39, 40, 41]<br>Note: Pancreatic somatostatin acts locally to modulate islet cell secretion.
+The kidneys produce three critical endocrine/paracrine factors: {{c1::1,25-dihydroxyvitamin D (calcitriol)}}, {{c2::erythropoietin (EPO)}}, and {{c3::thrombopoietin}}. | Kidney Endocrine Function [cite: 42, 43, 44, 45]
+The adrenal cortex produces three categories of steroid hormones: {{c1::glucocorticoids (e.g., cortisol)}}, {{c2::mineralocorticoids (e.g., aldosterone)}}, and {{c3::androgens (e.g., DHEA)}}. | Adrenal Cortex Hormones [cite: 46, 47, 48, 49, 94, 95, 97, 100]
+The adrenal medulla synthesizes and secretes the catecholamines {{c1::adrenaline (epinephrine)}} and {{c2::noradrenaline (norepinephrine)}}. | Adrenal Medulla Catecholamines [cite: 50, 51, 52, 112, 114]
+The ovaries secrete four main endocrine factors: {{c1::progesterone, estrogens, inhibins, and androstenedione}}. | Ovarian Hormones [cite: 53, 54, 55, 56, 57]
+The testes synthesize and secrete {{c1::androgens (e.g., testosterone)}}, {{c2::estradiol}}, and {{c3::inhibins}}. | Testicular Hormones [cite: 58, 59, 60, 61]<br>Note: Small amounts of estradiol are produced directly by the testes or converted peripherally.
+During pregnancy, the placenta secretes four critical hormones: {{c1::progesterone, estrogens, human chorionic gonadotropin (hCG), and human placental lactogen (hPL)}}. | Placental Hormones [cite: 62, 63, 64, 65, 66]
+During pregnancy, the uterus itself acts as an endocrine source, releasing {{c1::prolactin}} and {{c2::relaxin}}. | Uterine Hormones during Pregnancy [cite: 67, 68, 69]
+The three primary biochemical classes of hormones are {{c1::proteins/peptides (most hormones)}}, {{c2::steroids}}, and {{c3::amino acid derivatives (amines)}}. | Biochemical Classes of Hormones [cite: 70, 71, 72, 74]
+Steroid hormones are exclusively produced by three sites: the {{c1::adrenal cortex}}, the {{c2::gonads (ovaries/testes)}}, and the {{c3::placenta during pregnancy}}. | Sites of Steroidogenesis [cite: 73]
+During protein hormone synthesis, a large {{c1::preprohormone}} is generated at the ribosomes and translated directly into the {{c2::endoplasmic reticulum}}. | Protein Hormone Synthesis Phase 1 [cite: 75, 76]
+After signal peptide cleavage in the ER, the inactive {{c1::prohormone}} moves via vesicular transport to the {{c2::Golgi apparatus}}. | Protein Hormone Synthesis Phase 2 [cite: 77]
+The final activation of a protein hormone occurs inside {{c1::secretory vesicles}} by enzymatic cleavage, prior to release via {{c2::exocytosis}}. | Protein Hormone Synthesis Phase 3 [cite: 78]
+Protein hormones, being hydrophilic, cannot cross the plasma membrane and must bind to extracellular {{c1::G-protein coupled receptors (7-TM receptors)}}. | Protein Hormone Action Mechanism [cite: 79, 80]
+Upon protein hormone binding, GPCR activation triggers the generation of {{c1::cAMP}}, which initiates a downstream {{c2::protein kinase cascade}}. | Protein Hormone Second Messengers [cite: 81]
+Downstream of the protein kinase cascade, a signaling molecule can enter the nucleus to act as a {{c1::transcription factor}}, changing gene expression. | Protein Hormone Nuclear Effects [cite: 82, 83]
+Protein hormone signaling can highly {{c1::amplify}} responses and stimulate diverse effects because {{c2::cAMP acts on multiple downstream targets}}. | Signal Amplification [cite: 85]
+Steroid hormones are lipid-soluble (lipophilic) molecules derived from {{c1::cholesterol}}. | Steroid Hormone Nature [cite: 86, 87, 88]
+Because steroid hormones are lipophilic, they {{c1::diffuse directly across}} the cell membrane, but require {{c2::protein carriers}} for transport in blood. | Steroid Transport [cite: 88, 89, 90]
+The overall synthesis of steroid hormones is regulated upstream by {{c1::protein hormones secreted from the pituitary gland}}. | Steroid Regulation [cite: 91]
+Pituitary tropic hormones activate {{c1::Protein Kinase A (PKA)}}, increasing {{c2::steroidogenic acute regulatory (StAR) protein}} to move cholesterol into the {{c3::mitochondria}}. | Rate-limiting Step of Steroidogenesis [cite: 92]
+Unlike peptide hormones stored in vesicles, steroid hormones cannot be stored, meaning it {{c1::takes time}} to synthesize and increase blood levels. | Steroid Kinetics [cite: 78, 93]
+The mineralocorticoid {{c1::aldosterone}} functions primarily to regulate {{c2::salt and mineral balance}} in the body. | Aldosterone Function [cite: 95, 96]
+The glucocorticoid {{c1::cortisol}} mediates the physiological response to {{c2::stress}} and alters the {{c3::metabolism of glucose}}. | Cortisol Function [cite: 97, 98, 99]
+The adrenal cortex secretes {{c1::dehydroepiandrosterone (DHEA)}}, which functions as a {{c2::weak sex hormone}}. | DHEA Function [cite: 100, 101]
+The three primary steroid hormones of the gonads are {{c1::testosterone}}, {{c2::estrogens}}, and {{c3::progesterone (associated with pregnancy)}}. | Gonadal Steroids [cite: 102, 103, 104, 105]
+Amine hormones are biochemically derived from the amino acid {{c1::tyrosine}}. | Amine Hormone Precursor [cite: 106, 107]
+Although thyroid hormones (T3/T4) are amine hormones, they are highly {{c1::lipophilic}} and bind to {{c2::intracellular (nuclear) receptors}}. | Thyroid Hormone Mechanism [cite: 108, 109, 110, 111]<br>Pitfall: Most amine/peptide hormones are hydrophilic, making thyroid hormones a major exception.
+Catecholamines include {{c1::dopamine, adrenaline, and noradrenaline}}, which are synthesized in either the {{c2::adrenal medulla or the hypothalamus}}. | Catecholamine Overview [cite: 112, 113, 114, 115]
+Unlike thyroid hormones, catecholamine amine hormones are highly {{c1::hydrophilic}} and circulate freely dissolved in plasma. | Catecholamine Solubility [cite: 112, 116]
+Humoral stimulus: A decrease in plasma {{c1::calcium ions}} directly triggers the secretion of {{c2::parathyroid hormone (PTH)}} to restore homeostasis. | Humoral Stimulus Example [cite: 117, 118, 119]
+Neural stimulus: Sympathetic nervous system activation triggers the immediate release of {{c1::adrenaline and noradrenaline}} from the adrenal medulla. | Neural Stimulus: Sympathetic [cite: 120, 121]
+Neural stimulus: Parasympathetic nervous system activation triggers the release of {{c1::insulin}} from the pancreas and modulates {{c2::GIT hormones}}. | Neural Stimulus: Parasympathetic [cite: 122]
+Hormonal stimulus: Hypothalamic {{c1::TRH}} acts as a hormonal signal to stimulate the secretion of {{c2::TSH}} in the anterior pituitary. | Hormonal Stimulus Example [cite: 123, 124]
+Peripheral metabolism can activate hormones outside the gland; for example, the androgen {{c1::testosterone}} can be converted peripherally into {{c2::estrogen}}. | Peripheral Hormone Activation [cite: 125, 126]
+The vast majority of endocrine pathways maintain homeostasis and restore physiological setpoints via {{c1::negative feedback}} loops. | Endocrine Feedback Control [cite: 127]
+An exception to negative feedback is {{c1::positive feedback}}, an example of which is the explosive release of {{c2::oxytocin}} during childbirth. | Positive Feedback Example [cite: 128, 129]"
+The hypothalamus and pituitary gland,,"The pituitary gland is located within a pocket of the {{c1::sphenoid::bone}} bone, situated at the base of the brain just below the hypothalamus. | [cite: 2, 3, 4] The specific pocket in the sphenoid bone is known anatomically as the sella turcica.
+The pituitary gland is structurally connected to the hypothalamus via the {{c1::infundibulum::also known as the pituitary stalk}}. | [cite: 5] This connection allows for both neural and vascular communication between the brain and the endocrine system.
+The {{c1::median eminence::anatomical structure}} serves as the interface where the hypothalamus releases hypophysiotropic hormones into the portal system. | [cite: 6, 19] It is located at the base of the hypothalamus, forming the upper part of the pituitary stalk.
+The anterior pituitary gland is also known as the {{c1::adrenohypophysis::alternative name}}. | [cite: 7]
+Embryologically, the anterior pituitary gland is formed from {{c1::Rathke's pouch::embryonic structure}}, which originates from the pharynx. | [cite: 8] This tissue origin explains why it is glandular tissue, unlike the posterior pituitary.
+Vascular communication between the hypothalamus and the anterior pituitary is established via the {{c1::hypothalamo-hypophyseal portal vessels::vascular network}}. | [cite: 9] This portal system allows high concentrations of hypothalamic hormones to reach the anterior pituitary rapidly without being diluted in the general circulation.
+The posterior pituitary gland is also known as the {{c1::neurohypophysis::alternative name}}. | [cite: 10]
+Unlike the anterior lobe, the posterior pituitary gland is an embryological and functional extension of the {{c1::hypothalamus::brain region}}. | [cite: 11] It consists primarily of axons projecting down from hypothalamic neurons.
+The posterior pituitary stores its hormones in expanded axon terminals called {{c1::Herring bodies::storage structures}}. | [cite: 12] These bodies release hormones into the bloodstream upon electrical stimulation.
+In the hypothalamus, the {{c1::supraoptic nuclei::specific nuclei}} are primarily responsible for producing vasopressin/ADH. | [cite: 14, 15] ADH regulates water balance and blood pressure.
+In the hypothalamus, the {{c1::paraventricular nuclei::specific nuclei}} are primarily responsible for producing oxytocin. | [cite: 16, 17] Oxytocin is vital for uterine contractions during labor and milk ejection during lactation.
+Hypophysiotropic hormones destined for the anterior pituitary are released into the median eminence by {{c1::parvocellular neurons::neuron type}}. | [cite: 18, 19] These are small-bodied neurons, distinct from the magnocellular neurons that project to the posterior pituitary.
+In the reproductive axis, {{c1::GnRH::hypothalamic hormone}} stimulates the release of LH and FSH, which subsequently act on the gonads. | [cite: 21] GnRH = Gonadotropin-releasing hormone; LH = Luteinizing hormone; FSH = Follicle-stimulating hormone.
+The secretion of Growth Hormone (GH) is dual-regulated: promoted by {{c1::GHRH::stimulatory hormone}} and inhibited by {{c2::SST::inhibitory hormone}}. | [cite: 22] GHRH = Growth Hormone-Releasing Hormone; SST = Somatostatin. GH acts downstream on the liver and other tissues.
+In the thyroid axis, {{c1::TRH::hypothalamic hormone}} stimulates the secretion of TSH, which then targets the thyroid gland. | [cite: 23] TRH = Thyrotropin-releasing hormone; TSH = Thyroid-stimulating hormone.
+The secretion of Prolactin from the anterior pituitary is tonically inhibited by the neurotransmitter/hormone {{c1::dopamine::inhibitory factor}}. | [cite: 24] Prolactin acts on the breasts; a drop in dopamine levels allows prolactin levels to rise.
+In the stress axis, {{c1::CRH::hypothalamic hormone}} stimulates the release of ACTH, which subsequently acts on the adrenal cortex. | [cite: 25] CRH = Corticotropin-releasing hormone; ACTH = Adrenocorticotropic hormone.
+In a endocrine {{c1::long loop::loop type}} negative feedback mechanism, the hormone from the peripheral gland inhibits hormone secretion from both the pituitary and the hypothalamus. | [cite: 27] This represents the classic final hormone inhibiting the upstream drivers (e.g., cortisol inhibiting CRH and ACTH).
+In a endocrine {{c1::short loop::loop type}} negative feedback mechanism, the anterior pituitary hormone directly inhibits the hypothalamus. | [cite: 28] This prevents over-secretion by shutting down the initial hypothalamic signal before the peripheral hormone is even generated.
+Growth Hormone (GH) is synthesized and secreted by the {{c1::anterior pituitary::specific organ gland}}. | [cite: 29, 30] It is a major driver of somatic growth and metabolic regulation.
+Unbound, free Growth Hormone (GH) has a relatively short plasma half-life of {{c1::10-20 minutes::duration}}. | [cite: 31] This short lifespan causes fluctuating, pulsatile plasma levels throughout the day.
+Approximately {{c1::40%::percentage}} of circulating Growth Hormone binds to GHBP, which acts to increase its overall half-life. | [cite: 32] GHBP = Growth Hormone Binding Protein. It buffers the pulsatile nature of GH secretion.
+Growth Hormone drives bone lengthening specifically by increasing the proliferation of {{c1::chondrocytes::cell type}} within the epiphyseal plates. | [cite: 33, 34] The epiphyseal plate is the growth region found near the ends of long bones.
+GHRH stimulates the release of Growth Hormone by increasing intracellular levels of {{c1::cAMP::second messenger}} inside anterior pituitary somatotrophs. | [cite: 35, 36] Somatotrophs are the specialized GH-secreting cells of the anterior pituitary.
+Somatostatin (SST) exerts its inhibitory effect on GH secretion by reducing intracellular levels of {{c1::cAMP::second messenger}} within somatotrophs. | [cite: 37, 38] This directly counteracts the stimulatory GHRH pathway.
+The primary metabolic roles of Growth Hormone include {{c1::sparing glucose::effect on carbohydrates}}, breaking down fats, and promoting protein synthesis. | [cite: 39, 40, 41, 42] GH shifts metabolism toward using fatty acids for energy rather than carbohydrates or proteins.
+Upon binding to its target cell receptors, Growth Hormone initiates transcription by activating {{c1::JAK2::kinase 1}} and Src family kinases. | [cite: 43, 44, 45] This activates the downstream STAT transcription factors.
+Under the control of Growth Hormone, the liver produces and secretes {{c1::IGF-1::insulin-like factor}}, which is the major mediator of GH's growth-promoting activities. | [cite: 46, 47] IGF-1 = Insulin-like Growth Factor 1.
+The primary physiological role of IGF-1 at the cellular level is to {{c1::stimulate cell division::cellular action}}. | [cite: 48] This mitogenic property drives tissue hypertrophy and hyperplasia.
+In the bloodstream, IGF-1 does not circulate freely; it is bound to one of {{c1::6::number}} distinct IGFBP proteins. | [cite: 49] IGFBP = Insulin-like Growth Factor Binding Protein. These proteins modulate the bioavailability and activity of IGF-1.
+Elevated systemic levels of IGF-1 provide {{c1::negative feedback::regulatory mechanism}} to suppress further secretion of Growth Hormone. | [cite: 50] This completes the classic endocrine feedback loop for the GH axis.
+Pituitary gigantism can be triggered by a genetic mutation in the {{c1::AIP::gene}} gene, or by a functional tumor within the pituitary gland. | [cite: 51, 52, 53] AIP = Aryl hydrocarbon receptor-interacting protein.
+Dwarfism can manifest even with normal GH levels due to a reduced sensitivity to GH, which typically stems from mutations in {{c1::GH binding proteins or receptors::molecular components}}. | [cite: 54, 55, 56] This form of insensitivity is often referred to clinically as Laron dwarfism.
+Thyroid hormone plays an indirect role in growth by promoting the synthesis of {{c1::Growth Hormone::pituitary hormone}} in the anterior pituitary. | [cite: 57, 58, 59] Without adequate thyroid hormone, GH synthesis drops dramatically.
+During skeletal development, the thyroid hormone {{c1::T3::specific active thyroid hormone}} exerts a direct, independent stimulatory action on bones. | [cite: 60] T3 = Triiodothyronine.
+Excessive or chronic exposure to glucocorticoids, such as cortisol, acts to {{c1::reduce::increase/reduce}} overall somatic growth. | [cite: 61] This is a crucial consideration in pediatric patients requiring long-term steroid therapy.
+Glucocorticoids suppress the growth axis by reducing {{c1::GH secretion and receptor expression::pituitary/target effects}} as well as reducing circulating IGF-1 levels. | [cite: 62, 63] This dual action severely blunts downstream growth signals.
+Beyond suppressing the GH/IGF-1 axis, glucocorticoids stunt skeletal growth by reducing {{c1::adrenal androgen::hormone class}} production and decreasing bone mineralization. | [cite: 64, 65]
+Sex steroids stimulate growth during puberty by increasing the systemic secretion of both {{c1::GH and IGF-1::two hormones}}. | [cite: 66, 67] This surge is responsible for the pubertal growth spurt.
+While sex steroids initially accelerate growth, they ultimately halt further height gains by promoting the {{c1::epiphyseal fusion::skeletal event}} of long bones. | [cite: 68] Once the epiphyseal plates fuse, further linear growth becomes impossible.
+The specific sex steroid testosterone drives anabolic growth by increasing both {{c1::muscle mass and body weight::two physiological parameters}}. | [cite: 69]
+At the cellular level, insulin promotes tissue growth by inhibiting {{c1::protein degradation::cellular process}}. | [cite: 70, 71] This anti-catabolic effect is essential for net protein accumulation.
+Physiologically, adequate levels of {{c1::insulin::pancreatic hormone}} are absolute prerequisites for Growth Hormone to effectively promote somatic growth. | [cite: 72] Without insulin, the growth-promoting pathways of GH are severely blunted."
 Calcium balance,,
 Osteoporosis,,
 Endocrine response to stress,,
