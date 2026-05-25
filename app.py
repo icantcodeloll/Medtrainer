@@ -468,14 +468,14 @@ def render_data_portability_interface():
     import datetime
 
     st.sidebar.markdown("---")
-    st.sidebar.subheader("⚙️ Disaster Recovery & Migration")
+    st.sidebar.subheader("Admin")
     
     # 1. ENFORCE SECURITY PASSWORD
     # Change "YourSecurePassword123" to whatever admin password you prefer
     ADMIN_PASSWORD = "123456789" 
     
     user_password = st.sidebar.text_input(
-        "Enter Administrative Password", 
+        "Enter password", 
         type="password", 
         key="data_portability_pwd"
     )
