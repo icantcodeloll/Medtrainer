@@ -454,12 +454,12 @@ def get_blind_exam(topics_list, level, num_questions):
     return exam_text
 
 # =====================================================================
-# DATA PORTABILITY ENGINE (Disaster Recovery & Migration Framework)
+# PASSWORD-PROTECTED DATA PORTABILITY ENGINE
 # =====================================================================
 def render_data_portability_interface():
     """
-    Renders download/upload tools in the sidebar to backup all user 
-    JSON progress profiles and tracking CSV matrices before code changes.
+    Renders password-protected download/upload tools in the sidebar to 
+    safeguard user JSON progress profiles and tracking CSV matrices.
     """
     import zipfile
     import io
@@ -469,9 +469,30 @@ def render_data_portability_interface():
 
     st.sidebar.markdown("---")
     st.sidebar.subheader("⚙️ Disaster Recovery & Migration")
+    
+    # 1. ENFORCE SECURITY PASSWORD
+    # Change "YourSecurePassword123" to whatever admin password you prefer
+    ADMIN_PASSWORD = "123456789" 
+    
+    user_password = st.sidebar.text_input(
+        "Enter Administrative Password", 
+        type="password", 
+        key="data_portability_pwd"
+    )
+
+    if not user_password:
+        st.sidebar.caption("Enter password")
+        return
+        
+    if user_password != ADMIN_PASSWORD:
+        st.sidebar.error("Incorrect")
+        return
+
+    # --- EVERYTHING BELOW IS UNLOCKED ONLY IF THE PASSWORD IS CORRECT ---
+    st.sidebar.success("🔓 Access Granted")
     st.sidebar.caption("Download data profiles before changing code, and reupload them afterward.")
 
-    # 1. SCAN AND ARCHIVE ALL PROFILE DATA
+    # 2. SCAN AND ARCHIVE ALL PROFILE DATA
     json_files = glob.glob("*_progress.json")
     csv_files = glob.glob("*_objectives.csv")
     all_files = json_files + csv_files
@@ -496,7 +517,7 @@ def render_data_portability_interface():
     else:
         st.sidebar.info("No user tracking files found to back up yet.")
 
-    # 2. RESTORE AND UNPACK USER ARCHIVES
+    # 3. RESTORE AND UNPACK USER ARCHIVES
     uploaded_zip = st.sidebar.file_uploader(
         "Restore / Migrate Profiles (.zip)", 
         type=["zip"], 
