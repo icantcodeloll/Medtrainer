@@ -192,7 +192,7 @@ if 'thinking_level' not in st.session_state:
 st.session_state.thinking_level = st.sidebar.selectbox(
     "Gemini Thinking Level",
     options=["MINIMAL", "LOW", "MEDIUM", "HIGH"],
-    index=2, # Defaults to MINIMAL
+    index=0, # Defaults to MINIMAL
     help="Control how deeply the model deliberates before generating questions or grading."
 )
 
