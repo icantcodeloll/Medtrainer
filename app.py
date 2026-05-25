@@ -452,6 +452,76 @@ def get_blind_exam(topics_list, level, num_questions):
     # Single call to the model using the TOGGLE'S value
     exam_text = call_gemini_with_rotation(prompt, st.session_state.exam_model, use_search=st.session_state.use_search, timeout_per_question=3)
     return exam_text
+
+# =====================================================================
+# DATA PORTABILITY ENGINE (Disaster Recovery & Migration Framework)
+# =====================================================================
+def render_data_portability_interface():
+    """
+    Renders download/upload tools in the sidebar to backup all user 
+    JSON progress profiles and tracking CSV matrices before code changes.
+    """
+    import zipfile
+    import io
+    import os
+    import glob
+    import datetime
+
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("⚙️ Disaster Recovery & Migration")
+    st.sidebar.caption("Download data profiles before changing code, and reupload them afterward.")
+
+    # 1. SCAN AND ARCHIVE ALL PROFILE DATA
+    json_files = glob.glob("*_progress.json")
+    csv_files = glob.glob("*_objectives.csv")
+    all_files = json_files + csv_files
+
+    if all_files:
+        # Create an in-memory ZIP package
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+            for file_path in all_files:
+                if os.path.exists(file_path):
+                    zip_file.write(file_path, os.path.basename(file_path))
+        
+        zip_buffer.seek(0)
+        
+        st.sidebar.download_button(
+            label="📥 Download All User Data (.zip)",
+            data=zip_buffer,
+            file_name=f"backup_user_profiles_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.zip",
+            mime="application/zip",
+            key="download_all_data_zip"
+        )
+    else:
+        st.sidebar.info("No user tracking files found to back up yet.")
+
+    # 2. RESTORE AND UNPACK USER ARCHIVES
+    uploaded_zip = st.sidebar.file_uploader(
+        "Restore / Migrate Profiles (.zip)", 
+        type=["zip"], 
+        key="upload_migration_zip"
+    )
+
+    if uploaded_zip is not None:
+        if st.sidebar.button("💥 Confirm Overwrite & Extract Data"):
+            try:
+                with zipfile.ZipFile(uploaded_zip, "r") as zip_ref:
+                    file_list = zip_ref.namelist()
+                    valid_extensions = ('.json', '.csv', '.bak')
+                    
+                    if not all(any(f.endswith(ext) for ext in valid_extensions) for f in file_list):
+                        st.sidebar.error("Invalid archive payload. Must contain only .json or .csv profiles.")
+                        return
+
+                    # Unpack files into the execution root directory
+                    zip_ref.extractall(".")
+                
+                st.sidebar.success(f"Successfully restored {len(file_list)} database tracking asset(s)!")
+                st.sidebar.info("Please refresh or interact with the app to load profiles.")
+                st.balloons()
+            except Exception as e:
+                st.sidebar.error(f"Migration processing error: {str(e)}")
 # ==========================================
 # 3. WEB INTERFACE
 # ==========================================
@@ -725,6 +795,7 @@ if st.session_state.get('show_settings', False):
             st.sidebar.info("No saved progress to reset")
     
     st.sidebar.markdown("---")
+    render_data_portability_interface()
     st.sidebar.subheader("Knowledge Bank")
     # Use the df_sidebar we loaded earlier
     if 'mastery_score' in df_sidebar.columns:
