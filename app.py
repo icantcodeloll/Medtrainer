@@ -135,8 +135,8 @@ except Exception as e:
 
 # Models
 # Note: Google Search works best with Flash/Pro (Lite may have tool limitations)
-EXAM_MODEL = 'gemini-3.1-flash-lite-preview'
-GRADER_MODEL = 'gemini-3.1-flash-lite-preview'
+EXAM_MODEL = 'gemini-3.1-flash-lite'
+GRADER_MODEL = 'gemini-3.1-flash-lite'
 
 #Models that work: gemini-2.5-flash, gemini-2.5-flash-lite
 
@@ -164,7 +164,7 @@ loaded_progress = load_progress(active_user)
 if 'current_level' not in st.session_state:
     st.session_state.current_level = loaded_progress.get("current_level", 1)
 if 'exam_model' not in st.session_state:
-    st.session_state.exam_model = 'gemini-3.1-flash-lite-preview'
+    st.session_state.exam_model = 'gemini-3.1-flash-lite'
 if 'num_questions' not in st.session_state:
     st.session_state.num_questions = loaded_progress.get("num_questions", 5) 
 if 'missed_questions' not in st.session_state:
@@ -784,7 +784,7 @@ if st.session_state.get('show_settings', False):
     )
 
     # Update memory
-    st.session_state.exam_model = 'gemini-2.5-flash' if "Slow" in model_choice else 'gemini-3.1-flash-lite-preview'
+    st.session_state.exam_model = 'gemini-2.5-flash' if "Slow" in model_choice else 'gemini-3.1-flash-lite'
 
     st.sidebar.markdown("**Grounding:**")
     st.session_state.use_search = st.sidebar.toggle(
