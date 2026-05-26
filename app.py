@@ -143,42 +143,7 @@ st.session_state.thinking_level = st.sidebar.selectbox(
 )
 
 # Register auto-save on app shutdown
-st.sidebar.markdown("""
-    <style>
-    /* target any button inside our custom wrapper div regardless of nesting deepness */
-    div.blue-save-btn button,
-    div.blue-save-btn button[data-testid="stBaseButton-secondary"] {
-        background-color: #007BFF !important;
-        color: #FFFFFF !important;
-        border: 1px solid #007BFF !important;
-        border-radius: 8px !important;
-        font-weight: bold !important;
-        width: 100% !important;
-        display: block !important;
-    }
-    
-    /* Hover effects */
-    div.blue-save-btn button:hover,
-    div.blue-save-btn button[data-testid="stBaseButton-secondary"]:hover {
-        background-color: #0056b3 !important;
-        border-color: #0056b3 !important;
-        color: #FFFFFF !important;
-    }
-
-    /* Active click states */
-    div.blue-save-btn button:active {
-        background-color: #004085 !important;
-        border-color: #004085 !important;
-    }
-    </style>
-""", unsafe_allow_html=True)
-
-# Create the isolated HTML container and put the standard button inside it
-st.sidebar.markdown('<div class="blue-save-btn">', unsafe_allow_html=True)
-save_clicked = st.sidebar.button("💾 Save Progress", help="Manually save your current progress", key="sidebar_save_progress_button")
-st.sidebar.markdown('</div>', unsafe_allow_html=True)
-
-if save_clicked:
+if st.sidebar.button("Save Progress", help="Manually save your current progress"):
     try:
         if save_progress(st.session_state, active_user):
             st.sidebar.success("Progress saved successfully!")
