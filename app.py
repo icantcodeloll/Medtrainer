@@ -472,11 +472,10 @@ def render_data_portability_interface():
             try:
                 with zipfile.ZipFile(uploaded_zip, "r") as zip_ref:
                     file_list = zip_ref.namelist()
-                    valid_extensions = ('.json', '.csv', '.bak')
-                    
+                    valid_extensions = ('.json', '.bak')
+
                     if not all(any(f.endswith(ext) for ext in valid_extensions) for f in file_list):
-                        st.sidebar.error("Invalid archive payload. Must contain only .json or .csv profiles.")
-                        return
+                        st.sidebar.error("Invalid archive payload. Must contain only .json progress profiles.")
 
                     # Unpack files into the execution root directory
                     zip_ref.extractall(".")
@@ -824,49 +823,24 @@ if st.session_state.current_exam:
                 st.stop() # Stops the code before it hits the loop and crashes
             score = 0
             
-            # --- FIXED: Load the CSV to update scores ---
-            df_main = pd.read_csv(CSV_FILE)
+         # --- SIMPLIFIED GRADING SYSTEM ---
+    for i, q_text in enumerate(individual_questions):
+        if i >= len(user_answers):
+            break
 
-            if 'mastery_score' in df_main.columns:
-                df_main['mastery_score'] = pd.to_numeric(df_main['mastery_score'], errors='coerce').fillna(1).astype(int)
+        u_ans = user_answers[i]
+        correct = correct_key[i] if i < len(correct_key) else None
 
-            for i, original_idx in enumerate(st.session_state.samples_df.index):
-            # Guard against situations where the user provided fewer answers than questions
-                if i >= len(user_answers):
-                    break
-                
-                u_ans = user_answers[i]
-                correct = correct_key[i] if i < len(correct_key) else None
-                
-                # Fetch the current score safely before modifying it
-                current_score = int(df_main.at[original_idx, 'mastery_score']) if 'mastery_score' in df_main.columns else 1
-                
-                if u_ans == correct:
-                    score += 1
-                    # Increase Mastery Score safely (Hard Cap at 5)
-                    if 'mastery_score' in df_main.columns and st.session_state.mastery_mode:
-                        new_score = min(5, current_score + 1)
-                        df_main.at[original_idx, 'mastery_score'] = new_score
-                else:
-                    # Decrease Mastery Score safely (Floor Cap at 1)
-                    if 'mastery_score' in df_main.columns and st.session_state.mastery_mode:
-                        new_score = max(1, current_score - 1)
-                        df_main.at[original_idx, 'mastery_score'] = new_score
-                    
-                    if i < len(individual_questions):
-                        st.session_state.missed_questions.append({
-                            "question": individual_questions[i].strip(),
-                            "correct": correct,
-                            "yours": u_ans,
-                            "category": st.session_state.current_categories[i] if i < len(st.session_state.current_categories) else "General",
-                        })
-            
-            # --- Ensure the column keeps its clean integer type before saving ---
-            if 'mastery_score' in df_main.columns:
-                df_main['mastery_score'] = df_main['mastery_score'].astype(int)
-
-            # Save the changes back to your file
-            thread_safe_to_csv(df_main, CSV_FILE)
+        if u_ans == correct:
+            score += 1
+        else:
+            if i < len(individual_questions):
+                st.session_state.missed_questions.append({
+                    "question": individual_questions[i].strip(),
+                    "correct": correct,
+                    "yours": u_ans,
+                    "category": st.session_state.current_categories[i] if i < len(st.session_state.current_categories) else "General",
+                })
             
             # Save state so the feedback stays visible after submission
             st.session_state.exam_submitted = True
