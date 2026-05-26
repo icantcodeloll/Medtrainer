@@ -145,29 +145,38 @@ st.session_state.thinking_level = st.sidebar.selectbox(
 # Register auto-save on app shutdown
 st.sidebar.markdown("""
     <style>
-    div[data-testid="stSidebar"] div.blue-save-btn div.stButton > button {
+    /* target any button inside our custom wrapper div regardless of nesting deepness */
+    div.blue-save-btn button,
+    div.blue-save-btn button[data-testid="stBaseButton-secondary"] {
         background-color: #007BFF !important;
-        color: white !important;
+        color: #FFFFFF !important;
+        border: 1px solid #007BFF !important;
         border-radius: 8px !important;
-        border: none !important;
         font-weight: bold !important;
-        transition: background-color 0.3s ease !important;
+        width: 100% !important;
+        display: block !important;
     }
-    div[data-testid="stSidebar"] div.blue-save-btn div.stButton > button:hover {
+    
+    /* Hover effects */
+    div.blue-save-btn button:hover,
+    div.blue-save-btn button[data-testid="stBaseButton-secondary"]:hover {
         background-color: #0056b3 !important;
-        color: white !important;
+        border-color: #0056b3 !important;
+        color: #FFFFFF !important;
     }
-    div[data-testid="stSidebar"] div.blue-save-btn div.stButton > button:active {
+
+    /* Active click states */
+    div.blue-save-btn button:active {
         background-color: #004085 !important;
+        border-color: #004085 !important;
     }
     </style>
 """, unsafe_allow_html=True)
 
-# Wrap the button inside a custom styled container div
-with st.sidebar.container():
-    st.markdown('<div class="blue-save-btn">', unsafe_allow_html=True)
-    save_clicked = st.button("💾 Save Progress", help="Manually save your current progress")
-    st.markdown('</div>', unsafe_allow_html=True)
+# Create the isolated HTML container and put the standard button inside it
+st.sidebar.markdown('<div class="blue-save-btn">', unsafe_allow_html=True)
+save_clicked = st.sidebar.button("💾 Save Progress", help="Manually save your current progress", key="sidebar_save_progress_button")
+st.sidebar.markdown('</div>', unsafe_allow_html=True)
 
 if save_clicked:
     try:
