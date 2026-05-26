@@ -69,69 +69,15 @@ if st.sidebar.button("Switch / Create Profile"):
 active_user = st.session_state.username
 st.sidebar.success(f"Logged in as: **{active_user}**")
 
-# Set up user-specific files
-MASTER_CSV = "learning_objectives_informative_reports.csv" # Your master template
-USER_CSV = f"{active_user}_objectives.csv"                 # Their personal copy
-
-def backup_user_data(user_csv):
-    """Creates a timestamped backup of the user's data before any processing happens."""
-    if os.path.exists(user_csv):
-        backup_dir = "user_backups"
-        os.makedirs(backup_dir, exist_ok=True)
-        
-        # Generates a timestamp like: 20260518_085900
-        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        backup_filename = f"{os.path.basename(user_csv)}.{timestamp}.bak"
-        backup_path = os.path.join(backup_dir, backup_filename)
-        
-        shutil.copy(user_csv, backup_path)
-
-# Run the backup immediately right here!
-if f"backed_up_{active_user}" not in st.session_state:
-    backup_user_data(USER_CSV)
-    st.session_state[f"backed_up_{active_user}"] = True
 # ==========================================
-# SMART CSV SYNCHRONIZATION
+# GLOBAL MASTER TEMPLATE CONFIGURATION
 # ==========================================
-CSV_FILE = USER_CSV
+MASTER_CSV = "learning_objectives_informative_reports.csv" 
+CSV_FILE = MASTER_CSV
 
-try:
-    if not os.path.exists(MASTER_CSV):
-        st.error(f"Fatal Error: Master template file '{MASTER_CSV}' not found!")
-        st.stop()
-        
-    df_master = pd.read_csv(MASTER_CSV)
-
-    if not os.path.exists(USER_CSV):
-        # Brand new user: Give them a clean copy of the master template
-        thread_safe_to_csv(df_master, USER_CSV)
-    else:
-        # Existing user: Safely sync new columns or rows without overwriting user data
-        df_user = pd.read_csv(USER_CSV)
-        is_updated = False
-
-        # 1. Sync Missing Columns (e.g., adding 'system' or 'exam' columns later)
-        missing_cols = [col for col in df_master.columns if col not in df_user.columns]
-        if missing_cols:
-            for col in missing_cols:
-                # Map the new column data from master to user using the JOIN_COLUMN
-                mapping = df_master.set_index(JOIN_COLUMN)[col].to_dict()
-                df_user[col] = df_user[JOIN_COLUMN].map(mapping)
-            is_updated = True
-
-        # 2. Sync Missing Rows (e.g., if you add new learning objectives to the master file)
-        missing_rows = df_master[~df_master[JOIN_COLUMN].isin(df_user[JOIN_COLUMN])]
-        if not missing_rows.empty:
-            df_user = pd.concat([df_user, missing_rows], ignore_index=True)
-            is_updated = True
-
-        # Save back to their personal CSV file only if changes were made
-        if is_updated:
-            thread_safe_to_csv(df_user, USER_CSV)
-            st.toast(f"Profile updated!")
-
-except Exception as e:
-    st.error(f"Error handling profile sync: {e}")
+if not os.path.exists(MASTER_CSV):
+    st.error(f"Fatal Error: Master template file '{MASTER_CSV}' not found!")
+    st.stop()
 
 # Models
 # Note: Google Search works best with Flash/Pro (Lite may have tool limitations)
@@ -492,16 +438,13 @@ def render_data_portability_interface():
     st.sidebar.success("🔓 Access Granted")
     st.sidebar.caption("Download data profiles before changing code, and reupload them afterward.")
 
-    # 2. SCAN AND ARCHIVE ALL PROFILE DATA
+# 2. SCAN AND ARCHIVE ALL PROGRESS DATA
     json_files = glob.glob("*_progress.json")
-    csv_files = glob.glob("*_objectives.csv")
-    all_files = json_files + csv_files
-
-    if all_files:
+    if json_files:
         # Create an in-memory ZIP package
         zip_buffer = io.BytesIO()
         with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
-            for file_path in all_files:
+            for file_path in json_files:
                 if os.path.exists(file_path):
                     zip_file.write(file_path, os.path.basename(file_path))
         
@@ -554,16 +497,6 @@ st.sidebar.metric("Active Level", f"{st.session_state.current_level}/50")
 
 # --- ADD THIS: Focus Mode Dropdown ---
 df_sidebar = pd.read_csv(CSV_FILE)
-
-# --- MASTERY MODE INITIALIZATION ---
-if 'mastery_mode' not in st.session_state:
-    st.session_state.mastery_mode = False
-
-st.session_state.mastery_mode = st.sidebar.checkbox(
-    "Mastery Mode", 
-    value=st.session_state.mastery_mode,
-    help="Enable Spaced Repetition (SRS) based on your weak areas."
-)
 
 
 categories = df_sidebar['category'].fillna("Uncategorized").astype(str).unique().tolist()
@@ -644,23 +577,10 @@ if st.sidebar.button("Generate New Exam"):
                 st.error("No active objectives found. Mark some as 'y' in your CSV.")
                 st.stop()
     
-        # --- SMART SAMPLING (EXAM WEIGHTED + SRS) ---
-        # 1. Map exam weights to the dataframe based on category
-        df['topic_weight'] = df['category'].map(EXAM_WEIGHTS).fillna(0.05)
-        
-        # Factor in Mastery Score ONLY if column exists AND Mastery Mode is toggled ON
-        if st.session_state.mastery_mode and 'mastery_score' in df.columns:
-            df['mastery_score'] = pd.to_numeric(df['mastery_score'], errors='coerce').fillna(1).astype(int)
-
-            # Inverse mastery modifier: lower mastery (1-3) increases chance of being picked
-            df['mastery_modifier'] = 6 - df['mastery_score']
-
-            # Combined sampling weight = Exam BluePrint Weight * Mastery Need
-            df['sampling_weight'] = df['topic_weight'] * df['mastery_modifier']
-        else:
-            # Standard blueprint sampling when mastery mode is off
-            df['sampling_weight'] = df['topic_weight']
-    
+        # --- SMART SAMPLING (EXAM WEIGHTED ONLY) ---
+        # Map exam weights to the dataframe based on category blueprints
+        df['sampling_weight'] = df['category'].map(EXAM_WEIGHTS).fillna(0.05)
+            
 
         # 3. Sample using the calculated weights
         try:
@@ -817,18 +737,7 @@ if st.session_state.get('show_settings', False):
     
     st.sidebar.markdown("---")
     render_data_portability_interface()
-    st.sidebar.subheader("Knowledge Bank")
-    # Use the df_sidebar we loaded earlier
-    if 'mastery_score' in df_sidebar.columns:
-        # Convert mastery_score to integers for comparison
-        df_sidebar['mastery_score'] = pd.to_numeric(df_sidebar['mastery_score'], errors='coerce').fillna(1).astype(int)
-        total_objs = len(df_sidebar)
-        mastered = len(df_sidebar[df_sidebar['mastery_score'] == 5])
-        progress_val = mastered / total_objs if total_objs > 0 else 0
-        
-        st.sidebar.write(f"Mastered: {mastered} / {total_objs}")
-        st.sidebar.progress(progress_val)
-        st.sidebar.caption(f"{progress_val*100:.1f}% of curriculum at Mastery Level 5")
+
 
 # Display the Exam
 if st.session_state.current_exam:
