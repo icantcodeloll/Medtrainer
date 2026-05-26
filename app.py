@@ -133,12 +133,12 @@ if 'previous_test_data' not in st.session_state:
 if "use_search" not in st.session_state:
     st.session_state.use_search = False
 if 'thinking_level' not in st.session_state:
-    st.session_state.thinking_level = "MINIMAL"
+    st.session_state.thinking_level = "MEDIUM"
 
 st.session_state.thinking_level = st.sidebar.selectbox(
     "Gemini Thinking Level",
     options=["MINIMAL", "LOW", "MEDIUM", "HIGH"],
-    index=0, # Defaults to MINIMAL
+    index=2, # Defaults to MINIMAL
     help="Control how deeply the model deliberates before generating questions or grading."
 )
 
