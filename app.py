@@ -599,7 +599,7 @@ if st.sidebar.button("Generate New Exam"):
         else:
             st.session_state.current_categories = ['General'] * n
 
-        samples = (samples_df['explanation'] + "\n[Notes: " + samples_df['content'].fillna('') + "]").tolist()
+        samples = (samples_df['explanation'].fillna('').astype(str) + "\n[Notes: " + samples_df['content'].fillna('').astype(str) + "]").tolist()
         
         with st.spinner(f"Generating {n} questions at Level {st.session_state.current_level}..."):
             max_retries = 3
