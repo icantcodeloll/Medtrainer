@@ -143,7 +143,33 @@ st.session_state.thinking_level = st.sidebar.selectbox(
 )
 
 # Register auto-save on app shutdown
-if st.sidebar.button("Save Progress", help="Manually save your current progress"):
+st.sidebar.markdown("""
+    <style>
+    div[data-testid="stSidebar"] div.blue-save-btn div.stButton > button {
+        background-color: #007BFF !important;
+        color: white !important;
+        border-radius: 8px !important;
+        border: none !important;
+        font-weight: bold !important;
+        transition: background-color 0.3s ease !important;
+    }
+    div[data-testid="stSidebar"] div.blue-save-btn div.stButton > button:hover {
+        background-color: #0056b3 !important;
+        color: white !important;
+    }
+    div[data-testid="stSidebar"] div.blue-save-btn div.stButton > button:active {
+        background-color: #004085 !important;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+# Wrap the button inside a custom styled container div
+with st.sidebar.container():
+    st.markdown('<div class="blue-save-btn">', unsafe_allow_html=True)
+    save_clicked = st.button("💾 Save Progress", help="Manually save your current progress")
+    st.markdown('</div>', unsafe_allow_html=True)
+
+if save_clicked:
     try:
         if save_progress(st.session_state, active_user):
             st.sidebar.success("Progress saved successfully!")
