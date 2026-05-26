@@ -138,16 +138,19 @@ if 'thinking_level' not in st.session_state:
 st.session_state.thinking_level = st.sidebar.selectbox(
     "Gemini Thinking Level",
     options=["MINIMAL", "LOW", "MEDIUM", "HIGH"],
-    index=2, # Defaults to MEDIUM
+    index=2, # Defaults to MINIMAL
     help="Control how deeply the model deliberates before generating questions or grading."
 )
 
-# Checkbox to toggle Autosave feature (Defaults to True)
-autosave_enabled = st.sidebar.checkbox(
-    "Enable Autosave", 
-    value=True, 
-    help="Automatically saves your level and progress when exams are generated or graded."
-)
+# Register auto-save on app shutdown
+if st.sidebar.button("Save Progress", help="Manually save your current progress"):
+    try:
+        if save_progress(st.session_state, active_user):
+            st.sidebar.success("Progress saved successfully!")
+        else:
+            st.sidebar.error("Failed to save progress")
+    except Exception as e:
+        st.sidebar.error(f"Serialization Error: Could not save progress yet. ({e})")
 
 def get_client():
     return genai.Client(api_key=API_KEYS[st.session_state.key_index])
@@ -624,12 +627,9 @@ if st.sidebar.button("Generate New Exam"):
                 
                 # CLEANING: Remove the key section from the visible text 
                 # so it doesn't show up in the last radio button question
+                st.session_state.current_exam = text.strip() 
+                
                 st.session_state.current_key = re.findall(r'[A-D]', key_part)
-        
-                # Autosave after generating exam
-                if autosave_enabled:
-                    save_progress(st.session_state, active_user)
-                    
                 st.rerun()
             else:
                 st.error(f"Failed to generate a perfectly formatted exam after {max_retries} attempts. Please click generate again.")
@@ -862,9 +862,6 @@ if st.session_state.current_exam:
                 st.warning(f"Level Down. Now at Level {st.session_state.current_level}")
             else:
                 st.info(f"Score: {score}/{st.session_state.num_questions} ({percentage_correct:.0f}%) - Level maintained")
-            # Autosave after grading criteria calculations are completed
-            if autosave_enabled:
-                save_progress(st.session_state, active_user)
 
 # 2. THE FEEDBACK (Outside the form)
     if st.session_state.get('exam_submitted'):
