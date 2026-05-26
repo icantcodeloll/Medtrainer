@@ -801,58 +801,54 @@ if st.session_state.current_exam:
             st.write("---")
         
         submitted = st.form_submit_button("Submit for Grading")
-    if submitted:
+        if submitted:
             # Use actual number of questions from current exam
             num_actual_questions = len(raw_questions)
-            
+
             # Convert dictionary to a sorted list of answers
             user_answers = [st.session_state.user_selections[i] for i in range(num_actual_questions)]
             user_input = "\n".join([f"Q{i+1}: {ans if ans else 'No Answer'}" for i, ans in enumerate(user_answers)])
-            
+
             # Use only the first num_actual_questions answers from current_key
             correct_key = st.session_state.current_key[:num_actual_questions]
             correct_key_formatted = "\n".join([f"Q{i+1}: {ans}" for i, ans in enumerate(correct_key)])
-
-            # Save this formatted version to session state
+            
+            # Save these formatted versions to session state
             st.session_state.last_user_input = user_input
             st.session_state.last_correct_key = correct_key_formatted
-            st.session_state.last_user_answers_list = user_answers # <-- ADD THIS LINE
-            
+            st.session_state.last_user_answers_list = user_answers 
+
             if len(user_answers) != len(correct_key):
                 st.error(f"Mismatch: The exam has {len(correct_key)} questions, but you entered {len(user_answers)} answers. Please fix your input.")
-                st.stop() # Stops the code before it hits the loop and crashes
+                st.stop() 
+
+            # --- SIMPLIFIED GRADING SYSTEM (Now properly nested inside 'if submitted') ---
             score = 0
-            
-         # --- SIMPLIFIED GRADING SYSTEM ---
-    for i, q_text in enumerate(individual_questions):
-        if i >= len(user_answers):
-            break
+            for i, q_text in enumerate(individual_questions):
+                if i >= len(user_answers):
+                    break
+                u_ans = user_answers[i]
+                correct = correct_key[i] if i < len(correct_key) else None
+                if u_ans == correct:
+                    score += 1
+                else:
+                    if i < len(individual_questions):
+                        st.session_state.missed_questions.append({
+                            "question": individual_questions[i].strip(),
+                            "correct": correct,
+                            "yours": u_ans,
+                            "category": st.session_state.current_categories[i] if i < len(st.session_state.current_categories) else "General",
+                        })
 
-        u_ans = user_answers[i]
-        correct = correct_key[i] if i < len(correct_key) else None
-
-        if u_ans == correct:
-            score += 1
-        else:
-            if i < len(individual_questions):
-                st.session_state.missed_questions.append({
-                    "question": individual_questions[i].strip(),
-                    "correct": correct,
-                    "yours": u_ans,
-                    "category": st.session_state.current_categories[i] if i < len(st.session_state.current_categories) else "General",
-                })
-            
             # Save state so the feedback stays visible after submission
             st.session_state.exam_submitted = True
             st.session_state.last_score = score
-            st.session_state.last_user_input = user_input
-
+            
             # Update Level based on performance
-            num_actual_questions = len(user_answers)
             percentage_correct = (score / num_actual_questions) * 100
             questions_wrong = num_actual_questions - score
-            
-            # Level up if: only 1 question wrong OR 80%+ correct (whichever is lower threshold)
+
+            # Level up if: only 1 question wrong OR 80%+ correct
             if questions_wrong <= 1 or percentage_correct >= 80:
                 st.session_state.current_level = min(50, st.session_state.current_level + 1)
                 st.success(f"Level Up! Now at Level {st.session_state.current_level}")
@@ -862,27 +858,28 @@ if st.session_state.current_exam:
                 st.warning(f"Level Down. Now at Level {st.session_state.current_level}")
             else:
                 st.info(f"Score: {score}/{st.session_state.num_questions} ({percentage_correct:.0f}%) - Level maintained")
+            
+            # Force a rerun to clean up widget displays and lock in state
+            st.rerun()
 
-# 2. THE FEEDBACK (Outside the form)
+    # --- 2. THE FEEDBACK (Fully outside the st.form block) ---
     if st.session_state.get('exam_submitted'):
         st.subheader(f"Results: {st.session_state.last_score}/{st.session_state.num_questions}")
-        
+
         with st.spinner("Instructor is searching for the latest feedback..."):
-            # This keeps your original answer comparison and AI explanation
             feedback = get_ai_grading(
-                st.session_state.current_exam, 
-                st.session_state.last_user_input, 
+                st.session_state.current_exam,
+                st.session_state.last_user_input,
                 st.session_state.last_correct_key,
                 st.session_state.last_score
             )
-            st.markdown(feedback)
-
+        st.markdown(feedback)
         st.write("---")
-        
-        # --- ADDED: Download Graded Exam Button ---
+
+        # --- Download Graded Exam Button ---
         if FPDF:
             pdf_bytes_graded = create_exam_pdf(
-                st.session_state.current_exam, 
+                st.session_state.current_exam,
                 st.session_state.current_key,
                 user_answers=st.session_state.get('last_user_answers_list', []),
                 score=st.session_state.last_score,
@@ -890,13 +887,12 @@ if st.session_state.current_exam:
             )
             if pdf_bytes_graded:
                 st.download_button(
-                    label="📄 Download Results & Selections as PDF",
+                    label=" 📄  Download Results & Selections as PDF",
                     data=pdf_bytes_graded,
                     file_name="graded_practice_exam.pdf",
                     mime="application/pdf",
                     key="download_graded_pdf"
                 )
-        # ---------------------------------------------
         
 
 # Missed Questions Bank in Sidebar
