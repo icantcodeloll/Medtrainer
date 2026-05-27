@@ -599,7 +599,32 @@ if st.sidebar.button("Generate New Exam"):
         else:
             st.session_state.current_categories = ['General'] * n
 
-        samples = (samples_df['explanation'].fillna('').astype(str) + "\n[Notes: " + samples_df['content'].fillna('').astype(str) + "]").tolist()
+        def randomize_paragraph_start(text):
+            """Splits a paragraph into sentences and randomizes their order or starting point."""
+            if not text or not isinstance(text, str):
+                return ""
+            
+            # Split text into sentences using a simple regex (handles ., !, ?)
+            sentences = re.split(r'(?<=[.!?])\s+', text.strip())
+            if len(sentences) <= 1:
+                return text # Return as-is if it's only one sentence
+            
+            # Option A: Completely shuffle the sentences
+            #random.shuffle(sentences)
+            #return " ".join(sentences)
+
+            # ALTERNATIVE (Option B): If you prefer to keep the sequential order but just want 
+            # to start at a random sentence and wrap around to the beginning, uncomment below:
+            start_idx = random.randint(0, len(sentences) - 1)
+            rotated_sentences = sentences[start_idx:] + sentences[:start_idx]
+            return " ".join(rotated_sentences)
+
+        # Apply the sentence-level randomization to your data columns
+        randomized_explanations = samples_df['explanation'].fillna('').astype(str).apply(randomize_paragraph_start)
+        randomized_content = samples_df['content'].fillna('').astype(str).apply(randomize_paragraph_start)
+
+        # Compile into the final list for the prompt
+        samples = (randomized_explanations + "\n[Notes: " + randomized_content + "]").tolist()
         
         with st.spinner(f"Generating {n} questions at Level {st.session_state.current_level}..."):
             max_retries = 3
