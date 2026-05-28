@@ -873,7 +873,7 @@ if st.session_state.current_exam:
             questions_wrong = num_actual_questions - score
 
             # Level up if: only 1 question wrong OR 90%+ correct
-            if questions_wrong <= 1 or percentage_correct >= 80:
+            if questions_wrong <= 1 or percentage_correct >= 90:
                 st.session_state.current_level = min(50, st.session_state.current_level + 1)
                 st.success(f"Level Up! Now at Level {st.session_state.current_level}")
             # Level down if: less than 60% correct
