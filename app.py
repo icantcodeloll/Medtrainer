@@ -135,13 +135,6 @@ if "use_search" not in st.session_state:
 if 'thinking_level' not in st.session_state:
     st.session_state.thinking_level = "MEDIUM"
 
-st.session_state.thinking_level = st.sidebar.selectbox(
-    "Gemini Thinking Level",
-    options=["MINIMAL", "LOW", "MEDIUM", "HIGH"],
-    index=2, # Defaults to MINIMAL
-    help="Control how deeply the model deliberates before generating questions or grading."
-)
-
 # Register auto-save on app shutdown
 if st.sidebar.button("Save Progress", help="Manually save your current progress"):
     try:
@@ -713,7 +706,13 @@ if st.sidebar.button("Settings", use_container_width=True):
 if st.session_state.get('show_settings', False):
     st.session_state.current_level = st.sidebar.slider("Starting Level", 1, 50, st.session_state.current_level)
     st.session_state.num_questions = st.sidebar.slider("Number of Questions", 1, 50, st.session_state.num_questions)
-    
+    st.session_state.thinking_level = st.sidebar.selectbox(
+        "Gemini Thinking Level",
+        options=["MINIMAL", "LOW", "MEDIUM", "HIGH"],
+        index=["MINIMAL", "LOW", "MEDIUM", "HIGH"].index(st.session_state.thinking_level),
+        help="Control how deeply the model deliberates before generating questions or grading."
+    )
+
     st.sidebar.markdown("---")
     
     # --- NEW: Double-Sided Model Switch ---
