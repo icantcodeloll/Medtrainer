@@ -890,7 +890,7 @@ if st.session_state.current_exam:
     if st.session_state.get('exam_submitted'):
         st.subheader(f"Results: {st.session_state.last_score}/{st.session_state.num_questions}")
 
-        with st.spinner("Instructor is searching for the latest feedback..."):
+        with st.spinner("Don't forget to click save progress after!!"):
             feedback = get_ai_grading(
                 st.session_state.current_exam,
                 st.session_state.last_user_input,
