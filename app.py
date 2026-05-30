@@ -197,37 +197,47 @@ def call_gemini_with_rotation(prompt, model_to_use, use_search=False, timeout_pe
 # ==========================================
 # 2. CORE LOGIC FUNCTIONS
 # ==========================================
-def create_exam_pdf(exam_text, answer_key, user_answers=None, score=None, max_score=None):
-    """Generates a PDF containing the exam questions, answer key, and optionally user selections."""
+def create_exam_pdf(exam_text, answer_key, user_answers=None, score=None, max_score=None, metadata=None):
+    """Generates a PDF containing the exam questions, answer key, and optionally user selections and filters."""
     if not FPDF:
         return None
-        
+
     pdf = FPDF()
     pdf.add_page()
     pdf.set_auto_page_break(auto=True, margin=15)
-    
+
     # Title
     pdf.set_font("Arial", "B", 16)
     if score is not None and max_score is not None:
         pdf.cell(0, 10, f"Practice Exam Results - Score: {score}/{max_score}", ln=True, align="C")
     else:
         pdf.cell(0, 10, "Practice Exam", ln=True, align="C")
-    pdf.ln(5)
-    
+    pdf.ln(2)
+
+    # --- ADD METADATA BLOCK ---
+    if metadata:
+        pdf.set_font("Arial", "I", 10)
+        meta_text = f"Level: {metadata.get('level', 'N/A')} | Focus Mode: {metadata.get('focus', 'All')} | Exam Filter: {metadata.get('exam', 'All')} | System Filter: {metadata.get('system', 'All')}"
+        pdf.cell(0, 8, meta_text, ln=True, align="C")
+        pdf.ln(5)
+    else:
+        pdf.ln(3)
+    # --------------------------
+
     # Clean text to prevent Unicode encoding errors in FPDF
     clean_text = exam_text.replace('\u2019', "'").replace('\u201c', '"').replace('\u201d', '"')
     clean_text = clean_text.encode('latin-1', 'replace').decode('latin-1')
-    
+
     # Print Questions
     pdf.set_font("Arial", "", 12)
     pdf.multi_cell(0, 7, clean_text)
-    
+
     # Add Answer Key & User Answers on a new page
     pdf.add_page()
     pdf.set_font("Arial", "B", 16)
     pdf.cell(0, 10, "Exam Summary", ln=True, align="C")
     pdf.ln(5)
-    
+
     pdf.set_font("Arial", "", 12)
     for i, ans in enumerate(answer_key):
         text = f"Question {i+1}: Correct Key: {ans}"
@@ -235,17 +245,17 @@ def create_exam_pdf(exam_text, answer_key, user_answers=None, score=None, max_sc
             u_ans = user_answers[i] if user_answers[i] else "No Answer"
             match_text = " (CORRECT)" if u_ans == ans else " (INCORRECT)"
             text += f" | Your Answer: {u_ans}{match_text}"
-            
+
         pdf.cell(0, 8, text, ln=True)
-        
+
     # Save to temp file and return bytes
     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
         pdf.output(tmp.name)
         tmp_path = tmp.name
-        
+
     with open(tmp_path, "rb") as f:
         pdf_bytes = f.read()
-        
+
     os.unlink(tmp_path) # Clean up temp file
     return pdf_bytes
 
@@ -321,7 +331,7 @@ def validate_exam_format(exam_text, expected_questions):
 
 def get_blind_exam(topics_list, level, num_questions):
     combined_content = "\n\n".join([f"Source {i+1}: {t}" for i, t in enumerate(topics_list)])
-    
+
     # Difficulty calibration from intuitive basics to counterintuitive expert challenges
     if level <= 5:
         difficulty_desc = "intuitive basics - straightforward medical concepts that make logical sense"
@@ -341,53 +351,62 @@ def get_blind_exam(topics_list, level, num_questions):
     else:  # 46-50
         difficulty_desc = "supreme counterintuition - advanced mastery of medical paradoxes and exceptions"
         complexity_guide = "multi-system integration where standard rules don't apply, latest research breakthroughs that overturn conventional wisdom, complex clinical reasoning requiring recognition of exceptions, niche subspecialty knowledge where intuitive answers are wrong, molecular-level pathophysiology that defies simple explanations, emerging treatment protocols with paradoxical mechanisms, rare disease patterns that mimic opposite conditions, advanced diagnostic challenges where the obvious answer is incorrect"
-    
+
+    # --- DYNAMIC RANDOM KEY GENERATION ---
+    # Create an even pool of options and randomly shuffle them for this specific exam run
+    options_pool = ['A', 'B', 'C', 'D'] * ((num_questions // 4) + 1)
+    dynamic_keys = random.sample(options_pool, num_questions)
+    formatted_key_string = ", ".join(dynamic_keys)
+    # -------------------------------------
+
     prompt = f"""
-    You are a medical board examiner. 
-    TASK: Generate EXACTLY {num_questions} Multiple Choice Questions (1 per snippet provided below).
-    DIFFICULTY LEVEL: {level}/50.
-    DIFFICULTY DESCRIPTION: {difficulty_desc}.
-    COMPLEXITY GUIDANCE: {complexity_guide}.
+You are a medical board examiner.
+TASK: Generate EXACTLY {num_questions} Multiple Choice Questions (1 per snippet provided below).
+DIFFICULTY LEVEL: {level}/50.
+DIFFICULTY DESCRIPTION: {difficulty_desc}.
+COMPLEXITY GUIDANCE: {complexity_guide}.
 
-    CRITICAL BIAS PREVENTION:
-    1. AVOID confirmation bias - Ensure each option could plausibly be correct
-    2. NO obvious "red herrings" - All distractors must be medically plausible
-    3. BALANCED difficulty - Correct answer should not be obviously easier/harder than others
-    4. MEDICAL ACCURACY - Verify all information with current medical guidelines
-    5. CLARITY over trickery - Questions should test knowledge, not reading comprehension
+CRITICAL BIAS PREVENTION:
+1. AVOID confirmation bias - Ensure each option could plausibly be correct
+2. NO obvious "red herrings" - All distractors must be medically plausible
+3. BALANCED difficulty - Correct answer should not be obviously easier/harder than others
+4. MEDICAL ACCURACY - Verify all information with current medical guidelines
+5. CLARITY over trickery - Questions should test knowledge, not reading comprehension
 
-    CRITICAL FORMATTING REQUIREMENTS:
-    1. START IMMEDIATELY with '1. ' followed by the question text. NO preamble.
-    2. ABSOLUTELY NO introductory text, explanations, or meta-commentary.
-    3. Each question MUST follow this EXACT format:
-       "X. [Question text]
-       A. [Option A]
-       B. [Option B] 
-       C. [Option C]
-       D. [Option D]"
-    4. Every question MUST start with its number and period (e.g., '1.', '2.', '3.').
-    5. NO extra text, warnings, or formatting notes anywhere in the response.
-    6. The VERY LAST line must be: [KEY: A, B, C, D, A, B, C, D, A, B]
+CRITICAL FORMATTING REQUIREMENTS:
+1. START IMMEDIATELY with '1. ' followed by the question text. NO preamble.
+2. ABSOLUTELY NO introductory text, explanations, or meta-commentary.
+3. Each question MUST follow this EXACT format:
+"X. [Question text]
+A. [Option A]
+B. [Option B]
+C. [Option C]
+D. [Option D]"
+4. Every question MUST start with its number and period (e.g., '1.', '2.', '3.').
+5. NO extra text, warnings, or formatting notes anywhere in the response.
 
-    CONTENT REQUIREMENTS:
-    7. Use the STUDY MATERIAL provided below as the base.
-    8. USE GOOGLE SEARCH to supplement with latest medical guidelines and realistic clinical cases.
-    9. Ensure questions match difficulty level {level}:
-       - Level 1-5: Intuitive basics - straightforward concepts that follow common sense, obvious anatomy/physiology
-       - Level 6-15: Logical progression - predictable clinical patterns, standard protocols, common conditions with textbook presentations
-       - Level 16-25: Complex but predictable - applied knowledge with clear patterns, differential diagnosis with logical elimination
-       - Level 26-35: Challenging patterns - specialized knowledge with some counterintuitive elements, presentations deviating from textbook
-       - Level 36-45: Counterintuitive expert - knowledge that defies common medical assumptions, paradoxical responses, conditions presenting opposite to expected
-       - Level 46-50: Supreme counterintuition - medical paradoxes and exceptions where intuitive answers are wrong, conditions that mimic opposite presentations, treatments with paradoxical mechanisms, diagnostic challenges where obvious answer is incorrect
-    10. **STRICT ANSWER DISTRIBUTION**: Each letter (A, B, C, D) correct exactly 2-3 times.
-    11. All options must be plausible distractors.
+CRITICAL ANSWER ASSIGNMENT:
+6. You MUST design the questions so that the correct answer for each question follows this exact sequence: [KEY: {formatted_key_string}]
+7. Arrange your option texts (A, B, C, D) manually so that the real, factual medical answer aligns perfectly with the matching letter in that designated sequence.
+8. The VERY LAST line of your response must be exactly: [KEY: {formatted_key_string}]
 
-    STUDY MATERIAL:
-    {combined_content}
+CONTENT REQUIREMENTS:
+7. Use the STUDY MATERIAL provided below as the base.
+8. USE GOOGLE SEARCH to supplement with latest medical guidelines and realistic clinical cases.
+9. Ensure questions match difficulty level {level}:
+- Level 1-5: Intuitive basics - straightforward concepts that follow common sense, obvious anatomy/physiology
+- Level 6-15: Logical progression - predictable clinical patterns, standard protocols, common conditions with textbook presentations
+- Level 16-25: Complex but predictable - applied knowledge with clear patterns, differential diagnosis with logical elimination
+- Level 26-35: Challenging patterns - specialized knowledge with some counterintuitive elements, presentations deviating from textbook
+- Level 36-45: Counterintuitive expert - knowledge that defies common medical assumptions, paradoxical responses, conditions presenting opposite to expected
+- Level 46-50: Supreme counterintuition - medical paradoxes and exceptions where intuitive answers are wrong, conditions that mimic opposite presentations, treatments with paradoxical mechanisms, diagnostic challenges where obvious answer is incorrect
 
-    REMEMBER: Start with '1. ' immediately. No introduction. End with [KEY: format].
-    """
-    
+STUDY MATERIAL:
+{combined_content}
+
+REMEMBER: Start with '1. ' immediately. No introduction. Match your questions to the exact key sequence provided, and end with the [KEY: format].
+"""
+
     # Single call to the model using the TOGGLE'S value
     exam_text = call_gemini_with_rotation(prompt, st.session_state.exam_model, use_search=st.session_state.use_search, timeout_per_question=3)
     return exam_text
@@ -785,16 +804,26 @@ if st.session_state.current_exam:
     
     # --- ADDED: PDF Download Button ---
     if FPDF:
-        pdf_bytes = create_exam_pdf(st.session_state.current_exam, st.session_state.current_key)
+    # Package the metadata dictionary dynamically
+        current_metadata = {
+            "level": st.session_state.current_level,
+            "focus": focus_mode if 'focus_mode' in locals() else "All Topics",
+            "exam": exam_filter if 'exam_filter' in locals() else "All Exams",
+            "system": system_filter if 'system_filter' in locals() else "All Systems"
+        }
+        
+        pdf_bytes = create_exam_pdf(
+            st.session_state.current_exam, 
+            st.session_state.current_key,
+            metadata=current_metadata
+        )
         if pdf_bytes:
             st.download_button(
-                label="📄 Download Exam as PDF",
+                label=" 📄  Download Exam as PDF",
                 data=pdf_bytes,
                 file_name="practice_exam.pdf",
                 mime="application/pdf"
             )
-    else:
-        st.warning("Please install fpdf (`pip install fpdf`) to enable PDF downloads.")
     # ----------------------------------
     # 1. CLEANING: Remove introductory fluff and trailing keys
     clean_text = st.session_state.current_exam.strip()
@@ -918,22 +947,24 @@ if st.session_state.current_exam:
         st.write("---")
 
         # --- Download Graded Exam Button ---
+        # --- Download Graded Exam Button ---
         if FPDF:
+            # Package the metadata dictionary dynamically here as well
+            current_metadata = {
+                "level": st.session_state.current_level,
+                "focus": focus_mode if 'focus_mode' in locals() else "All Topics",
+                "exam": exam_filter if 'exam_filter' in locals() else "All Exams",
+                "system": system_filter if 'system_filter' in locals() else "All Systems"
+            }
+
             pdf_bytes_graded = create_exam_pdf(
                 st.session_state.current_exam,
                 st.session_state.current_key,
                 user_answers=st.session_state.get('last_user_answers_list', []),
                 score=st.session_state.last_score,
-                max_score=st.session_state.num_questions
+                max_score=st.session_state.num_questions,
+                metadata=current_metadata
             )
-            if pdf_bytes_graded:
-                st.download_button(
-                    label=" 📄  Download Results & Selections as PDF",
-                    data=pdf_bytes_graded,
-                    file_name="graded_practice_exam.pdf",
-                    mime="application/pdf",
-                    key="download_graded_pdf"
-                )
         
 
 # Missed Questions Bank in Sidebar
