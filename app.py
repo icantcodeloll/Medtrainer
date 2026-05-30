@@ -491,26 +491,24 @@ st.sidebar.metric("Active Level", f"{st.session_state.current_level}/50")
 df_sidebar = pd.read_csv(CSV_FILE)
 
 
+# --- Focus Mode Multi-Select ---
+df_sidebar = pd.read_csv(CSV_FILE)
 categories = df_sidebar['category'].fillna("Uncategorized").astype(str).unique().tolist()
-all_categories = ["All Topics"] + sorted(categories)
-focus_mode = st.sidebar.selectbox("Focus Mode:", all_categories)
+focus_mode = st.sidebar.multiselect("Focus Mode:", options=sorted(categories), help="Select one or more categories")
 
-# --- ADD THIS: Exam Filter Dropdown ---
+# --- Exam Filter Multi-Select ---
 if 'exam' in df_sidebar.columns:
     exams = df_sidebar['exam'].fillna("Uncategorized").astype(str).unique().tolist()
-    all_exams = ["All Exams"] + sorted(exams)
-    exam_filter = st.sidebar.selectbox("Exam Filter:", all_exams)
+    exam_filter = st.sidebar.multiselect("Exam Filter:", options=sorted(exams), help="Select one or more exams")
 else:
-    exam_filter = "All Exams"
+    exam_filter = []
 
-# --- ADD THIS: Systems Filter Dropdown ---
+# --- Systems Filter Multi-Select ---
 if 'system' in df_sidebar.columns:
     system = df_sidebar['system'].fillna("Uncategorized").astype(str).unique().tolist()
-    all_systems = ["All Systems"] + sorted(system)
-    system_filter = st.sidebar.selectbox("System Filter:", all_systems)
+    system_filter = st.sidebar.multiselect("System Filter:", options=sorted(system), help="Select one or more systems")
 else:
-    system_filter = "All Systems"
-
+    system_filter = []
 
 
 if st.sidebar.button("Generate New Exam"):
@@ -540,25 +538,25 @@ if st.sidebar.button("Generate New Exam"):
         df_notes = pd.read_csv(NOTES_FILE)
         df = pd.merge(df_main, df_notes, on=JOIN_COLUMN, how='left')
                 
-        # --- ADD THIS: Filter by category ---
-        if focus_mode != "All Topics":
-            df = df[df['category'] == focus_mode]
+        # --- Filter by category (Multi-Select) ---
+        if focus_mode:  # Triggers only if the user made selections
+            df = df[df['category'].isin(focus_mode)]
             if df.empty:
-                st.error(f"No questions found for {focus_mode}. Check your CSV.")
+                st.error(f"No questions found for selected categories: {', '.join(focus_mode)}. Check your CSV.")
                 st.stop()
 
-        # --- ADD THIS: Filter by exam ---
-        if exam_filter != "All Exams" and 'exam' in df.columns:
-            df = df[df['exam'] == exam_filter]
+        # --- Filter by exam (Multi-Select) ---
+        if exam_filter and 'exam' in df.columns:  # Triggers only if the user made selections
+            df = df[df['exam'].isin(exam_filter)]
             if df.empty:
-                st.error(f"No questions found for {exam_filter}. Check your CSV.")
+                st.error(f"No questions found for selected exams: {', '.join(exam_filter)}. Check your CSV.")
                 st.stop()
 
-        # --- ADD THIS: Filter by system ---
-        if system_filter != "All Systems" and 'system' in df.columns:
-            df = df[df['system'] == system_filter]
+        # --- Filter by system (Multi-Select) ---
+        if system_filter and 'system' in df.columns:  # Triggers only if the user made selections
+            df = df[df['system'].isin(system_filter)]
             if df.empty:
-                st.error(f"No questions found for {system_filter}. Check your CSV.")
+                st.error(f"No questions found for selected systems: {', '.join(system_filter)}. Check your CSV.")
                 st.stop()
         
         # --- TOGGLE LOGIC ---
