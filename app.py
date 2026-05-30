@@ -487,26 +487,38 @@ st.sidebar.header("Stats & Controls")
 # Move Active Level metric here
 st.sidebar.metric("Active Level", f"{st.session_state.current_level}/50")
 
-# --- ADD THIS: Focus Mode Dropdown ---
+
+# --- Focus Mode Multi-Select (Default: Select All) ---
 df_sidebar = pd.read_csv(CSV_FILE)
+categories = sorted(df_sidebar['category'].fillna("Uncategorized").astype(str).unique().tolist())
+focus_mode = st.sidebar.multiselect(
+    "Focus Mode:", 
+    options=categories, 
+    default=categories,  # Pre-selects all items
+    help="Select one or more categories"
+)
 
-
-# --- Focus Mode Multi-Select ---
-df_sidebar = pd.read_csv(CSV_FILE)
-categories = df_sidebar['category'].fillna("Uncategorized").astype(str).unique().tolist()
-focus_mode = st.sidebar.multiselect("Focus Mode:", options=sorted(categories), help="Select one or more categories")
-
-# --- Exam Filter Multi-Select ---
+# --- Exam Filter Multi-Select (Default: Select All) ---
 if 'exam' in df_sidebar.columns:
-    exams = df_sidebar['exam'].fillna("Uncategorized").astype(str).unique().tolist()
-    exam_filter = st.sidebar.multiselect("Exam Filter:", options=sorted(exams), help="Select one or more exams")
+    exams = sorted(df_sidebar['exam'].fillna("Uncategorized").astype(str).unique().tolist())
+    exam_filter = st.sidebar.multiselect(
+        "Exam Filter:", 
+        options=exams, 
+        default=exams,  # Pre-selects all items
+        help="Select one or more exams"
+)
 else:
     exam_filter = []
 
-# --- Systems Filter Multi-Select ---
+# --- Systems Filter Multi-Select (Default: Select All) ---
 if 'system' in df_sidebar.columns:
-    system = df_sidebar['system'].fillna("Uncategorized").astype(str).unique().tolist()
-    system_filter = st.sidebar.multiselect("System Filter:", options=sorted(system), help="Select one or more systems")
+    system = sorted(df_sidebar['system'].fillna("Uncategorized").astype(str).unique().tolist())
+    system_filter = st.sidebar.multiselect(
+        "System Filter:", 
+        options=system, 
+        default=system,  # Pre-selects all items
+        help="Select one or more systems"
+)
 else:
     system_filter = []
 
@@ -538,26 +550,33 @@ if st.sidebar.button("Generate New Exam"):
         df_notes = pd.read_csv(NOTES_FILE)
         df = pd.merge(df_main, df_notes, on=JOIN_COLUMN, how='left')
                 
-        # --- Filter by category (Multi-Select) ---
-        if focus_mode:  # Triggers only if the user made selections
+        # --- Filter by category ---
+        if not focus_mode:
+            st.error("Please select at least one Focus Mode category.")
+            st.stop()
+        else:
             df = df[df['category'].isin(focus_mode)]
-            if df.empty:
-                st.error(f"No questions found for selected categories: {', '.join(focus_mode)}. Check your CSV.")
-                st.stop()
 
-        # --- Filter by exam (Multi-Select) ---
-        if exam_filter and 'exam' in df.columns:  # Triggers only if the user made selections
-            df = df[df['exam'].isin(exam_filter)]
-            if df.empty:
-                st.error(f"No questions found for selected exams: {', '.join(exam_filter)}. Check your CSV.")
+        # --- Filter by exam ---
+        if 'exam' in df.columns:
+            if not exam_filter:
+                st.error("Please select at least one Exam filter.")
                 st.stop()
+            else:
+                df = df[df['exam'].isin(exam_filter)]
 
-        # --- Filter by system (Multi-Select) ---
-        if system_filter and 'system' in df.columns:  # Triggers only if the user made selections
-            df = df[df['system'].isin(system_filter)]
-            if df.empty:
-                st.error(f"No questions found for selected systems: {', '.join(system_filter)}. Check your CSV.")
+        # --- Filter by system ---
+        if 'system' in df.columns:
+            if not system_filter:
+                st.error("Please select at least one System filter.")
                 st.stop()
+            else:
+                df = df[df['system'].isin(system_filter)]
+                
+        # Final safety check to ensure data isn't missing
+        if df.empty:
+            st.error("No questions found matching your combined filter criteria. Check your CSV selections.")
+            st.stop()
         
         # --- TOGGLE LOGIC ---
         if 'include' in df.columns:
