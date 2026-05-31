@@ -404,7 +404,7 @@ CONTENT REQUIREMENTS:
 STUDY MATERIAL:
 {combined_content}
 
-REMEMBER: Start with '1. ' immediately. No introduction. Match your questions to the exact key sequence provided, and end with the [KEY: format].
+REMEMBER: You must maintain a strict difficulty level of {level}/50 for ALL {num_questions} questions. Do not drop the complexity or become more intuitive on the later questions. Start with '1. ' immediately. No introduction. Match your questions to the exact key sequence provided, and end with the [KEY: format].
 """
 
     # Single call to the model using the TOGGLE'S value
