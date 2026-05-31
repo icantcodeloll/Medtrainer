@@ -207,7 +207,7 @@ def create_exam_pdf(exam_text, answer_key, user_answers=None, score=None, max_sc
     pdf.set_auto_page_break(auto=True, margin=15)
 
     # Title
-    pdf.set_font("Arial", "B", 16)
+    pdf.set_font("Arial", "B", 12)
     if score is not None and max_score is not None:
         pdf.cell(0, 10, f"Practice Exam Results - Score: {score}/{max_score}", ln=True, align="C")
     else:
@@ -216,7 +216,7 @@ def create_exam_pdf(exam_text, answer_key, user_answers=None, score=None, max_sc
 
     # --- ADD METADATA BLOCK ---
     if metadata:
-        pdf.set_font("Arial", "I", 10)
+        pdf.set_font("Arial", "I", 9)
         meta_text = f"Level: {metadata.get('level', 'N/A')} | Focus Mode: {metadata.get('focus', 'All')} | Exam Filter: {metadata.get('exam', 'All')} | System Filter: {metadata.get('system', 'All')}"
         pdf.cell(0, 8, meta_text, ln=True, align="C")
         pdf.ln(5)
@@ -229,16 +229,16 @@ def create_exam_pdf(exam_text, answer_key, user_answers=None, score=None, max_sc
     clean_text = clean_text.encode('latin-1', 'replace').decode('latin-1')
 
     # Print Questions
-    pdf.set_font("Arial", "", 12)
+    pdf.set_font("Arial", "", 9)
     pdf.multi_cell(0, 7, clean_text)
 
     # Add Answer Key & User Answers on a new page
     pdf.add_page()
-    pdf.set_font("Arial", "B", 16)
+    pdf.set_font("Arial", "B", 12)
     pdf.cell(0, 10, "Exam Summary", ln=True, align="C")
     pdf.ln(5)
 
-    pdf.set_font("Arial", "", 12)
+    pdf.set_font("Arial", "", 9)
     for i, ans in enumerate(answer_key):
         text = f"Question {i+1}: Correct Key: {ans}"
         if user_answers and i < len(user_answers):
