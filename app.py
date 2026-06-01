@@ -804,26 +804,49 @@ if st.session_state.current_exam:
     
     # --- ADDED: PDF Download Button ---
     if FPDF:
-    # Package the metadata dictionary dynamically
+        # Package the metadata dictionary dynamically
         current_metadata = {
             "level": st.session_state.current_level,
             "focus": focus_mode if 'focus_mode' in locals() else "All Topics",
             "exam": exam_filter if 'exam_filter' in locals() else "All Exams",
             "system": system_filter if 'system_filter' in locals() else "All Systems"
         }
-        
+
         pdf_bytes = create_exam_pdf(
-            st.session_state.current_exam, 
+            st.session_state.current_exam,
             st.session_state.current_key,
             metadata=current_metadata
         )
         if pdf_bytes:
             st.download_button(
-                label=" 📄  Download Exam as PDF",
+                label="  📄   Download Exam as PDF",
                 data=pdf_bytes,
                 file_name="practice_exam.pdf",
                 mime="application/pdf"
             )
+
+    # --- NEW: TXT Download Button ---
+    if st.session_state.current_exam:
+        # Compile plain text version with metadata info
+        meta_focus = focus_mode if 'focus_mode' in locals() else "All Topics"
+        meta_exam = exam_filter if 'exam_filter' in locals() else "All Exams"
+        meta_system = system_filter if 'system_filter' in locals() else "All Systems"
+        
+        txt_content = (
+            f"Practice Exam (Level {st.session_state.current_level}/50)\n"
+            f"Filters - Focus Mode: {meta_focus} | Exam: {meta_exam} | System: {meta_system}\n"
+            f"Generated on: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+            f"----------------------------------------------------------------------\n\n"
+            f"{st.session_state.current_exam.strip()}\n"
+        )
+        
+        st.download_button(
+            label="  📝   Download Exam as TXT",
+            data=txt_content,
+            file_name="practice_exam.txt",
+            mime="text/plain",
+            key="download_exam_txt_main"
+        )
     # ----------------------------------
     # 1. CLEANING: Remove introductory fluff and trailing keys
     clean_text = st.session_state.current_exam.strip()
