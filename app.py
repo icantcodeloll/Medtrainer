@@ -825,15 +825,14 @@ if st.session_state.current_exam:
                 mime="application/pdf"
             )
 
-    # --- NEW: TXT Download Button (With Whitespace Optimization) ---
+    # --- NEW: TXT Download Button (Zero Blank Lines between Questions) ---
     if st.session_state.current_exam:
         # Compile clean plain text with regular expressions
         raw_exam_text = st.session_state.current_exam.strip()
         
-        # 1. Clean up multi-newlines between Option D and the following question number
-        # This looks for any option D ending, captures the trailing space/breaks up to the next digit,
-        # and enforces exactly two newlines total (resulting in exactly one empty blank line).
-        clean_exam_text = re.sub(r'(D\.\s.*?)\n+(?=\d+\.\s)', r'\1\n\n', raw_exam_text)
+        # 1. Collapse multi-newlines between Option D and the following question number down to a single line break
+        # This matches Option D, grabs all trailing newlines/whitespace, and replaces them with a single \n
+        clean_exam_text = re.sub(r'(D\.\s.*?)\n+(?=\d+\.\s)', r'\1\n', raw_exam_text)
         
         # 2. Package the metadata dictionary dynamically
         meta_focus = focus_mode if 'focus_mode' in locals() else "All Topics"
