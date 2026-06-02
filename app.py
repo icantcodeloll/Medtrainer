@@ -92,13 +92,12 @@ GRADER_MODEL = 'gemini-3.1-flash-lite'
 # ==========================================
 # Adjust these numbers to match your actual blueprint (e.g., USMLE, Board exams)
 EXAM_WEIGHTS = {
-    "Anatomy": 0.28, #42
-    "Physiology": 0.40, #62
-    "Pharmacology": 0.15, #23
-    "Nutrition": 0.06, #6
-    "Microbiology": 0.06, #9
-    "Immunology": 0.01, #2
-    "Uncategorized": 0.04      
+    "Anatomy": 0.28, 
+    "Physiology": 0.40,
+    "Pharmacology": 0.15, 
+    "Nutrition": 0.06,
+    "Microbiology": 0.06,
+    "Immunology": 0.01
 }
 
 
