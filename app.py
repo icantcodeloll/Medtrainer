@@ -11,6 +11,7 @@ import shutil # Add this to your imports at the top of the file
 import tempfile
 import random
 import datetime
+from zoneinfo import ZoneInfo
 import threading
 
 # Global thread lock to prevent simultaneous CSV write operations
@@ -219,8 +220,11 @@ def create_exam_pdf(exam_text, answer_key, user_answers=None, score=None, max_sc
     # --- ADD METADATA BLOCK ---
     if metadata:
         pdf.set_font("Arial", "I", 9)
+        melbourne_time = datetime.datetime.now(ZoneInfo("Australia/Melbourne")).strftime('%Y-%m-%d %H:%M:%S')
         meta_text = f"Level: {metadata.get('level', 'N/A')} | Focus Mode: {metadata.get('focus', 'All')} | Exam Filter: {metadata.get('exam', 'All')} | System Filter: {metadata.get('system', 'All')}"
-        pdf.cell(0, 8, meta_text, ln=True, align="C")
+        time_text = f"Generated on (Melbourne Time): {melbourne_time}"
+        pdf.cell(0, 6, meta_text, ln=True, align="C")
+        pdf.cell(0, 6, time_text, ln=True, align="C")
         pdf.ln(5)
     else:
         pdf.ln(3)
@@ -464,10 +468,11 @@ def render_data_portability_interface():
         
         zip_buffer.seek(0)
         
+        timestamp_melb = datetime.datetime.now(ZoneInfo("Australia/Melbourne")).strftime('%Y%m%d_%H%M%S')
         st.sidebar.download_button(
             label="📥 Download All User Data (.zip)",
             data=zip_buffer,
-            file_name=f"backup_user_profiles_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.zip",
+            file_name=f"backup_user_profiles_{timestamp_melb}.zip",
             mime="application/zip",
             key="download_all_data_zip"
         )
@@ -841,10 +846,11 @@ if st.session_state.current_exam:
         meta_exam = exam_filter if 'exam_filter' in locals() else "All Exams"
         meta_system = system_filter if 'system_filter' in locals() else "All Systems"
         
+        melbourne_now = datetime.datetime.now(ZoneInfo("Australia/Melbourne")).strftime('%Y-%m-%d %H:%M:%S')
         txt_content = (
             f"Practice Exam (Level {st.session_state.current_level}/50)\n"
             f"Filters - Focus Mode: {meta_focus} | Exam: {meta_exam} | System: {meta_system}\n"
-            f"Generated on: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+            f"Generated on (Melbourne Time): {melbourne_now}\n"
             f"----------------------------------------------------------------------\n\n"
             f"{clean_exam_text}\n"
         )
