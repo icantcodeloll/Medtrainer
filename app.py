@@ -1018,8 +1018,8 @@ if st.session_state.missed_questions:
     st.sidebar.markdown("---")
     st.sidebar.subheader(f"Missed Questions ({len(st.session_state.missed_questions)})")
     # Prepare the missed questions text content dynamically in memory
-    export_text = f"=== WEB SESSION: {time.strftime('%Y-%m-%d %H:%M')} ===\n"
-    for item in st.session_state.missed_questions:
+    melbourne_mistakes_time = datetime.datetime.now(ZoneInfo("Australia/Melbourne")).strftime('%Y-%m-%d %H:%M')
+    export_text = f"=== WEB SESSION (Melbourne Time): {melbourne_mistakes_time} ===\n"    for item in st.session_state.missed_questions:
         cat = item.get('category', 'General')
         export_text += f"\n[{cat}] {item['question']}\n[CORRECT: {item['correct']} | YOURS: {item['yours']}]\n"
 
