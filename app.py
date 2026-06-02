@@ -100,7 +100,7 @@ EXAM_WEIGHTS = {
     "Microbiology": 9,
     "Immunology": 2,
     #"Clinical skills": 36,
-    #"EBM": 14,
+    "EBM": 14,
     "Int Med": 6
 }
 
