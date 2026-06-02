@@ -658,9 +658,10 @@ if st.sidebar.button("Generate New Exam"):
         # Apply the sentence-level randomization to your data columns
         randomized_explanations = samples_df['explanation'].fillna('').astype(str).apply(randomize_paragraph_start)
         randomized_content = samples_df['content'].fillna('').astype(str).apply(randomize_paragraph_start)
+        randomized_flashcards = samples_df['flashcards'].fillna('').astype(str).apply(randomize_paragraph_start)
 
         # Compile into the final list for the prompt
-        samples = (randomized_explanations + "\n[Notes: " + randomized_content + "]").tolist()
+        samples = (randomized_explanations + "\n[Notes: " + randomized_content + randomized_flashcards + "]").tolist()
         
         with st.spinner(f"Generating {n} questions at Level {st.session_state.current_level}..."):
             max_retries = 3
