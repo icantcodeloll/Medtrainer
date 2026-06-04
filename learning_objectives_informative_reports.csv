@@ -1531,8 +1531,8 @@ Note the arrangement of the peritoneum and peritoneal cavity in the pelvis (comp
 "Identify the parts and major features of the liver, gallbladder, pancreas (including pancreatic duct), spleen, biliary tract and portal venous system (its course and major tributaries).",,,y,Anatomy,1,Exam 1,GIT
 "Compare and contrast the major features of the abdominal oesophagus, stomach, duodenum, jejunum, ileum, caecum (and appendix), colon (ascending, transverse, descending and sigmoid) and rectum (including relevant parts, where appropriate).",,,y,Anatomy,1,Exam 1,GIT
 "Describe the arterial supply to the foregut, midgut and hindgut.",,,y,Anatomy,1,Exam 1,GIT
-Identify the parts and major anatomical features of the kidneys and associated structures (noting internal and external features and the relevant vasculature).,,,y,Anatomy,1,Exam 1,GIT
-Describe the anatomy of the posterior abdominal wall (and identify key relationships to this anatomical region).,,,y,Anatomy,1,Exam 1,GIT
+Identify the parts and major anatomical features of the kidneys and associated structures (noting internal and external features and the relevant vasculature).,,,y,Anatomy,1,Exam 1,Renal
+Describe the anatomy of the posterior abdominal wall (and identify key relationships to this anatomical region).,,,y,Anatomy,1,Exam 1,Renal
 Examine the issues around integrative medicine (IM) research and funding,,Evidence in integrative medicine,y,Int Med,1,Exam 1,Extra
 Use selected examples of research to illustrate principles,,Evidence in integrative medicine,y,Int Med,1,Exam 1,Extra
 Cultivate healthy scepticism regarding healthcare,,Evidence in integrative medicine,y,Int Med,1,Exam 1,Extra
@@ -2476,3 +2476,32 @@ Capillary blood glucose testing using a handheld glucometer provides a rapid est
 •	Capillary Sampling: Perform a finger prick using the lancet device. Puncture the lateral or medial sides of the distal phalanx; avoid the highly sensitive central finger pad.
 •	Biochemical Reaction: Gently touch the drop of capillary blood to the yellow target area on the protruding end of the strip. The sample will be drawn upward into the reaction chamber via capillary action.
 •	Hemostasis & Disposal: Apply firm pressure to the puncture site using clean gauze. Safely discard the contaminated lancet directly into the sharps container and dispose of all clinical waste appropriately.",,y,Clinical skills,1,Exam 2,Endocrine
+Identify the components of the lung in histological sections,,Week 1 workshop resp histology,y,Anatomy,1,Exam 1,Respiratory
+Identify cells and tissues in the lung using light and electron microscopy,,Week 1 workshop resp histology,y,Anatomy,1,Exam 1,Respiratory
+Demonstrate knowledge of the key respiratory physiology mechanisms,,Week 1 workshop resp cases,y,Physiology,1,Exam 1,Respiratory
+"Understand and interpret flow-volume loops, comparing baseline data to data post-bronchodilator administration",,Week 1 workshop resp cases,y,Physiology,1,Exam 1,Respiratory
+"Understand and interpret spirometry data, lung volumes, airway function parameters, and CO transfer factors",,Week 1 workshop resp cases,y,Physiology,1,Exam 1,Respiratory
+Analyse a range of data in order to determine potential patient aetiologies in case-based learning,,Week 1 workshop resp cases,y,Physiology,1,Exam 1,Respiratory
+Apply your anatomical knowledge to develop a differential diagnosis based on patient symptoms as it relates to thoracic anatomy,,Week 2 workshop thoracic cases,y,Anatomy,1,Exam 1,Respiratory
+Appreciate the range of common respiratory infections,,Week 2 workshop lower rti cases,y,Microbiology,1,Exam 1,Respiratory
+Be familiar with the major respiratory pathogens & the infections caused,,Week 2 workshop lower rti cases,y,Microbiology,1,Exam 1,Respiratory
+Develop an approach to assessment and appropriate treatment of common respiratory infections,,Week 2 workshop lower rti cases,y,Microbiology,1,Exam 1,Respiratory
+Be aware of rare but potentially serious respiratory infections requiring urgent assessment & referral,,Week 2 workshop lower rti cases,y,Microbiology,1,Exam 1,Respiratory
+Assess critically the need for antibiotics in common respiratory infections,,Week 2 workshop lower rti cases,y,Microbiology,1,Exam 1,Respiratory
+"Engage clinical reasoning skills and begin to describe complexities related to ANS clinical diagnosis, management and treatment.",,Week 3 workshop git ans,y,Anatomy,1,Exam 1,GIT
+"Use your anatomical, physiology and pharmacology knowledge to develop a differential diagnosis based on patient symptoms as it relates to ANS.",,Week 3 workshop git ans,y,Anatomy,1,Exam 1,GIT
+Concept and consolidation - respiratory,,Week 3 workshop respiratory consolidation,y,Clinical skills,1,Exam 1,Respiratory
+Apply your anatomical knowledge to develop a differential diagnosis based on patient symptoms as it relates to gastrointestinal (GIT) anatomy.,,Week 4 workshop git cases,y,Anatomy,1,Exam 1,GIT
+Explain (using a diagram) basal and receptor-mediated secretion of HCl from gastric parietal cells.,,Week 4 workshop ulcer reflux,y,Pharmacology,1,Exam 1,GIT
+"Describe drugs that are commonly used to treat excess parietal HCl secretion (associated with gastric ulcers), including their mechanisms of action.",,Week 4 workshop ulcer reflux,y,Pharmacology,1,Exam 1,GIT
+Describe why a high percentage of toddlers suffer constipation and which pharmacological therapies are suitable.,,Week 4 workshop ulcer reflux,y,Pharmacology,1,Exam 1,GIT
+"Identify the components, cell types and functions of the layers of the gastrointestinal tract.",,Week 5 workshop git histology,y,Anatomy,1,Exam 1,GIT
+Explain the histological/structural and functional differences between different regions of the gastrointestinal tract,,Week 5 workshop git histology,y,Anatomy,1,Exam 1,GIT
+"Describe the histological structure and features of the liver, gall bladder and pancreas.",,Week 5 workshop git histology,y,Anatomy,1,Exam 1,GIT
+Concept and consolidation - GIT 1,,Week 5 workshop git consolidation 1,y,Clinical skills,1,Exam 1,GIT
+Recognize the impact of viral hepatitis and parasitic infections of the GIT,,Week 6 workshop infections of git,y,Microbiology,1,Exam 1,GIT
+Provide examples of specific intestinal parasitic organisms and describe the diseases caused,,Week 6 workshop infections of git,y,Microbiology,1,Exam 1,GIT
+Identify the most common forms of viral hepatitis,,Week 6 workshop infections of git,y,Microbiology,1,Exam 1,GIT
+"Describe the clinical presentation, complications and diagnosis of viral hepatitis and parasitic infections of the GIT",,Week 6 workshop infections of git,y,Microbiology,1,Exam 1,GIT
+"Antiparasitic Drug of Choice (Antiprotozoal and Anthelmintic), the mechanism of action and any precautions associated with the use of a particular drug.",,Week 6 workshop infections of git,y,Microbiology,1,Exam 1,GIT
+Concept and consolidation - GIT 2,,Week 6 workshop git consolidation 2,y,Clinical skills,1,Exam 1,GIT
