@@ -156,7 +156,7 @@ def call_gemini_with_rotation(prompt, model_to_use, use_search=False, timeout_pe
     
     # 1. Establish tool rules: Google Search ONLY applies to Gemini 2.5 Flash
     tools = []
-    if use_search and "3.5-flash" in model_to_use.lower():
+    if use_search and "3.5-flash-preview" in model_to_use.lower():
         tools = [types.Tool(google_search=types.GoogleSearch())]
     
     # 2. Build configuration arguments dynamically
@@ -166,7 +166,7 @@ def call_gemini_with_rotation(prompt, model_to_use, use_search=False, timeout_pe
         config_args["tools"] = tools
         
     
-    if "3.1-flash-lite" in model_to_use.lower() or "3.5-flash" in model_to_use.lower():
+    if "3.1-flash-lite" in model_to_use.lower() or "3.5-flash-preview" in model_to_use.lower():
         # Safeguard default state if UI component hasn't rendered yet
         current_level = st.session_state.get("thinking_level", "MEDIUM")
         config_args["thinking_config"] = types.ThinkingConfig(thinking_level=current_level)
@@ -765,13 +765,13 @@ if st.session_state.get('show_settings', False):
         label="Speed",
         label_visibility="collapsed", # Hides the label so it just looks like a switch
         options=["Fast", "Slow & Smart"],
-        index=1 if st.session_state.get('exam_model', 'gemini-3.5-flash') == 'gemini-3.5-flash' else 0,
+        index=1 if st.session_state.get('exam_model', 'gemini-3.5-flash-preview') == 'gemini-3.5-flash-preview' else 0,
         horizontal=True, # This forces them side-by-side like a double switch!
         help="Fast uses Flash-Lite. Slow & Smart uses Flash."
     )
 
     # Update memory
-    st.session_state.exam_model = 'gemini-3.5-flash' if "Slow" in model_choice else 'gemini-3.1-flash-lite'
+    st.session_state.exam_model = 'gemini-3.5-flash-preview' if "Slow" in model_choice else 'gemini-3.1-flash-lite'
 
     st.sidebar.markdown("**Grounding:**")
     st.session_state.use_search = st.sidebar.toggle(
