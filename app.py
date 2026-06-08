@@ -621,7 +621,7 @@ if st.sidebar.button("Generate New Exam"):
         try:
             # We use replace=False so we don't duplicate questions in the same exam
             st.session_state.samples_df = df.sample(min(n, len(df)), weights='sampling_weight', replace=False)
-            st.sidebar.info("All content for E1 has been uplodaded")
+            st.sidebar.info("All content has been uplodaded")
         except ValueError:
             # Fallback if weights math fails (e.g., all weights are zero)
             st.session_state.samples_df = df.sample(min(n, len(df)))
