@@ -188,7 +188,7 @@ def call_gemini_with_rotation(prompt, model_to_use, use_search=False, timeout_pe
             if "429" in str(e):
                 keys_tried += 1
                 if keys_tried >= len(API_KEYS):
-                    st.error("All API keys exhausted.")
+                    st.error("Reduce the question count.")
                     return None
                 st.session_state.key_index = (st.session_state.key_index + 1) % len(API_KEYS)
                 time.sleep(1)
