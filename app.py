@@ -245,7 +245,7 @@ def get_ai_grading(exam_text, user_answers, correct_key, score):
     
     ### GRADING PROTOCOL:
     1. Compare the student's answer for each question against the correct key.
-    2. USE GOOGLE SEARCH to verify the current medical guidelines.
+    2. Verify with current medical knowledge.
     3. Focus ONLY on the questions the student got INCORRECT. 
     
     ### STRICT FORMATTING REQUIREMENTS:
@@ -262,45 +262,6 @@ def get_ai_grading(exam_text, user_answers, correct_key, score):
     
     # Using search during grading ensures explanations match current guidelines
     return call_gemini_with_rotation(prompt, GRADER_MODEL, use_search=st.session_state.use_search)
-
-def validate_exam_format(exam_text, expected_questions):
-    return True, "Validation temporarily disabled" # <--- ADD THIS LINE HERE
-    """Validate that the AI response follows the correct format"""
-    if not exam_text or not exam_text.strip():
-        return False, "Empty response"
-    
-    # Check if starts with question number
-    if not re.match(r'^\s*1\.\s', exam_text.strip()):
-        return False, "Does not start with '1. '"
-    
-    # Check for correct number of questions
-    question_pattern = r'^\s*\d+\.\s'
-    questions = re.findall(question_pattern, exam_text, re.MULTILINE)
-    if len(questions) != expected_questions:
-        return False, f"Expected {expected_questions} questions, found {len(questions)}"
-    
-    # Check for answer key format
-    key_pattern = r'\[KEY:\s*[A-D,\s]+\]$'
-    if not re.search(key_pattern, exam_text.strip()):
-        return False, "Missing or malformed answer key"
-    
-    # Check each question has A, B, C, D options
-    lines = exam_text.split('\n')
-    current_question = 0
-    option_count = 0
-    
-    for line in lines:
-        line = line.strip()
-        if re.match(r'^\d+\.\s', line):
-            current_question += 1
-            option_count = 0
-        elif re.match(r'^[A-D]\.\s', line):
-            option_count += 1
-    
-    if current_question != expected_questions:
-        return False, f"Question count mismatch: {current_question} vs {expected_questions}"
-    
-    return True, "Valid format"
 
 
 def get_blind_exam(topics_list, level, num_questions):
@@ -632,26 +593,10 @@ if st.sidebar.button("Generate New Exam"):
         samples = (randomized_explanations + "\n[Notes: " + randomized_content + randomized_flashcards + "]").tolist()
         
         with st.spinner(f"Generating {n} questions at Level {st.session_state.current_level}..."):
-            max_retries = 3
-            is_valid = False
             raw_response = ""
-            
-            # --- NEW: Retry Loop with Validation ---
-            for attempt in range(max_retries):
-                raw_response = get_blind_exam(samples, st.session_state.current_level, n)
-                
-                # Pass the AI response through your validation function
-                is_valid, validation_message = validate_exam_format(raw_response, n)
-                
-                if is_valid:
-                    break # Format is perfect, exit the retry loop
-                else:
-                    # Show a temporary warning and try again
-                    st.toast(f"Attempt {attempt + 1} failed: {validation_message}. Retrying...")
-                    time.sleep(1) # Brief pause before requesting again
-            # ---------------------------------------
+            raw_response = get_blind_exam(samples, st.session_state.current_level, n)
 
-            if is_valid and "[KEY:" in raw_response:
+            if "[KEY:" in raw_response:
                 # Use a split that keeps the questions separate from the key
                 text, key_part = raw_response.split("[KEY:")
                 
