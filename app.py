@@ -5,24 +5,11 @@ from google.genai import types
 import time
 import re
 import os
-import atexit
 from progress_manager import save_progress, load_progress
-import shutil # Add this to your imports at the top of the file
 import tempfile
 import random
 import datetime
 from zoneinfo import ZoneInfo
-import threading
-
-# Global thread lock to prevent simultaneous CSV write operations
-csv_write_lock = threading.Lock()
-
-def thread_safe_to_csv(df, filepath):
-    """Acquires a thread lock before writing to disk to prevent file collisions."""
-    with csv_write_lock:
-        df.to_csv(filepath, index=False)
-
-
 try:
     from fpdf import FPDF
 except ImportError:
@@ -32,19 +19,6 @@ except ImportError:
 # 1. SETUP & CONFIGURATION
 # ==========================================
 st.set_page_config(page_title="Trainer", page_icon="🩺", layout="wide")
-
-# Safari compatibility fixes
-st.markdown("""
-<style>
-.stButton > button {
-    width: 100%;
-}
-.stSelectbox > div > div > select {
-    width: 100%;
-}
-</style>
-""", unsafe_allow_html=True)
-
 
 API_KEYS = [st.secrets["GENAI_KEY_1"]]#, st.secrets["GENAI_KEY_2"], st.secrets["GENAI_KEY_3"]] # (Keep your full list here)
 NOTES_FILE = "lecture_notes.csv"
@@ -73,19 +47,16 @@ st.sidebar.success(f"Logged in as: **{active_user}**")
 # ==========================================
 # GLOBAL MASTER TEMPLATE CONFIGURATION
 # ==========================================
-MASTER_CSV = "learning_objectives_informative_reports.csv" 
-CSV_FILE = MASTER_CSV
+CSV_FILE = "learning_objectives_informative_reports.csv" 
 
-if not os.path.exists(MASTER_CSV):
-    st.error(f"Fatal Error: Master template file '{MASTER_CSV}' not found!")
+if not os.path.exists(CSV_FILE):
+    st.error(f"Fatal Error: Master template file '{CSV_FILE}' not found!")
     st.stop()
 
 # Models
 # Note: Google Search works best with Flash/Pro (Lite may have tool limitations)
 EXAM_MODEL = 'gemini-3.1-flash-lite'
 GRADER_MODEL = 'gemini-3.1-flash-lite'
-
-#Models that work: gemini-3.5-flash, gemini-3.1-flash-lite
 
 
 # ==========================================
@@ -105,7 +76,6 @@ EXAM_WEIGHTS = {
 }
 
 
-
 # Load saved progress on startup
 loaded_progress = load_progress(active_user)
 
@@ -123,7 +93,6 @@ if 'current_exam' not in st.session_state:
 if 'current_key' not in st.session_state:
     st.session_state.current_key = loaded_progress.get("current_key", [])
 if 'key_index' not in st.session_state:
-    # Give every user a random starting key to prevent collisions
     st.session_state.key_index = loaded_progress.get("key_index", random.randint(0, len(API_KEYS) - 1))
 if 'current_categories' not in st.session_state:
     st.session_state.current_categories = loaded_progress.get("current_categories", [])
@@ -131,14 +100,12 @@ if 'samples_df' not in st.session_state:
     st.session_state.samples_df = loaded_progress.get("samples_df", pd.DataFrame())
 if 'previous_test_data' not in st.session_state:
     st.session_state.previous_test_data = {}
-# Place this in your sidebar logic (e.g., around line 450)
-# --- INITIALIZE COMMON SYSTEM STATES ---
 if "use_search" not in st.session_state:
     st.session_state.use_search = False
 if 'thinking_level' not in st.session_state:
     st.session_state.thinking_level = "MEDIUM"
 
-# Register auto-save on app shutdown
+
 if st.sidebar.button("Save Progress", help="Manually save your current progress"):
     try:
         if save_progress(st.session_state, active_user):
@@ -269,9 +236,10 @@ def get_ai_grading(exam_text, user_answers, correct_key, score):
     prompt = f"""
     Here is the input:
     EXAM QUESTIONS: {exam_text}
+    SCORE: {score}
     CORRECT KEY: {correct_key}
     STUDENT ANSWERS: {user_answers}
-    SCORE: {score}
+    
 
     You are a medical instructor. Grade the student's performance.
     
