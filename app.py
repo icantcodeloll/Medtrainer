@@ -373,7 +373,7 @@ def render_data_portability_interface():
         return
 
     # --- EVERYTHING BELOW IS UNLOCKED ONLY IF THE PASSWORD IS CORRECT ---
-    st.sidebar.success("🔓 Access Granted")
+    st.sidebar.success("Access Granted")
     st.sidebar.caption("Download data profiles before changing code, and reupload them afterward.")
 
 # 2. SCAN AND ARCHIVE ALL PROGRESS DATA
@@ -390,7 +390,7 @@ def render_data_portability_interface():
         
         timestamp_melb = datetime.datetime.now(ZoneInfo("Australia/Melbourne")).strftime('%Y%m%d_%H%M%S')
         st.sidebar.download_button(
-            label="📥 Download All User Data (.zip)",
+            label="Download All User Data (.zip)",
             data=zip_buffer,
             file_name=f"backup_user_profiles_{timestamp_melb}.zip",
             mime="application/zip",
@@ -731,7 +731,7 @@ if st.session_state.current_exam:
         )
         if pdf_bytes:
             st.download_button(
-                label="  📄   Download Exam as PDF",
+                label="  Download Exam as PDF",
                 data=pdf_bytes,
                 file_name="practice_exam.pdf",
                 mime="application/pdf"
@@ -761,7 +761,7 @@ if st.session_state.current_exam:
         )
         
         st.download_button(
-            label="  📝   Download Exam as TXT",
+            label="Download Exam as TXT",
             data=txt_content,
             file_name="practice_exam.txt",
             mime="text/plain",
@@ -931,7 +931,7 @@ if st.session_state.missed_questions:
 
     # Offer the file directly as a local browser download
     st.sidebar.download_button(
-        label="📥 Download Mistakes to .txt",
+        label="Download Mistakes to .txt",
         data=export_text,
         file_name=f"{active_user}_missed_questions.txt",
         mime="text/plain",
