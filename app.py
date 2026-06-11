@@ -330,14 +330,7 @@ CRITICAL ANSWER ASSIGNMENT:
 
 CONTENT REQUIREMENTS:
 7. Use the STUDY MATERIAL provided below as the base.
-8. USE GOOGLE SEARCH to supplement with latest medical guidelines and realistic clinical cases.
-9. Ensure questions match difficulty level {level}:
-- Level 1-5: Intuitive basics - straightforward concepts that follow common sense, obvious anatomy/physiology
-- Level 6-15: Logical progression - predictable clinical patterns, standard protocols, common conditions with textbook presentations
-- Level 16-25: Complex but predictable - applied knowledge with clear patterns, differential diagnosis with logical elimination
-- Level 26-35: Challenging patterns - specialized knowledge with some counterintuitive elements, presentations deviating from textbook
-- Level 36-45: Counterintuitive expert - knowledge that defies common medical assumptions, paradoxical responses, conditions presenting opposite to expected
-- Level 46-50: Supreme counterintuition - medical paradoxes and exceptions where intuitive answers are wrong, conditions that mimic opposite presentations, treatments with paradoxical mechanisms, diagnostic challenges where obvious answer is incorrect
+8. Ensure questions match difficulty level {level}/50
 
 STUDY MATERIAL:
 {combined_content}
