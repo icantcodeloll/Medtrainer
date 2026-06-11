@@ -10,6 +10,10 @@ import tempfile
 import random
 import datetime
 from zoneinfo import ZoneInfo
+import zipfile
+import io
+import glob
+
 try:
     from fpdf import FPDF
 except ImportError:
@@ -54,7 +58,6 @@ if not os.path.exists(CSV_FILE):
     st.stop()
 
 # Models
-# Note: Google Search works best with Flash/Pro (Lite may have tool limitations)
 EXAM_MODEL = 'gemini-3.1-flash-lite'
 GRADER_MODEL = 'gemini-3.1-flash-lite'
 
@@ -118,7 +121,7 @@ if st.sidebar.button("Save Progress", help="Manually save your current progress"
 def get_client():
     return genai.Client(api_key=API_KEYS[st.session_state.key_index])
 
-def call_gemini_with_rotation(prompt, model_to_use, use_search=False, timeout_per_question=3):
+def call_gemini_with_rotation(prompt, model_to_use, use_search=False):
     keys_tried = 0
     
     # 1. Establish tool rules: Google Search ONLY applies to Gemini 2.5 Flash
@@ -343,7 +346,7 @@ REMEMBER: You must maintain a strict difficulty level of {level}/50 for ALL {num
 """
 
     # Single call to the model using the TOGGLE'S value
-    exam_text = call_gemini_with_rotation(prompt, st.session_state.exam_model, use_search=st.session_state.use_search, timeout_per_question=3)
+    exam_text = call_gemini_with_rotation(prompt, st.session_state.exam_model, use_search=st.session_state.use_search)
     return exam_text
 
 # =====================================================================
@@ -354,11 +357,6 @@ def render_data_portability_interface():
     Renders password-protected download/upload tools in the sidebar to 
     safeguard user JSON progress profiles and tracking CSV matrices.
     """
-    import zipfile
-    import io
-    import os
-    import glob
-    import datetime
 
     st.sidebar.markdown("---")
     st.sidebar.subheader("Admin")
