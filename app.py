@@ -18,40 +18,46 @@ from streamlit.runtime.scriptrunner import get_script_run_ctx
 
 # Save progress function not set up yet
 
-
-# Inject custom CSS to completely hide the copy button on button hovers
 st.markdown("""
     <style>
-    /* Remove default button shapes and styles */
+    /* 1. Target and normalize ALL question choice buttons to identical boxes */
     div.stButton > button {
         border-radius: 8px !important;
-        border: 1px solid #e0e0e0 !important;
-        background-color: transparent !important;
-        color: #333333 !important;
+        /* Force explicit padding and baseline margins */
         padding: 14px 20px !important;
         text-align: left !important;
         display: block !important;
         transition: all 0.2s ease-in-out !important;
         font-size: 15px !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
     }
     
-    /* Hover effect - smooth background shift */
-    div.stButton > button:hover {
+    /* 2. Style for the UNSELECTED options (Secondary State) */
+    div.stButton > button[kind="secondary"] {
+        /* Use a 2px transparent border to match the 2px selected border size */
+        border: 2px solid #e0e0e0 !important;
+        background-color: transparent !important;
+        color: #333333 !important;
+    }
+    
+    /* Hover effect for unselected items */
+    div.stButton > button[kind="secondary"]:hover {
         border-color: #4b6cb7 !important;
         background-color: #f4f7fc !important;
         color: #4b6cb7 !important;
-        box-shadow: 0px 2px 5px rgba(0,0,0,0.05) !important;
     }
     
-    /* Style for the SELECTED option (Primary Button state) */
+    /* 3. Style for the SELECTED option (Primary State) */
     div.stButton > button[kind="primary"] {
-        background-color: #eef2fa !important;
+        /* Kept at exactly 2px so its layout box height is identical to unselected rows */
         border: 2px solid #4b6cb7 !important;
+        background-color: #eef2fa !important;
         color: #4b6cb7 !important;
         font-weight: bold !important;
     }
 
-    /* Hide the built-in Streamlit copy icons entirely */
+    /* 4. Complete elimination of the hover text copy icons */
     button [data-testid="stCopyButton"] {
         display: none !important;
     }
