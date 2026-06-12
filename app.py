@@ -494,7 +494,7 @@ if st.sidebar.button("Generate New Exam"):
         df_notes = pd.read_csv(NOTES_FILE)
         df = pd.merge(df_main, df_notes, on=JOIN_COLUMN, how='left')
                 
-        # --- Filter by category ---
+        # --- Filter by subject ---
         if not subject_filter:
             st.error("Please select at least one Subject filter.")
             st.stop()
