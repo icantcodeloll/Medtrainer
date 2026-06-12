@@ -439,7 +439,7 @@ df_sidebar = pd.read_csv(CSV_FILE)
 with st.sidebar.expander("Filter Content", expanded=False):
     
     # --- Subject filter Checkboxes (Default: Checked) ---
-    st.markdown("**Subject filter:**")
+    st.markdown("**Subjects:**")
     categories = sorted(df_sidebar['category'].fillna("Uncategorized").astype(str).unique().tolist())
     subject_filter = []
     for cat in categories:
@@ -451,7 +451,7 @@ with st.sidebar.expander("Filter Content", expanded=False):
     # --- Exam Filter Checkboxes (Default: Checked) ---
     exam_filter = []
     if 'exam' in df_sidebar.columns:
-        st.markdown("**Exam Filter:**")
+        st.markdown("**Exam:**")
         exams = sorted(df_sidebar['exam'].fillna("Uncategorized").astype(str).unique().tolist())
         for ex in exams:
             if st.checkbox(ex, value=True, key=f"exam_{ex}"):
@@ -464,7 +464,7 @@ with st.sidebar.expander("Filter Content", expanded=False):
     # --- Systems Filter Checkboxes (Default: Checked) ---
     system_filter = []
     if 'system' in df_sidebar.columns:
-        st.markdown("**System Filter:**")
+        st.markdown("**Systems:**")
         systems = sorted(df_sidebar['system'].fillna("Uncategorized").astype(str).unique().tolist())
         for sys in systems:
             if st.checkbox(sys, value=True, key=f"sys_{sys}"):
