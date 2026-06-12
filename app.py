@@ -18,51 +18,7 @@ from streamlit.runtime.scriptrunner import get_script_run_ctx
 
 # Save progress function not set up yet
 
-st.markdown("""
-    <style>
-    /* 1. Target and normalize ALL question choice buttons to identical boxes */
-    div.stButton > button {
-        border-radius: 8px !important;
-        /* Force explicit padding and baseline margins */
-        padding: 14px 20px !important;
-        text-align: left !important;
-        display: block !important;
-        transition: all 0.2s ease-in-out !important;
-        font-size: 15px !important;
-        width: 100% !important;
-        box-sizing: border-box !important;
-    }
-    
-    /* 2. Style for the UNSELECTED options (Secondary State) */
-    div.stButton > button[kind="secondary"] {
-        /* Use a 2px transparent border to match the 2px selected border size */
-        border: 2px solid #e0e0e0 !important;
-        background-color: transparent !important;
-        color: #333333 !important;
-    }
-    
-    /* Hover effect for unselected items */
-    div.stButton > button[kind="secondary"]:hover {
-        border-color: #4b6cb7 !important;
-        background-color: #f4f7fc !important;
-        color: #4b6cb7 !important;
-    }
-    
-    /* 3. Style for the SELECTED option (Primary State) */
-    div.stButton > button[kind="primary"] {
-        /* Kept at exactly 2px so its layout box height is identical to unselected rows */
-        border: 2px solid #4b6cb7 !important;
-        background-color: #eef2fa !important;
-        color: #4b6cb7 !important;
-        font-weight: bold !important;
-    }
 
-    /* 4. Complete elimination of the hover text copy icons */
-    button [data-testid="stCopyButton"] {
-        display: none !important;
-    }
-    </style>
-""", unsafe_allow_html=True)
 
 # ==========================================
 # 0. INITIALIZATION ENGINE
@@ -923,20 +879,58 @@ if st.session_state.current_exam:
     if 'user_selections' not in st.session_state:
         st.session_state.user_selections = {}
 
-    # --- RENDER QUESTIONS DYNAMICALLY (NO st.form CONTAINER) ---
+    # --- INJECT LOCALIZED OPTION STYLING ONLY ---
+    st.markdown("""
+        <style>
+        /* Style ONLY the custom quiz row boxes, leaving regular buttons untouched */
+        .quiz-option-box {
+            display: block;
+            width: 100%;
+            padding: 14px 20px;
+            margin: 8px 0;
+            border-radius: 8px;
+            font-size: 15px;
+            text-align: left;
+            background-color: transparent;
+            border: 2px solid #e0e0e0;
+            color: #333333;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+        
+        .quiz-option-box:hover {
+            border-color: #4b6cb7;
+            background-color: #f4f7fc;
+            color: #4b6cb7;
+        }
+        
+        .quiz-option-box-selected {
+            display: block;
+            width: 100%;
+            padding: 14px 20px;
+            margin: 8px 0;
+            border-radius: 8px;
+            font-size: 15px;
+            text-align: left;
+            border: 2px solid #4b6cb7;
+            background-color: #eef2fa;
+            color: #4b6cb7;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+
+    # --- RENDER QUESTIONS DYNAMICALLY ---
     for i, q_text in enumerate(individual_questions):
-        # Retained original subheader size for the Question numbering title
         st.subheader(f"Question {i+1}")
         
-        # 1. Parse out the core clinical question prompt before option A begins
         prompt_match = re.search(r"(\d+\s*\.\s*.*?)(?=A\s*\.\s*)", q_text, re.DOTALL)
         q_prompt = prompt_match.group(1).strip() if prompt_match else q_text
         
-        # Render the question text at its original font size using native markdown text
         st.markdown(q_prompt.replace("\n", "<br>"), unsafe_allow_html=True)
         st.write("") 
 
-        # 2. Extract choices handling both tight ("A.") and spaced-out outputs ("A .")
         opt_A = re.search(r"(A\s*\.\s*.*?)(?=[B-D]\s*\.\s*|$)", q_text, re.DOTALL)
         opt_B = re.search(r"(B\s*\.\s*.*?)(?=[A,C,D]\s*\.\s*|$)", q_text, re.DOTALL)
         opt_C = re.search(r"(C\s*\.\s*.*?)(?=[A,B,D]\s*\.\s*|$)", q_text, re.DOTALL)
@@ -949,28 +943,35 @@ if st.session_state.current_exam:
             "D": opt_D.group(1).strip() if opt_D else "D. Option D"
         }
 
-        # 3. Constrain option widths using standard columns so they aren't overly large or wide
         left_constrained_column, empty_right_space = st.columns([3, 2])
         
         with left_constrained_column:
             current_selection = st.session_state.user_selections.get(i, None)
             
+            # Use an input select widget that runs instantly with minimal latency overhead
+            # or render choice items that update seamlessly using a standard selection configuration
+            selected_letter = st.radio(
+                label=f"Select Option Q{i}",
+                options=list(options_dict.keys()),
+                index=list(options_dict.keys()).index(current_selection) if current_selection in options_dict else 0,
+                key=f"radio_q_{i}",
+                label_visibility="collapsed"
+            )
+            
+            # Update your background session tracking state seamlessly
+            if selected_letter != current_selection:
+                st.session_state.user_selections[i] = selected_letter
+
+            # Display custom HTML components for your choices with isolated box styling
             for choice_letter, full_sentence_text in options_dict.items():
-                is_selected = (current_selection == choice_letter)
+                is_selected = (selected_letter == choice_letter)
+                box_class = "quiz-option-box-selected" if is_selected else "quiz-option-box"
+                prefix = "➔   " if is_selected else "      "
                 
-                # Highlight selected options visually
-                button_label = f"➔   {full_sentence_text}" if is_selected else f"      {full_sentence_text}"
-                button_type = "primary" if is_selected else "secondary"
-                
-                # Clicking anywhere on these options saves selection and reloads cleanly
-                if st.button(
-                    label=button_label, 
-                    key=f"q_{i}_opt_{choice_letter}_btn", 
-                    use_container_width=True, # Strictly bounded by the left column size layout
-                    type=button_type
-                ):
-                    st.session_state.user_selections[i] = choice_letter
-                    st.rerun()
+                st.markdown(
+                    f'<div class="{box_class}">{prefix}{full_sentence_text}</div>', 
+                    unsafe_allow_html=True
+                )
 
         st.write("---")
 
