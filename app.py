@@ -1112,14 +1112,15 @@ def render_trainer_page():
             st.rerun()
 
             # --- 2. THE FEEDBACK (Fully outside the st.form block) ---
+            # Locate this section at the very end of render_trainer_page()
             if st.session_state.get('exam_submitted'):
-                st.markdown("---")
-                st.header(f"Results: {st.session_state.last_score}/{st.session_state.num_questions}")
-                
-                # --- IMMEDIATE FEEDBACK PANEL ---
-                st.subheader("Score Breakdown")
-                st.info(st.session_state.get('immediate_wrong_breakdown', 'No grading data found.'))
-                st.markdown("---")
+                if st.session_state.get('level_message'):
+                    st.markdown(st.session_state.level_message)
+                    
+                # --- REMOVE OR COMMENT OUT THE OLD BREAKDOWN LINES HERE ---
+                if st.session_state.get('immediate_wrong_breakdown'):
+                    st.markdown("### Immediate Answer Breakdown")
+                    st.markdown(st.session_state.immediate_wrong_breakdown)
                 
             
                 st.write("---")
@@ -1202,49 +1203,36 @@ def render_stats_page():
         # ==========================================
         # ADVANCED DIAGNOSTICS & CHARTS
         # ==========================================
-        left_chart_col, right_chart_col = st.columns(2)
-
-        with left_chart_col:
-            st.subheader("Subject Mastery Matrix")
-            # Group by category and compute performance
-            subject_stats = df_history.groupby('category').apply(lambda x: pd.Series({
-                'Correct': (x['yours'] == x['correct']).sum(),
-                'Total': len(x)
-            })).reset_index()
-            
-            subject_stats['Accuracy (%)'] = (subject_stats['Correct'] / subject_stats['Total']) * 100
-            subject_stats = subject_stats.sort_values(by='Accuracy (%)', ascending=False)
-            
-            # Display as a clean data table with highlight bars
-            st.dataframe(
-                subject_stats,
-                column_config={
-                    "category": "Medical Specialty",
-                    "Correct": "Correct Qs",
-                    "Total": "Total Faced",
-                    "Accuracy (%)": st.column_config.ProgressColumn(
-                        "Accuracy Tracker",
-                        help="Target 100% mastery tier across every board subject blueprint",
-                        format="%.1f%%",
-                        min_value=0,
-                        max_value=100
-                    )
-                },
-                hide_index=True,
-                use_container_width=True
-            )
-
-        with right_chart_col:
-            st.subheader("Structural Error Profile")
-            # Distribution of wrong choices to see if the user is guessing or getting tricked
-            wrong_answers = df_history[df_history['yours'] != df_history['correct']]
-            if not wrong_answers.empty:
-                # Group by letter distribution to see patterns
-                guess_patterns = wrong_answers['yours'].value_counts()
-                st.bar_chart(guess_patterns, color="#ff4b4b")
-                st.caption("Distribution of incorrect selections. A high cluster in one choice may indicate predictable blind spots.")
-            else:
-                st.success("Perfect slate! No system errors detected to build a distribution chart.")
+        # NEW CLEAN FULL-WIDTH LAYOUT:
+        st.subheader("Subject Mastery")
+        
+        # Group by category and compute performance
+        subject_stats = df_history.groupby('category').apply(lambda x: pd.Series({
+            'Correct': (x['yours'] == x['correct']).sum(),
+            'Total': len(x)
+        })).reset_index()
+        
+        subject_stats['Accuracy (%)'] = (subject_stats['Correct'] / subject_stats['Total']) * 100
+        subject_stats = subject_stats.sort_values(by='Accuracy (%)', ascending=False)
+        
+        # Display as a clean data table with highlight bars
+        st.dataframe(
+            subject_stats,
+            column_config={
+                "category": "Medical Specialty",
+                "Correct": "Correct Qs",
+                "Total": "Total Faced",
+                "Accuracy (%)": st.column_config.ProgressColumn(
+                    "Accuracy Tracker",
+                    help="Target 100% mastery tier across every board subject blueprint",
+                    format="%.1f%%",
+                    min_value=0,
+                    max_value=100
+                )
+            },
+            hide_index=True,
+            use_container_width=True  # This will now stretch beautifully across the whole page
+        )
 
         # ==========================================
         # STUDY RECOMMENDATION ENGINE
