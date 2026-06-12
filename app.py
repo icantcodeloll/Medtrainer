@@ -874,116 +874,111 @@ if st.session_state.current_exam:
     # Remove any empty strings resulting from the split
     individual_questions = [q.strip() for q in raw_questions if q.strip()]
 
+    # ==========================================
+    # REPLACED GRADING FORM WITH DYNAMIC INTERACTIVE BUTTON SCORING
+    # ==========================================
     if 'user_selections' not in st.session_state:
         st.session_state.user_selections = {}
 
-    with st.form("grading_form"):
-        for i, q_text in enumerate(individual_questions):
-            st.subheader(f"Question {i+1}")
-            
-            # --- PARSE QUESTION TEXT AND OPTIONS ---
-            # Extract the raw clinical prompt before option 'A.'
-            prompt_match = re.search(r"(\d+\.\s.*?)(?=A\.)", q_text, re.DOTALL)
-            q_prompt = prompt_match.group(1).strip() if prompt_match else q_text
-            
-            # Display the core clinical question prompt first
-            st.markdown(q_prompt.replace("\n", "<br>"), unsafe_allow_html=True)
-            st.write("") # Tiny spacer
-
-            # Extract the exact sentences for A, B, C, D options using regex
-            opt_A = re.search(r"(A\.\s.*?)(?=[B-D]\.|$)", q_text, re.DOTALL)
-            opt_B = re.search(r"(B\.\s.*?)(?=[A,C,D]\.|$)", q_text, re.DOTALL)
-            opt_C = re.search(r"(C\.\s.*?)(?=[A,B,D]\.|$)", q_text, re.DOTALL)
-            opt_D = re.search(r"(D\.\s.*?)(?=[A-C]\.|$)", q_text, re.DOTALL)
-
-            options_dict = {
-                "A": opt_A.group(1).strip() if opt_A else "A. Option A",
-                "B": opt_B.group(1).strip() if opt_B else "B. Option B",
-                "C": opt_C.group(1).strip() if opt_C else "C. Option C",
-                "D": opt_D.group(1).strip() if opt_D else "D. Option D"
-            }
-
-            # --- RENDER VERTICAL CLICKABLE SENTENCES ---
-            # Set up the current pre-selected value from the session state memory index
-            current_selection = st.session_state.user_selections.get(i, None)
-
-            # Create a localized vertical block for each sentence selection
-            for choice_letter, full_sentence_text in options_dict.items():
-                
-                # Visual helper: Highlight the text if it is the currently selected option
-                is_selected = (current_selection == choice_letter)
-                button_label = f"➔ {full_sentence_text}" if is_selected else f"    {full_sentence_text}"
-                button_type = "primary" if is_selected else "secondary"
-                
-                # Render the full sentence option as a wide, vertical button link
-                if st.button(
-                    label=button_label, 
-                    key=f"q_{i}_opt_{choice_letter}", 
-                    use_container_width=True,
-                    type=button_type
-                ):
-                    # Save the selection natively to memory when the user clicks the sentence
-                    st.session_state.user_selections[i] = choice_letter
-                    st.rerun()
-
-            st.write("---")
+    # RENDER QUESTIONS VIA DYNAMIC SCRIPT BUTTONS (NO st.form CONTAINER)
+    for i, q_text in enumerate(individual_questions):
+        st.subheader(f"Question {i+1}")
         
-        submitted = st.form_submit_button("Submit for Grading")
-        if submitted:
-            # Use actual number of questions from current exam
-            num_actual_questions = len(raw_questions)
-            # Convert dictionary to a sorted list of answers
-            user_answers = [st.session_state.user_selections.get(i, None) for i in range(num_actual_questions)]
-            user_input = "\n".join([f"Q{i+1}: {ans if ans else 'No Answer'}" for i, ans in enumerate(user_answers)])
-            # Use only the first num_actual_questions answers from current_key
-            correct_key = st.session_state.current_key[:num_actual_questions]
-            correct_key_formatted = "\n".join([f"Q{i+1}: {ans}" for i, ans in enumerate(correct_key)])
+        # Parse out the question scenario before 'A.' begins
+        prompt_match = re.search(r"(\d+\.\s.*?)(?=A\.)", q_text, re.DOTALL)
+        q_prompt = prompt_match.group(1).strip() if prompt_match else q_text
+        
+        # Render question prompt cleanly
+        st.markdown(q_prompt.replace("\n", "<br>"), unsafe_allow_html=True)
+        st.write("") 
 
-            # Save these formatted versions to session state
-            st.session_state.last_user_input = user_input
-            st.session_state.last_correct_key = correct_key_formatted
-            st.session_state.last_user_answers_list = user_answers
-            if len(user_answers) != len(correct_key):
-                st.error(f"Mismatch: The exam has {len(correct_key)} questions, but you entered {len(user_answers)} answers. Please fix your input.")
-                st.stop()
+        # Extract distinct sentences for A, B, C, and D choices
+        opt_A = re.search(r"(A\.\s.*?)(?=[B-D]\.|$)", q_text, re.DOTALL)
+        opt_B = re.search(r"(B\.\s.*?)(?=[A,C,D]\.|$)", q_text, re.DOTALL)
+        opt_C = re.search(r"(C\.\s.*?)(?=[A,B,D]\.|$)", q_text, re.DOTALL)
+        opt_D = re.search(r"(D\.\s.*?)(?=[A-C]\.|$)", q_text, re.DOTALL)
 
-            score = 0
-            incorrect_summary_markdown = ""
+        options_dict = {
+            "A": opt_A.group(1).strip() if opt_A else "A. Option A",
+            "B": opt_B.group(1).strip() if opt_B else "B. Option B",
+            "C": opt_C.group(1).strip() if opt_C else "C. Option C",
+            "D": opt_D.group(1).strip() if opt_D else "D. Option D"
+        }
+
+        # Render answers as a wide vertical block array column to the left
+        current_selection = st.session_state.user_selections.get(i, None)
+        
+        for choice_letter, full_sentence_text in options_dict.items():
+            is_selected = (current_selection == choice_letter)
+            button_label = f"➔  {full_sentence_text}" if is_selected else f"     {full_sentence_text}"
+            button_type = "primary" if is_selected else "secondary"
             
-            for i, q_text in enumerate(individual_questions):
-                if i >= len(user_answers):
-                    break
-                u_ans = user_answers[i] if user_answers[i] else "No Answer"
-                correct = correct_key[i] if i < len(correct_key) else None
-                
-                if u_ans == correct:
-                    score += 1
-                else:
-                    # Clean up any HTML line breaks in the question snippet for the summary report
-                    clean_q_snippet = re.sub(r'<br\s*/?>', ' ', individual_questions[i].split('\n')[0][:120])
-                    incorrect_summary_markdown += f"**Question {i+1}:** *{clean_q_snippet}...*\n"
-                    incorrect_summary_markdown += f"&nbsp;&nbsp;&nbsp;&nbsp;• **Your Answer:** `{u_ans}` | **Correct Answer:** `{correct}`\n\n"
-                    
-                    st.session_state.missed_questions.append({
-                        "question": individual_questions[i].strip(),
-                        "correct": correct,
-                        "yours": u_ans,
-                        "category": st.session_state.current_categories[i] if i < len(st.session_state.current_categories) else "General",
-                    })
-            
-            st.session_state.exam_submitted = True
-            st.session_state.last_score = score
-            st.session_state.immediate_wrong_breakdown = incorrect_summary_markdown if incorrect_summary_markdown else "🎉 **Perfect score! You got every question right!**"
+            # Clickable full-width button action
+            if st.button(
+                label=button_label, 
+                key=f"q_{i}_opt_{choice_letter}", 
+                use_container_width=True,
+                type=button_type
+            ):
+                st.session_state.user_selections[i] = choice_letter
+                st.rerun()
 
-            # Update Level based on performance
-            percentage_correct = (score / num_actual_questions) * 100
-            questions_wrong = num_actual_questions - score
-            if questions_wrong <= 1 or percentage_correct >= 90:
-                st.session_state.current_level = min(50, st.session_state.current_level + 1)
-            elif percentage_correct <= 60:
-                st.session_state.current_level = max(1, st.session_state.current_level - 1)
-                
-            st.rerun()
+        st.write("---")
+
+    # Regular interactive grading trigger button
+    submitted = st.button("Submit for Grading", type="primary", use_container_width=True)
+
+    if submitted:
+        num_actual_questions = len(individual_questions)
+        user_answers = [st.session_state.user_selections.get(idx, None) for idx in range(num_actual_questions)]
+        user_input = "\n".join([f"Q{idx+1}: {ans if ans else 'No Answer'}" for idx, ans in enumerate(user_answers)])
+        
+        correct_key = st.session_state.current_key[:num_actual_questions]
+        correct_key_formatted = "\n".join([f"Q{idx+1}: {ans}" for idx, ans in enumerate(correct_key)])
+        
+        st.session_state.last_user_input = user_input
+        st.session_state.last_correct_key = correct_key_formatted
+        st.session_state.last_user_answers_list = user_answers
+        
+        if len(user_answers) != len(correct_key):
+            st.error(f"Mismatch: The exam has {len(correct_key)} questions, but you entered {len(user_answers)} answers.")
+            st.stop()
+            
+        score = 0
+        incorrect_summary_markdown = ""
+
+        for i, q_text in enumerate(individual_questions):
+            if i >= len(user_answers):
+                break
+            u_ans = user_answers[i] if user_answers[i] else "No Answer"
+            correct = correct_key[i] if i < len(correct_key) else None
+
+            if u_ans == correct:
+                score += 1
+            else:
+                clean_q_snippet = re.sub(r'<br\s*/?>', ' ', individual_questions[i].split('\n')[0][:120])
+                incorrect_summary_markdown += f"**Question {i+1}:** *{clean_q_snippet}...*\n"
+                incorrect_summary_markdown += f"&nbsp;&nbsp;&nbsp;&nbsp;• **Your Answer:** `{u_ans}` | **Correct Answer:** `{correct}`\n\n"
+
+            st.session_state.missed_questions.append({
+                "question": individual_questions[i].strip(),
+                "correct": correct,
+                "yours": u_ans,
+                "category": st.session_state.current_categories[i] if i < len(st.session_state.current_categories) else "General",
+            })
+
+        st.session_state.exam_submitted = True
+        st.session_state.last_score = score
+        st.session_state.immediate_wrong_breakdown = incorrect_summary_markdown if incorrect_summary_markdown else " 🎉  **Perfect score! You got every question right!**"
+        
+        # Track metrics levels adjustments safely
+        percentage_correct = (score / num_actual_questions) * 100
+        if (num_actual_questions - score) <= 1 or percentage_correct >= 90:
+            st.session_state.current_level = min(50, st.session_state.current_level + 1)
+        elif percentage_correct <= 60:
+            st.session_state.current_level = max(1, st.session_state.current_level - 1)
+
+        st.rerun()
 
     # --- 2. THE FEEDBACK (Fully outside the st.form block) ---
     if st.session_state.get('exam_submitted'):
