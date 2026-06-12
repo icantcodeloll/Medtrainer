@@ -191,7 +191,7 @@ def create_exam_pdf(exam_text, answer_key, user_answers=None, score=None, max_sc
     if metadata:
         pdf.set_font("Arial", "I", 9)
         melbourne_time = datetime.datetime.now(ZoneInfo("Australia/Melbourne")).strftime('%Y-%m-%d %H:%M:%S')
-        meta_text = f"Level: {metadata.get('level', 'N/A')} | Focus Mode: {metadata.get('focus', 'All')} | Exam Filter: {metadata.get('exam', 'All')} | System Filter: {metadata.get('system', 'All')}"
+        meta_text = f"Level: {metadata.get('level', 'N/A')} | Subject: {metadata.get('subject', 'All')} | Exam Filter: {metadata.get('exam', 'All')} | System Filter: {metadata.get('system', 'All')}"
         time_text = f"Generated on (Melbourne Time): {melbourne_time}"
         pdf.cell(0, 6, meta_text, ln=True, align="C")
         pdf.cell(0, 6, time_text, ln=True, align="C")
@@ -434,11 +434,11 @@ st.sidebar.header("Stats & Controls")
 st.sidebar.metric("Active Level", f"{st.session_state.current_level}/50")
 
 
-# --- Focus Mode Multi-Select (Default: Select All) ---
+# --- Subject Multi-Select (Default: Select All) ---
 df_sidebar = pd.read_csv(CSV_FILE)
 categories = sorted(df_sidebar['category'].fillna("Uncategorized").astype(str).unique().tolist())
-focus_mode = st.sidebar.multiselect(
-    "Focus Mode:", 
+subject_filter = st.sidebar.multiselect(
+    "Subject:", 
     options=categories, 
     default=categories,  # Pre-selects all items
     help="Select one or more categories"
@@ -497,11 +497,11 @@ if st.sidebar.button("Generate New Exam"):
         df = pd.merge(df_main, df_notes, on=JOIN_COLUMN, how='left')
                 
         # --- Filter by category ---
-        if not focus_mode:
-            st.error("Please select at least one Focus Mode category.")
+        if not subject_filter:
+            st.error("Please select at least one Subject filter.")
             st.stop()
         else:
-            df = df[df['category'].isin(focus_mode)]
+            df = df[df['category'].isin(subject)]
 
         # --- Filter by exam ---
         if 'exam' in df.columns:
@@ -719,7 +719,7 @@ if st.session_state.current_exam:
         # Package the metadata dictionary dynamically
         current_metadata = {
             "level": st.session_state.current_level,
-            "focus": focus_mode if 'focus_mode' in locals() else "All Topics",
+            "subject": subject_filter if 'subject_filter' in locals() else "All Subjects",
             "exam": exam_filter if 'exam_filter' in locals() else "All Exams",
             "system": system_filter if 'system_filter' in locals() else "All Systems"
         }
@@ -747,14 +747,14 @@ if st.session_state.current_exam:
         clean_exam_text = re.sub(r'(D\.\s.*?)\n+(?=\d+\.\s)', r'\1\n', raw_exam_text)
         
         # 2. Package the metadata dictionary dynamically
-        meta_focus = focus_mode if 'focus_mode' in locals() else "All Topics"
+        meta_subject = subject_filter if 'subject_filter' in locals() else "All Subjects"
         meta_exam = exam_filter if 'exam_filter' in locals() else "All Exams"
         meta_system = system_filter if 'system_filter' in locals() else "All Systems"
         
         melbourne_now = datetime.datetime.now(ZoneInfo("Australia/Melbourne")).strftime('%Y-%m-%d %H:%M:%S')
         txt_content = (
             f"Practice Exam (Level {st.session_state.current_level}/50)\n"
-            f"Filters - Focus Mode: {meta_focus} | Exam: {meta_exam} | System: {meta_system}\n"
+            f"Filters - Subject: {meta_subject} | Exam: {meta_exam} | System: {meta_system}\n"
             f"Generated on (Melbourne Time): {melbourne_now}\n"
             f"----------------------------------------------------------------------\n\n"
             f"{clean_exam_text}\n"
@@ -895,7 +895,7 @@ if st.session_state.current_exam:
             # Package the metadata dictionary dynamically here as well
             current_metadata = {
                 "level": st.session_state.current_level,
-                "focus": focus_mode if 'focus_mode' in locals() else "All Topics",
+                "subject": subject_filter if 'subject_filter' in locals() else "All Subjects",
                 "exam": exam_filter if 'exam_filter' in locals() else "All Exams",
                 "system": system_filter if 'system_filter' in locals() else "All Systems"
             }
