@@ -499,7 +499,7 @@ if st.sidebar.button("Generate New Exam"):
             st.error("Please select at least one Subject filter.")
             st.stop()
         else:
-            df = df[df['category'].isin(subject)]
+            df = df[df['category'].isin(subject_filter)]
 
         # --- Filter by exam ---
         if 'exam' in df.columns:
