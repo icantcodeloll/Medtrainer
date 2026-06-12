@@ -1,24 +1,41 @@
 import streamlit as st
 import pandas as pd
-from google import genai
-from google.genai import types 
-import time
-import re
-import os
-from progress_manager import save_progress, load_progress
-import tempfile
 import random
 import datetime
 from zoneinfo import ZoneInfo
-import zipfile
-import io
+import re
+import os
 import glob
+import io
+import zipfile
+import tempfile
+import time
 import atexit
-from streamlit.runtime.scriptrunner import get_script_run_ctx
-import streamlit as st
+from google import genai
+from google.genai import types
+from progress_manager import save_progress, load_progress
 
-# Save progress function not set up yet
+# ==========================================
+# 0. MULTI-PAGE CONFIGURATION & NAVIGATION
+# ==========================================
+st.set_page_config(page_title="Trainer", page_icon="🩺", layout="wide")
 
+# Define the view functions
+def render_trainer_page():
+    # --- Paste your entire original layout engine here ---
+    # Everything from "INITIALIZATION ENGINE" down to the "Missed Questions Bank"
+    pass
+
+def render_stats_page():
+    # This function will house our new analytics dashboard
+    display_analytics_dashboard()
+
+# Create the navigation router
+pg = st.navigation([
+    st.Page(render_trainer_page, title="Exam Trainer", icon="📝"),
+    st.Page(render_stats_page, title="Performance Insights", icon="📊")
+])
+pg.run()
 
 
 # ==========================================
@@ -237,13 +254,6 @@ def call_gemini_with_rotation(prompt, model_to_use, use_search=False):
 # ==========================================
 # 2. CORE LOGIC FUNCTIONS
 # ==========================================
-def update_user_selection(q_index):
-    """Callback function that instantly saves choices without full app-level script lag."""
-    # Read what was chosen from the native radio component key
-    selected_val = st.session_state.get(f"native_radio_q_{q_index}")
-    if selected_val:
-        st.session_state.user_selections[q_index] = selected_val
-        
 def create_exam_pdf(exam_text, answer_key, user_answers=None, score=None, max_score=None, metadata=None):
     """Generates a PDF containing the exam questions, answer key, and optionally user selections and filters."""
     if not FPDF:
@@ -497,6 +507,115 @@ def render_data_portability_interface():
                 st.balloons()
             except Exception as e:
                 st.sidebar.error(f"Migration processing error: {str(e)}")
+
+def display_analytics_dashboard():
+    st.title("📊 Performance Insights")
+    st.markdown("Dive deep into your historic learning diagnostics and systemic curriculum coverage.")
+    
+    # Check if any questions have been answered yet
+    missed_bank = st.session_state.get("missed_questions", [])
+    
+    # Fallback simulation or calculation helper
+    # In production, you should record a structured historical session log.
+    # For now, we cleanly calculate it right from the live session profile:
+    if not missed_bank:
+        st.info("No exam submissions recorded for this profile yet. Generate and grade an exam to unlock data insights!")
+        return
+
+    # Convert session history to a pandas DataFrame for processing
+    df_history = pd.DataFrame(missed_bank)
+    
+    # Calculate Core Metrics
+    total_completed = len(df_history)
+    total_incorrect = df_history[df_history['yours'] != df_history['correct']].shape[0]
+    total_correct = total_completed - total_incorrect
+    overall_accuracy = (total_correct / total_completed) * 100
+
+    # ==========================================
+    # KPI METRIC CARDS ROW
+    # ==========================================
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric(label="Total Questions Done", value=f"{total_completed} Qs")
+    with col2:
+        st.metric(
+            label="Overall Accuracy", 
+            value=f"{overall_accuracy:.1f}%",
+            delta="Target: >75%" if overall_accuracy < 75 else "Excellent!",
+            delta_color="normal" if overall_accuracy >= 75 else "inverse"
+        )
+    with col3:
+        st.metric(label="Correct Answers", value=f"✅ {total_correct}")
+    with col4:
+        st.metric(label="Current Level Tier", value=f"Lvl {st.session_state.get('current_level', 1)} / 50")
+
+    st.markdown("---")
+
+    # ==========================================
+    # ADVANCED DIAGNOSTICS & CHARTS
+    # ==========================================
+    left_chart_col, right_chart_col = st.columns(2)
+
+    with left_chart_col:
+        st.subheader("🎯 Subject Mastery Matrix")
+        # Group by category and compute performance
+        subject_stats = df_history.groupby('category').apply(lambda x: pd.Series({
+            'Correct': (x['yours'] == x['correct']).sum(),
+            'Total': len(x)
+        })).reset_index()
+        
+        subject_stats['Accuracy (%)'] = (subject_stats['Correct'] / subject_stats['Total']) * 100
+        subject_stats = subject_stats.sort_values(by='Accuracy (%)', ascending=False)
+        
+        # Display as a clean data table with highlight bars
+        st.dataframe(
+            subject_stats,
+            column_config={
+                "category": "Medical Specialty",
+                "Correct": "Correct Qs",
+                "Total": "Total Faced",
+                "Accuracy (%)": st.column_config.ProgressColumn(
+                    "Accuracy Tracker",
+                    help="Target 100% mastery tier across every board subject blueprint",
+                    format="%.1f%%",
+                    min_value=0,
+                    max_value=100
+                )
+            },
+            hide_index=True,
+            use_container_width=True
+        )
+
+    with right_chart_col:
+        st.subheader("📉 Structural Error Profile")
+        # Distribution of wrong choices to see if the user is guessing or getting tricked
+        wrong_answers = df_history[df_history['yours'] != df_history['correct']]
+        if not wrong_answers.empty:
+            # Group by letter distribution to see patterns
+            guess_patterns = wrong_answers['yours'].value_counts()
+            st.bar_chart(guess_patterns, color="#ff4b4b")
+            st.caption("Distribution of incorrect selections. A high cluster in one choice may indicate predictable blind spots.")
+        else:
+            st.success("Perfect slate! No system errors detected to build a distribution chart.")
+
+    # ==========================================
+    # STUDY RECOMMENDATION ENGINE
+    # ==========================================
+    st.markdown("---")
+    st.subheader("💡 Adaptive Study Recommendation")
+    
+    # Identify lowest performing subject
+    if not subject_stats.empty:
+        weakest_subject = subject_stats.iloc[-1]
+        if weakest_subject['Accuracy (%)'] < 70:
+            st.warning(
+                f"Your performance metrics show a structural vulnerability in **{weakest_subject['category']}** "
+                f"({weakest_subject['Accuracy (%)']:.1f}% accuracy). Consider isolating this subject in your filter settings "
+                f"on the main menu during your next training sprint."
+            )
+        else:
+            st.success("All subject tracks are performing above standard target parameters. Keep testing up to Level 50!")
+
 # ==========================================
 # 3. WEB INTERFACE
 # ==========================================
@@ -967,56 +1086,38 @@ if st.session_state.current_exam:
         
         with left_constrained_column:
             current_selection = st.session_state.user_selections.get(i, None)
+            
+            # Safely convert keys to list and track indexing position mapping
             choice_keys = list(options_dict.keys())
-
-            # --- 1. SAFE PRE-INITIALIZATION PATTERN ---
-            # This ensures the session state matches your selection *before* the radio is initialized, preventing the exception.
-            radio_key = f"native_radio_q_{i}"
-            if current_selection in choice_keys:
-                st.session_state[radio_key] = current_selection
-
-            # 2. Inject a style trick to completely hide this specific row of native radio selectors
+            
+            # 1. Inject a style trick to completely hide this specific row of native radio selectors
             st.markdown(f"""
-            <style>
-            div[data-testid="stRadio"] {{
-                display: none !important;
-            }}
-            </style>
+                <style>
+                div[data-testid="stRadio"] {{
+                    display: none !important;
+                }}
+                </style>
             """, unsafe_allow_html=True)
 
-            # 3. Render background state tracker with a callback mapping to handle values safely
-            def on_radio_change(q_index=i):
-                val = st.session_state.get(f"native_radio_q_{q_index}")
-                if val:
-                    st.session_state.user_selections[q_index] = val
-
+            # 2. Render an invisible radio button in the background to handle the variable state
             selected_letter = st.radio(
                 label=f"Radio Select Q{i}",
                 options=choice_keys,
-                key=radio_key,
-                label_visibility="collapsed",
-                on_change=on_radio_change
+                index=choice_keys.index(current_selection) if current_selection in choice_keys else None,
+                key=f"native_radio_q_{i}",
+                label_visibility="collapsed"
             )
 
-            # 4. Render options as quick response custom buttons
+            # 3. Render your custom styled choices as large, full-width clickable buttons
             for choice_letter, full_sentence_text in options_dict.items():
                 is_selected = (current_selection == choice_letter)
                 btn_type = "primary" if is_selected else "secondary"
                 prefix = "➔   " if is_selected else "      "
-
-                is_disabled = st.session_state.get('exam_submitted', False)
-
-                if st.button(
-                    f"{prefix}{full_sentence_text}", 
-                    key=f"btn_q_{i}_{choice_letter}", 
-                    use_container_width=True, 
-                    type=btn_type,
-                    disabled=is_disabled
-                ):
-                    # Save selection immediately into the tracking arrays
+                
+                # Use use_container_width=True to make the buttons big and fill the space
+                # Disable buttons after submission so users can't change answers while viewing feedback
+                if st.button(f"{prefix}{full_sentence_text}", key=f"btn_q_{i}_{choice_letter}", use_container_width=True, type=btn_type, disabled=st.session_state.get('exam_submitted', False)):
                     st.session_state.user_selections[i] = choice_letter
-                    st.session_state[radio_key] = choice_letter
-                    # Instantly rerun to reflect the visual highlight change on screen with no error
                     st.rerun()
 
             # --- NEW: INJECT PER-QUESTION AI FEEDBACK RIGHT HERE ---
