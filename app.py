@@ -18,6 +18,54 @@ from streamlit.runtime.scriptrunner import get_script_run_ctx
 
 # Save progress function not set up yet
 
+# ==========================================
+# 0. INITIALIZATION ENGINE
+# ==========================================
+def initialize_app(active_user, force_reset=False):
+    """
+    Handles all initial state configurations, progress restoration, 
+    and systemic fallback settings in one central runtime hook.
+    """
+    # Load saved progress dynamically from local disk storage
+    if force_reset:
+        loaded_progress = {}
+    else:
+        loaded_progress = load_progress(active_user)
+
+    # Core parameters mapping dictionary 
+    defaults = {
+        "current_level": loaded_progress.get("current_level", 1),
+        "exam_model": loaded_progress.get("exam_model", 'gemini-3.1-flash-lite'),
+        "num_questions": loaded_progress.get("num_questions", 5),
+        "missed_questions": loaded_progress.get("missed_questions", []),
+        "current_exam": loaded_progress.get("current_exam", ""),
+        "current_key": loaded_progress.get("current_key", []),
+        "key_index": loaded_progress.get("key_index", random.randint(0, max(1, len(API_KEYS) - 1))),
+        "current_categories": loaded_progress.get("current_categories", []),
+        "previous_test_data": {},
+        "use_search": False,
+        "thinking_level": "MEDIUM",
+        "exam_submitted": False,
+        "last_score": 0,
+        "user_selections": {},
+        "last_user_answers_list": [],
+        "show_settings": False
+    }
+
+    # Bulk assign missing parameters into active memory layout
+    for key, value in defaults.items():
+        if key not in st.session_state or force_reset:
+            st.session_state[key] = value
+
+    # Specialized block handler for reconstructing structure representations (DataFrames)
+    if 'samples_df' not in st.session_state or force_reset:
+        saved_samples = loaded_progress.get("samples_df", None)
+        if isinstance(saved_samples, pd.DataFrame):
+            st.session_state.samples_df = saved_samples
+        elif isinstance(saved_samples, (dict, list)):
+            st.session_state.samples_df = pd.DataFrame(saved_samples)
+        else:
+            st.session_state.samples_df = pd.DataFrame()
 
 def save_on_tab_close():
     """
@@ -88,6 +136,7 @@ if st.sidebar.button("Switch / Create Profile"):
 
 active_user = st.session_state.username
 st.sidebar.success(f"Logged in as: **{active_user}**")
+initialize_app(active_user)
 
 # ==========================================
 # GLOBAL MASTER TEMPLATE CONFIGURATION
@@ -122,40 +171,6 @@ EXAM_WEIGHTS = {
 
 # Load saved progress on startup
 loaded_progress = load_progress(active_user)
-
-# Initialize Session States (with progress restoration)
-if 'current_level' not in st.session_state:
-    st.session_state.current_level = loaded_progress.get("current_level", 1)
-if 'exam_model' not in st.session_state:
-    st.session_state.exam_model = loaded_progress.get("exam_model", 'gemini-3.1-flash-lite')
-if 'num_questions' not in st.session_state:
-    st.session_state.num_questions = loaded_progress.get("num_questions", 5)
-if 'missed_questions' not in st.session_state:
-    st.session_state.missed_questions = loaded_progress.get("missed_questions", [])
-if 'current_exam' not in st.session_state:
-    st.session_state.current_exam = loaded_progress.get("current_exam", "")
-if 'current_key' not in st.session_state:
-    st.session_state.current_key = loaded_progress.get("current_key", [])
-if 'key_index' not in st.session_state:
-    st.session_state.key_index = loaded_progress.get("key_index", random.randint(0, len(API_KEYS) - 1))
-if 'current_categories' not in st.session_state:
-    st.session_state.current_categories = loaded_progress.get("current_categories", [])
-if 'samples_df' not in st.session_state:
-    # Handle reconstructing the DataFrame if saved as a dict/list structure
-    saved_samples = loaded_progress.get("samples_df", None)
-    if isinstance(saved_samples, pd.DataFrame):
-        st.session_state.samples_df = saved_samples
-    elif isinstance(saved_samples, dict) or isinstance(saved_samples, list):
-        st.session_state.samples_df = pd.DataFrame(saved_samples)
-    else:
-        st.session_state.samples_df = pd.DataFrame()
-if 'previous_test_data' not in st.session_state:
-    st.session_state.previous_test_data = {}
-if "use_search" not in st.session_state:
-    st.session_state.use_search = False
-if 'thinking_level' not in st.session_state:
-    st.session_state.thinking_level = "MEDIUM"
-
 
 
 if st.sidebar.button("Save Progress", help="Manually save your current progress"):
@@ -776,25 +791,14 @@ if st.session_state.get('show_settings', False):
 
     st.sidebar.markdown("---")
     if st.sidebar.button("Reset Progress", help="Clear all saved progress and reset to defaults"):
-    # Target the specific user's progress file instead of a global file
         user_specific_progress = f"{active_user}_progress.json"
         if os.path.exists(user_specific_progress):
             os.remove(user_specific_progress)
-            # Reset session state to defaults
-            st.session_state.current_level = 1
-            st.session_state.num_questions = 5
-            st.session_state.missed_questions = []
-            st.session_state.current_exam = None
-            st.session_state.current_key = []
-            st.session_state.last_score = 0
-            st.session_state.user_selections = {}
-            st.session_state.exam_submitted = False
-            st.session_state.current_categories = []
-            st.session_state.samples_df = None
-            st.sidebar.success("Progress reset successfully!")
-            st.rerun()
-        else:
-            st.sidebar.info("No saved progress to reset")
+            
+        # Re-initialize the setup back to default settings effortlessly
+        initialize_app(active_user, force_reset=True)
+        st.sidebar.success("Progress reset successfully!")
+        st.rerun()
     
     st.sidebar.markdown("---")
     render_data_portability_interface()
@@ -877,33 +881,54 @@ if st.session_state.current_exam:
         for i, q_text in enumerate(individual_questions):
             st.subheader(f"Question {i+1}")
             
-            # Enhanced formatting: Add line breaks after questions and options
-            # 1. Add single HTML line break after question text before options
-            formatted_q = re.sub(r"(\d+\.\s[^A-D]*?)(?=A\.)", r"\1<br>", q_text)
-            # 2. Add single HTML line break after each option (A., B., C., D.)
-            formatted_q = re.sub(r"([A-D]\.\s[^A-D]*?)(?=[A-D]\.|$)", r"\1<br>", formatted_q)
-            # 3. Replace newlines with HTML breaks for better rendering
-            formatted_q = formatted_q.replace("\n", "<br>")
-            # 4. Clean up any multiple consecutive breaks to maximum 1
-            formatted_q = re.sub(r"(<br>){2,}", "<br>", formatted_q)
+            # --- PARSE QUESTION TEXT AND OPTIONS ---
+            # Extract the raw clinical prompt before option 'A.'
+            prompt_match = re.search(r"(\d+\.\s.*?)(?=A\.)", q_text, re.DOTALL)
+            q_prompt = prompt_match.group(1).strip() if prompt_match else q_text
             
-            # Use markdown with HTML allowed for proper line breaks
-            st.markdown(formatted_q, unsafe_allow_html=True)
-            
-            # This makes the radio buttons cleaner - use exam content for unique key
-            exam_content = st.session_state.get('current_exam', '')
-            exam_content_hash = hash(exam_content) if exam_content else 0
-            st.session_state.user_selections[i] = st.radio(
-                label=f"Select answer for Question {i+1}", # Provide a real label
-                options=["A", "B", "C", "D"],
-                key=f"q_radio_{i}_{abs(exam_content_hash) % 1000}",
-                horizontal=True,
-                index=None,
-                label_visibility="collapsed" # This hides the label visually
-            )
+            # Display the core clinical question prompt first
+            st.markdown(q_prompt.replace("\n", "<br>"), unsafe_allow_html=True)
+            st.write("") # Tiny spacer
+
+            # Extract the exact sentences for A, B, C, D options using regex
+            opt_A = re.search(r"(A\.\s.*?)(?=[B-D]\.|$)", q_text, re.DOTALL)
+            opt_B = re.search(r"(B\.\s.*?)(?=[A,C,D]\.|$)", q_text, re.DOTALL)
+            opt_C = re.search(r"(C\.\s.*?)(?=[A,B,D]\.|$)", q_text, re.DOTALL)
+            opt_D = re.search(r"(D\.\s.*?)(?=[A-C]\.|$)", q_text, re.DOTALL)
+
+            options_dict = {
+                "A": opt_A.group(1).strip() if opt_A else "A. Option A",
+                "B": opt_B.group(1).strip() if opt_B else "B. Option B",
+                "C": opt_C.group(1).strip() if opt_C else "C. Option C",
+                "D": opt_D.group(1).strip() if opt_D else "D. Option D"
+            }
+
+            # --- RENDER VERTICAL CLICKABLE SENTENCES ---
+            # Set up the current pre-selected value from the session state memory index
+            current_selection = st.session_state.user_selections.get(i, None)
+
+            # Create a localized vertical block for each sentence selection
+            for choice_letter, full_sentence_text in options_dict.items():
+                
+                # Visual helper: Highlight the text if it is the currently selected option
+                is_selected = (current_selection == choice_letter)
+                button_label = f"➔ {full_sentence_text}" if is_selected else f"    {full_sentence_text}"
+                button_type = "primary" if is_selected else "secondary"
+                
+                # Render the full sentence option as a wide, vertical button link
+                if st.button(
+                    label=button_label, 
+                    key=f"q_{i}_opt_{choice_letter}", 
+                    use_container_width=True,
+                    type=button_type
+                ):
+                    # Save the selection natively to memory when the user clicks the sentence
+                    st.session_state.user_selections[i] = choice_letter
+                    st.rerun()
+
             st.write("---")
         
-        submitted = st.form_submit_button("Submit for Grading")
+        submitted = st.button("Submit for Grading", type="primary")
         if submitted:
             # Use actual number of questions from current exam
             num_actual_questions = len(raw_questions)
@@ -937,7 +962,7 @@ if st.session_state.current_exam:
                     # Clean up any HTML line breaks in the question snippet for the summary report
                     clean_q_snippet = re.sub(r'<br\s*/?>', ' ', individual_questions[i].split('\n')[0][:120])
                     incorrect_summary_markdown += f"**Question {i+1}:** *{clean_q_snippet}...*\n"
-                    incorrect_summary_markdown += f"&nbsp;&nbsp;&nbsp;&nbsp;• **Your Answer:** `{u_ans}` | **Required Answer:** `{correct}`\n\n"
+                    incorrect_summary_markdown += f"&nbsp;&nbsp;&nbsp;&nbsp;• **Your Answer:** `{u_ans}` | **Correct Answer:** `{correct}`\n\n"
                     
                     st.session_state.missed_questions.append({
                         "question": individual_questions[i].strip(),
@@ -971,8 +996,8 @@ if st.session_state.current_exam:
         st.markdown("---")
         
         # --- DETAILED AI EXPLANATIONS LOOP ---
-        st.subheader("🩺 AI Clinical Case Analysis")
-        with st.spinner("Analyzing answers against guidelines..."):
+        st.subheader("Deep Analysis")
+        with st.spinner("Analyzing answers"):
             feedback = get_ai_grading(
                 st.session_state.current_exam,
                 st.session_state.last_user_input,
@@ -981,25 +1006,6 @@ if st.session_state.current_exam:
             )
             st.markdown(feedback)
         st.write("---")
-
-        # --- Download Graded Exam Button ---
-        if FPDF:
-            # Package the metadata dictionary dynamically here as well
-            current_metadata = {
-                "level": st.session_state.current_level,
-                "subject": subject_filter if 'subject_filter' in locals() else "All Subjects",
-                "exam": exam_filter if 'exam_filter' in locals() else "All Exams",
-                "system": system_filter if 'system_filter' in locals() else "All Systems"
-            }
-
-            pdf_bytes_graded = create_exam_pdf(
-                st.session_state.current_exam,
-                st.session_state.current_key,
-                user_answers=st.session_state.get('last_user_answers_list', []),
-                score=st.session_state.last_score,
-                max_score=st.session_state.num_questions,
-                metadata=current_metadata
-            )
         
 
 # Missed Questions Bank in Sidebar
@@ -1023,7 +1029,7 @@ if st.session_state.missed_questions:
 
     # Offer the file directly as a local browser download
     st.sidebar.download_button(
-        label="Download Mistakes to .txt",
+        label="Download Mistakes",
         data=export_text,
         file_name=f"{active_user}_missed_questions.txt",
         mime="text/plain",
