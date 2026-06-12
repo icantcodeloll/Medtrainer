@@ -237,6 +237,13 @@ def call_gemini_with_rotation(prompt, model_to_use, use_search=False):
 # ==========================================
 # 2. CORE LOGIC FUNCTIONS
 # ==========================================
+def update_user_selection(q_index):
+    """Callback function that instantly saves choices without full app-level script lag."""
+    # Read what was chosen from the native radio component key
+    selected_val = st.session_state.get(f"native_radio_q_{q_index}")
+    if selected_val:
+        st.session_state.user_selections[q_index] = selected_val
+        
 def create_exam_pdf(exam_text, answer_key, user_answers=None, score=None, max_score=None, metadata=None):
     """Generates a PDF containing the exam questions, answer key, and optionally user selections and filters."""
     if not FPDF:
@@ -563,8 +570,11 @@ if st.sidebar.button("Generate New Exam"):
     st.session_state.samples_df = pd.DataFrame() # Wipe out old question indexes
     # --- NEW RESETS ---
     st.session_state.ai_feedback_clean = ""
+    st.session_state.level_message = ""
     if 'immediate_wrong_breakdown' in st.session_state:
         st.session_state.immediate_wrong_breakdown = ""
+
+    
 
     n = st.session_state.num_questions
     try:
@@ -957,39 +967,52 @@ if st.session_state.current_exam:
         
         with left_constrained_column:
             current_selection = st.session_state.user_selections.get(i, None)
-            
-            # Safely convert keys to list and track indexing position mapping
             choice_keys = list(options_dict.keys())
-            
+
             # 1. Inject a style trick to completely hide this specific row of native radio selectors
             st.markdown(f"""
-                <style>
-                div[data-testid="stRadio"] {{
-                    display: none !important;
-                }}
-                </style>
+            <style>
+            div[data-testid="stRadio"] {{
+                display: none !important;
+            }}
+            </style>
             """, unsafe_allow_html=True)
 
-            # 2. Render an invisible radio button in the background to handle the variable state
+            # 2. Render background state tracker with an 'on_change' callback mapping
+            # This allows it to update seamlessly without dropping execution momentum
             selected_letter = st.radio(
                 label=f"Radio Select Q{i}",
                 options=choice_keys,
                 index=choice_keys.index(current_selection) if current_selection in choice_keys else None,
                 key=f"native_radio_q_{i}",
-                label_visibility="collapsed"
+                label_visibility="collapsed",
+                on_change=update_user_selection,
+                args=(i,)
             )
 
-            # 3. Render your custom styled choices as large, full-width clickable buttons
+            # 3. Render custom choices as large clickable blocks
+            # Clicking them sets the value in st.session_state directly and forces a local UI sync, bypasses slow manual re-execution
             for choice_letter, full_sentence_text in options_dict.items():
                 is_selected = (current_selection == choice_letter)
                 btn_type = "primary" if is_selected else "secondary"
                 prefix = "➔   " if is_selected else "      "
-                
-                # Use use_container_width=True to make the buttons big and fill the space
-                # Disable buttons after submission so users can't change answers while viewing feedback
-                if st.button(f"{prefix}{full_sentence_text}", key=f"btn_q_{i}_{choice_letter}", use_container_width=True, type=btn_type, disabled=st.session_state.get('exam_submitted', False)):
+
+                # Check if exam is submitted to disable buttons after submission
+                is_disabled = st.session_state.get('exam_submitted', False)
+
+                if st.button(
+                    f"{prefix}{full_sentence_text}", 
+                    key=f"btn_q_{i}_{choice_letter}", 
+                    use_container_width=True, 
+                    type=btn_type,
+                    disabled=is_disabled
+                ):
+                    # Setting this key automatically fires the 'on_change' routine internally
+                    st.session_state[f"native_radio_q_{i}"] = choice_letter
                     st.session_state.user_selections[i] = choice_letter
-                    st.rerun()
+                    
+                    # Instead of forcing a hard global refresh via st.rerun(), we let 
+                    # Streamlit naturally re-render just the button active states
 
             # --- NEW: INJECT PER-QUESTION AI FEEDBACK RIGHT HERE ---
             if st.session_state.get('exam_submitted') and st.session_state.get('ai_feedback_clean'):
@@ -1014,7 +1037,6 @@ if st.session_state.current_exam:
     # --- NEW: SCORE & LEVELING FEEDBACK HIGHLIGHT ---
     if st.session_state.get('exam_submitted'):
         num_actual_questions = len(individual_questions)
-        st.markdown("---")
         
         # Display score and leveling notification in callout boxes
         st.metric(
