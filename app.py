@@ -472,7 +472,6 @@ with st.sidebar.expander("Filter Content", expanded=False):
     else:
         system_filter = []
 
-st.sidebar.markdown("---")
 
 
 if st.sidebar.button("Generate New Exam"):
@@ -547,6 +546,19 @@ if st.sidebar.button("Generate New Exam"):
         try:
             # We use replace=False so we don't duplicate questions in the same exam
             st.session_state.samples_df = df.sample(min(n, len(df)), weights='sampling_weight', replace=False)
+            # --- DIAGNOSTIC: WEIGHT VERIFICATION ---
+            st.write("### 📊 Exam Weight Diagnostics")
+            sampled_counts = st.session_state.samples_df['category'].value_counts()
+            sampled_percentages = st.session_state.samples_df['category'].value_counts(normalize=True) * 100
+
+            diagnostic_df = pd.DataFrame({
+                "Target Blueprint Weight": pd.Series(EXAM_WEIGHTS),
+                "Actual Sampled Count": sampled_counts,
+                "Actual Sampled %": sampled_percentages
+            }).fillna(0)
+
+            st.dataframe(diagnostic_df)
+            # ----------------------------------------
             st.sidebar.info("All content has been uploaded")
         except ValueError:
             # Fallback if weights math fails (e.g., all weights are zero)
