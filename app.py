@@ -18,6 +18,46 @@ from streamlit.runtime.scriptrunner import get_script_run_ctx
 
 # Save progress function not set up yet
 
+
+# Inject custom CSS to completely hide the copy button on button hovers
+st.markdown("""
+    <style>
+    /* Remove default button shapes and styles */
+    div.stButton > button {
+        border-radius: 8px !important;
+        border: 1px solid #e0e0e0 !important;
+        background-color: transparent !important;
+        color: #333333 !important;
+        padding: 14px 20px !important;
+        text-align: left !important;
+        display: block !important;
+        transition: all 0.2s ease-in-out !important;
+        font-size: 15px !important;
+    }
+    
+    /* Hover effect - smooth background shift */
+    div.stButton > button:hover {
+        border-color: #4b6cb7 !important;
+        background-color: #f4f7fc !important;
+        color: #4b6cb7 !important;
+        box-shadow: 0px 2px 5px rgba(0,0,0,0.05) !important;
+    }
+    
+    /* Style for the SELECTED option (Primary Button state) */
+    div.stButton > button[kind="primary"] {
+        background-color: #eef2fa !important;
+        border: 2px solid #4b6cb7 !important;
+        color: #4b6cb7 !important;
+        font-weight: bold !important;
+    }
+
+    /* Hide the built-in Streamlit copy icons entirely */
+    button [data-testid="stCopyButton"] {
+        display: none !important;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
 # ==========================================
 # 0. INITIALIZATION ENGINE
 # ==========================================
