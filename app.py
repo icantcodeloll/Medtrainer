@@ -15,6 +15,10 @@ import io
 import glob
 import atexit
 from streamlit.runtime.scriptrunner import get_script_run_ctx
+
+# Save progress function not set up yet
+
+
 def save_on_tab_close():
     """
     Background hook that intercepts Streamlit's session cleanup routine.
@@ -770,13 +774,6 @@ if st.session_state.get('show_settings', False):
     # Update memory
     st.session_state.exam_model = 'gemini-3.5-flash' if "Slow" in model_choice else 'gemini-3.1-flash-lite'
 
-    st.sidebar.markdown("**Grounding:**")
-    st.session_state.use_search = st.sidebar.toggle(
-        label="Enable Google Search",
-        value=False,  # Sets the default state to ON
-        help="Turn off on fast mode."
-    )
-
     st.sidebar.markdown("---")
     if st.sidebar.button("Reset Progress", help="Clear all saved progress and reset to defaults"):
     # Target the specific user's progress file instead of a global file
@@ -910,79 +907,81 @@ if st.session_state.current_exam:
         if submitted:
             # Use actual number of questions from current exam
             num_actual_questions = len(raw_questions)
-
             # Convert dictionary to a sorted list of answers
-            user_answers = [st.session_state.user_selections[i] for i in range(num_actual_questions)]
+            user_answers = [st.session_state.user_selections.get(i, None) for i in range(num_actual_questions)]
             user_input = "\n".join([f"Q{i+1}: {ans if ans else 'No Answer'}" for i, ans in enumerate(user_answers)])
-
             # Use only the first num_actual_questions answers from current_key
             correct_key = st.session_state.current_key[:num_actual_questions]
             correct_key_formatted = "\n".join([f"Q{i+1}: {ans}" for i, ans in enumerate(correct_key)])
-            
+
             # Save these formatted versions to session state
             st.session_state.last_user_input = user_input
             st.session_state.last_correct_key = correct_key_formatted
-            st.session_state.last_user_answers_list = user_answers 
-
+            st.session_state.last_user_answers_list = user_answers
             if len(user_answers) != len(correct_key):
                 st.error(f"Mismatch: The exam has {len(correct_key)} questions, but you entered {len(user_answers)} answers. Please fix your input.")
-                st.stop() 
+                st.stop()
 
-            # --- SIMPLIFIED GRADING SYSTEM (Now properly nested inside 'if submitted') ---
             score = 0
+            incorrect_summary_markdown = ""
+            
             for i, q_text in enumerate(individual_questions):
                 if i >= len(user_answers):
                     break
-                u_ans = user_answers[i]
+                u_ans = user_answers[i] if user_answers[i] else "No Answer"
                 correct = correct_key[i] if i < len(correct_key) else None
+                
                 if u_ans == correct:
                     score += 1
                 else:
-                    if i < len(individual_questions):
-                        st.session_state.missed_questions.append({
-                            "question": individual_questions[i].strip(),
-                            "correct": correct,
-                            "yours": u_ans,
-                            "category": st.session_state.current_categories[i] if i < len(st.session_state.current_categories) else "General",
-                        })
-
-            # Save state so the feedback stays visible after submission
+                    # Clean up any HTML line breaks in the question snippet for the summary report
+                    clean_q_snippet = re.sub(r'<br\s*/?>', ' ', individual_questions[i].split('\n')[0][:120])
+                    incorrect_summary_markdown += f"**Question {i+1}:** *{clean_q_snippet}...*\n"
+                    incorrect_summary_markdown += f"&nbsp;&nbsp;&nbsp;&nbsp;• **Your Answer:** `{u_ans}` | **Required Answer:** `{correct}`\n\n"
+                    
+                    st.session_state.missed_questions.append({
+                        "question": individual_questions[i].strip(),
+                        "correct": correct,
+                        "yours": u_ans,
+                        "category": st.session_state.current_categories[i] if i < len(st.session_state.current_categories) else "General",
+                    })
+            
             st.session_state.exam_submitted = True
             st.session_state.last_score = score
-            
+            st.session_state.immediate_wrong_breakdown = incorrect_summary_markdown if incorrect_summary_markdown else "🎉 **Perfect score! You got every question right!**"
+
             # Update Level based on performance
             percentage_correct = (score / num_actual_questions) * 100
             questions_wrong = num_actual_questions - score
-
-            # Level up if: only 1 question wrong OR 90%+ correct
             if questions_wrong <= 1 or percentage_correct >= 90:
                 st.session_state.current_level = min(50, st.session_state.current_level + 1)
-                st.success(f"Level Up! Now at Level {st.session_state.current_level}")
-            # Level down if: less than 60% correct
             elif percentage_correct <= 60:
                 st.session_state.current_level = max(1, st.session_state.current_level - 1)
-                st.warning(f"Level Down. Now at Level {st.session_state.current_level}")
-            else:
-                st.info(f"Score: {score}/{st.session_state.num_questions} ({percentage_correct:.0f}%) - Level maintained")
-            
-            # Force a rerun to clean up widget displays and lock in state
+                
             st.rerun()
 
     # --- 2. THE FEEDBACK (Fully outside the st.form block) ---
     if st.session_state.get('exam_submitted'):
-        st.subheader(f"Results: {st.session_state.last_score}/{st.session_state.num_questions}")
-
-        with st.spinner("Don't forget to click save progress after!!"):
+        st.markdown("---")
+        st.header(f"Results: {st.session_state.last_score}/{st.session_state.num_questions}")
+        
+        # --- IMMEDIATE FEEDBACK PANEL ---
+        st.subheader("Score Breakdown")
+        st.info(st.session_state.get('immediate_wrong_breakdown', 'No grading data found.'))
+        st.markdown("---")
+        
+        # --- DETAILED AI EXPLANATIONS LOOP ---
+        st.subheader("🩺 AI Clinical Case Analysis")
+        with st.spinner("Analyzing answers against guidelines..."):
             feedback = get_ai_grading(
                 st.session_state.current_exam,
                 st.session_state.last_user_input,
                 st.session_state.last_correct_key,
                 st.session_state.last_score
             )
-        st.markdown(feedback)
+            st.markdown(feedback)
         st.write("---")
 
-        # --- Download Graded Exam Button ---
         # --- Download Graded Exam Button ---
         if FPDF:
             # Package the metadata dictionary dynamically here as well
