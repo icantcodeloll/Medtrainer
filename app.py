@@ -546,19 +546,6 @@ if st.sidebar.button("Generate New Exam"):
         try:
             # We use replace=False so we don't duplicate questions in the same exam
             st.session_state.samples_df = df.sample(min(n, len(df)), weights='sampling_weight', replace=False)
-            # --- DIAGNOSTIC: WEIGHT VERIFICATION ---
-            st.write("### 📊 Exam Weight Diagnostics")
-            sampled_counts = st.session_state.samples_df['category'].value_counts()
-            sampled_percentages = st.session_state.samples_df['category'].value_counts(normalize=True) * 100
-
-            diagnostic_df = pd.DataFrame({
-                "Target Blueprint Weight": pd.Series(EXAM_WEIGHTS),
-                "Actual Sampled Count": sampled_counts,
-                "Actual Sampled %": sampled_percentages
-            }).fillna(0)
-
-            st.dataframe(diagnostic_df)
-            # ----------------------------------------
             st.sidebar.info("All content has been uploaded")
         except ValueError:
             # Fallback if weights math fails (e.g., all weights are zero)
@@ -597,7 +584,20 @@ if st.sidebar.button("Generate New Exam"):
         randomized_explanations = samples_df['explanation'].fillna('').astype(str).apply(randomize_paragraph_start)
         randomized_content = samples_df['content'].fillna('').astype(str).apply(randomize_paragraph_start)
         randomized_flashcards = samples_df['flashcards'].fillna('').astype(str).apply(randomize_paragraph_start)
-
+        # --- DIAGNOSTIC: ROTATION VERIFICATION ---
+        st.write("### 🔄 Sentence Rotation Diagnostics (First Sampled Question)")
+        if not samples_df.empty:
+            original_text = str(samples_df['content'].iloc[0])
+            rotated_text = str(randomized_content.iloc[0])
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                st.caption("**Original Content String:**")
+                st.text(original_text)
+            with col2:
+                st.caption("**Rotated Content String Passed to LLM:**")
+                st.text(rotated_text)
+        # ------------------------------------------
         # Compile into the final list for the prompt
         samples = (randomized_explanations + "\n[Notes: " + randomized_content + randomized_flashcards + "]").tolist()
         
