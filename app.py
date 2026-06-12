@@ -1011,7 +1011,25 @@ if st.session_state.current_exam:
             st.write("---")
 
     # Standalone execution grading submission action button
-    submitted = st.button("Submit for Grading", type="primary", use_container_width=True)
+    # --- NEW: SCORE & LEVELING FEEDBACK HIGHLIGHT ---
+    if st.session_state.get('exam_submitted'):
+        num_actual_questions = len(individual_questions)
+        st.markdown("---")
+        
+        # Display score and leveling notification in callout boxes
+        st.metric(
+            label="Exam Performance", 
+            value=f"{st.session_state.last_score} / {num_actual_questions}",
+            delta=f"{(st.session_state.last_score / num_actual_questions * 100):.1f}% Correct",
+            delta_color="normal" if st.session_state.last_score / num_actual_questions >= 0.7 else "inverse"
+        )
+        
+        if st.session_state.get('level_message'):
+            st.info(st.session_state.level_message)
+        st.write("")
+
+    # Standalone execution grading submission action button (normalized look)
+    submitted = st.button("Submit for Grading", type="primary")
 
     if submitted:
         num_actual_questions = len(individual_questions)
@@ -1071,9 +1089,22 @@ if st.session_state.current_exam:
 
         percentage_correct = (score / num_actual_questions) * 100
         if (num_actual_questions - score) <= 1 or percentage_correct >= 90:
-            st.session_state.current_level = min(50, st.session_state.current_level + 1)
+            next_level = min(50, st.session_state.current_level + 1)
+            if next_level > st.session_state.current_level:
+                st.session_state.level_message = f"**Excellent performance ({percentage_correct:.0f}%)! You have leveled up to Level {next_level}!**"
+            else:
+                st.session_state.level_message = f"**Fantastic score ({percentage_correct:.0f}%)! You are at the maximum mastery level (Level 50)!**"
+            st.session_state.current_level = next_level
         elif percentage_correct <= 60:
-            st.session_state.current_level = max(1, st.session_state.current_level - 1)
+            next_level = max(1, st.session_state.current_level - 1)
+            if next_level < st.session_state.current_level:
+                st.session_state.level_message = f"**Score was {percentage_correct:.0f}%. The system adjusted your difficulty down to Level {next_level} to rebuild foundations.**"
+            else:
+                st.session_state.level_message = f"**Score was {percentage_correct:.0f}%. You are at Level 1. Keep practicing to build confidence!**"
+            st.session_state.current_level = next_level
+        else:
+            st.session_state.level_message = f"**Solid effort ({percentage_correct:.0f}%)! Remaining at Level {st.session_state.current_level} to lock in consistency.**"
+            
         st.rerun()
 
         # --- 2. THE FEEDBACK (Fully outside the st.form block) ---
