@@ -15,6 +15,7 @@ import io
 import glob
 import atexit
 from streamlit.runtime.scriptrunner import get_script_run_ctx
+import streamlit as st
 
 # Save progress function not set up yet
 
@@ -955,31 +956,34 @@ if st.session_state.current_exam:
             # Safely convert keys to list and track indexing position mapping
             choice_keys = list(options_dict.keys())
             
-            # Set up selection tracking using a clean layout structure
+            # 1. Inject a style trick to completely hide this specific row of native radio selectors
+            st.markdown(f"""
+                <style>
+                div[data-testid="stRadio"] {{
+                    display: none !important;
+                }}
+                </style>
+            """, unsafe_allow_html=True)
+
+            # 2. Render an invisible radio button in the background to handle the variable state
             selected_letter = st.radio(
                 label=f"Radio Select Q{i}",
                 options=choice_keys,
                 index=choice_keys.index(current_selection) if current_selection in choice_keys else None,
                 key=f"native_radio_q_{i}",
-                horizontal=True,
                 label_visibility="collapsed"
             )
-            
-            # Save selection immediately to memory layer when an item is selected
-            if selected_letter != current_selection:
-                st.session_state.user_selections[i] = selected_letter
-                st.rerun()
 
-            # Display beautifully styled customized option box objects matching the state
+            # 3. Render your custom styled choices as large, full-width clickable buttons
             for choice_letter, full_sentence_text in options_dict.items():
-                is_selected = (selected_letter == choice_letter)
-                box_class = "quiz-option-box-selected" if is_selected else "quiz-option-box"
+                is_selected = (current_selection == choice_letter)
+                btn_type = "primary" if is_selected else "secondary"
                 prefix = "➔   " if is_selected else "      "
                 
-                st.markdown(
-                    f'<div class="{box_class}">{prefix}{full_sentence_text}</div>', 
-                    unsafe_allow_html=True
-                )
+                # Use use_container_width=True to make the buttons big and fill the space
+                if st.button(f"{prefix}{full_sentence_text}", key=f"btn_q_{i}_{choice_letter}", use_container_width=True, type=btn_type):
+                    st.session_state.user_selections[i] = choice_letter
+                    st.rerun()
 
         st.write("---")
 
