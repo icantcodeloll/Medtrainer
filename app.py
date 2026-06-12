@@ -879,10 +879,10 @@ if st.session_state.current_exam:
     if 'user_selections' not in st.session_state:
         st.session_state.user_selections = {}
 
-    # --- INJECT LOCALIZED OPTION STYLING ONLY ---
+    # --- 1. INJECT ISOLATED OPTION STYLE MATRIX ONLY ---
     st.markdown("""
         <style>
-        /* Style ONLY the custom quiz row boxes, leaving regular buttons untouched */
+        /* Target ONLY your quiz options, leaving all other site buttons untouched */
         .quiz-option-box {
             display: block;
             width: 100%;
@@ -894,16 +894,17 @@ if st.session_state.current_exam:
             background-color: transparent;
             border: 2px solid #e0e0e0;
             color: #333333;
-            cursor: pointer;
             transition: all 0.2s ease-in-out;
         }
         
+        /* Elegant hover state strictly localized to quiz options */
         .quiz-option-box:hover {
             border-color: #4b6cb7;
             background-color: #f4f7fc;
             color: #4b6cb7;
         }
         
+        /* Selected state has exact same structural dimensions to prevent shifting */
         .quiz-option-box-selected {
             display: block;
             width: 100%;
@@ -916,21 +917,23 @@ if st.session_state.current_exam:
             background-color: #eef2fa;
             color: #4b6cb7;
             font-weight: bold;
-            cursor: pointer;
         }
         </style>
     """, unsafe_allow_html=True)
 
-    # --- RENDER QUESTIONS DYNAMICALLY ---
+    # --- 2. RENDER THE QUESTIONS DYNAMICALLY (OUTSIDE st.form CONSTRAINTS FOR FAST RERUNS) ---
     for i, q_text in enumerate(individual_questions):
         st.subheader(f"Question {i+1}")
         
+        # Extract clinical question text body before the option choices begin
         prompt_match = re.search(r"(\d+\s*\.\s*.*?)(?=A\s*\.\s*)", q_text, re.DOTALL)
         q_prompt = prompt_match.group(1).strip() if prompt_match else q_text
         
+        # Keep the question at its native, original markdown text size
         st.markdown(q_prompt.replace("\n", "<br>"), unsafe_allow_html=True)
         st.write("") 
 
+        # Clean option boundaries handling spacing nuances from API outputs
         opt_A = re.search(r"(A\s*\.\s*.*?)(?=[B-D]\s*\.\s*|$)", q_text, re.DOTALL)
         opt_B = re.search(r"(B\s*\.\s*.*?)(?=[A,C,D]\s*\.\s*|$)", q_text, re.DOTALL)
         opt_C = re.search(r"(C\s*\.\s*.*?)(?=[A,B,D]\s*\.\s*|$)", q_text, re.DOTALL)
@@ -943,26 +946,31 @@ if st.session_state.current_exam:
             "D": opt_D.group(1).strip() if opt_D else "D. Option D"
         }
 
+        # Restrict options to a narrower column layout so they aren't overly large or wide
         left_constrained_column, empty_right_space = st.columns([3, 2])
         
         with left_constrained_column:
             current_selection = st.session_state.user_selections.get(i, None)
             
-            # Use an input select widget that runs instantly with minimal latency overhead
-            # or render choice items that update seamlessly using a standard selection configuration
+            # Safely convert keys to list and track indexing position mapping
+            choice_keys = list(options_dict.keys())
+            
+            # Set up selection tracking using a clean layout structure
             selected_letter = st.radio(
-                label=f"Select Option Q{i}",
-                options=list(options_dict.keys()),
-                index=list(options_dict.keys()).index(current_selection) if current_selection in options_dict else 0,
-                key=f"radio_q_{i}",
+                label=f"Radio Select Q{i}",
+                options=choice_keys,
+                index=choice_keys.index(current_selection) if current_selection in choice_keys else None,
+                key=f"native_radio_q_{i}",
+                horizontal=True,
                 label_visibility="collapsed"
             )
             
-            # Update your background session tracking state seamlessly
+            # Save selection immediately to memory layer when an item is selected
             if selected_letter != current_selection:
                 st.session_state.user_selections[i] = selected_letter
+                st.rerun()
 
-            # Display custom HTML components for your choices with isolated box styling
+            # Display beautifully styled customized option box objects matching the state
             for choice_letter, full_sentence_text in options_dict.items():
                 is_selected = (selected_letter == choice_letter)
                 box_class = "quiz-option-box-selected" if is_selected else "quiz-option-box"
@@ -975,7 +983,7 @@ if st.session_state.current_exam:
 
         st.write("---")
 
-    # Standalone Grading Button outside form constraints
+    # Standalone execution grading submission action button
     submitted = st.button("Submit for Grading", type="primary", use_container_width=True)
 
     if submitted:
