@@ -430,9 +430,7 @@ def render_data_portability_interface():
 st.title("Trainer")
 st.sidebar.header("Stats & Controls")
 
-# Move Active Level metric here
 st.sidebar.metric("Active Level", f"{st.session_state.current_level}/50")
-
 
 # --- Subject Multi-Select (Default: Select All) ---
 df_sidebar = pd.read_csv(CSV_FILE)
