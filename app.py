@@ -879,17 +879,18 @@ if st.session_state.current_exam:
 
     # --- RENDER QUESTIONS DYNAMICALLY (NO st.form CONTAINER) ---
     for i, q_text in enumerate(individual_questions):
-        st.subheader(f"Question {i+1}")
-
-        # 1. Parse out the core question prompt before "A ." or "A." begins
+        # Make the Question Title highly prominent
+        st.markdown(f"## Question {i+1}")
+        
+        # 1. Parse out the core clinical question prompt before option A begins (handles spaced and tight text variants)
         prompt_match = re.search(r"(\d+\s*\.\s*.*?)(?=A\s*\.\s*)", q_text, re.DOTALL)
         q_prompt = prompt_match.group(1).strip() if prompt_match else q_text
         
-        # Render question prompt cleanly using HTML tags for clear formatting
-        st.markdown(q_prompt.replace("\n", "<br>"), unsafe_allow_html=True)
+        # Render the question text noticeably bigger using an H3 header style
+        st.markdown(f"### {q_prompt.replace('\n', '<br>')}", unsafe_allow_html=True)
         st.write("") 
 
-        # 2. Extract choice sentences handles both strict formats ("A.") and spaced out variations ("A .")
+        # 2. Extract choices handling both formats ("A.") and AI spaced-out outputs ("A .")
         opt_A = re.search(r"(A\s*\.\s*.*?)(?=[B-D]\s*\.\s*|$)", q_text, re.DOTALL)
         opt_B = re.search(r"(B\s*\.\s*.*?)(?=[A,C,D]\s*\.\s*|$)", q_text, re.DOTALL)
         opt_C = re.search(r"(C\s*\.\s*.*?)(?=[A,B,D]\s*\.\s*|$)", q_text, re.DOTALL)
@@ -902,44 +903,43 @@ if st.session_state.current_exam:
             "D": opt_D.group(1).strip() if opt_D else "D. Option D"
         }
 
-        # 3. Render options vertically to the left as wide clickable buttons
-        current_selection = st.session_state.user_selections.get(i, None)
+        # 3. Create structural layouts: Constrain options to a narrower 60% wide left column 
+        # instead of stretching across 100% of the ultra-wide browser window.
+        left_constrained_column, empty_right_space = st.columns([3, 2])
         
-        for choice_letter, full_sentence_text in options_dict.items():
-            is_selected = (current_selection == choice_letter)
+        with left_constrained_column:
+            current_selection = st.session_state.user_selections.get(i, None)
             
-            # Visually highlight the current user choice with an arrow indicator
-            button_label = f"➔   {full_sentence_text}" if is_selected else f"      {full_sentence_text}"
-            button_type = "primary" if is_selected else "secondary"
-            
-            # Clicking anywhere on this full sentence button instantly records selection state
-            if st.button(
-                label=button_label, 
-                key=f"q_{i}_opt_{choice_letter}_btn", 
-                use_container_width=True,
-                type=button_type
-            ):
-                st.session_state.user_selections[i] = choice_letter
-                st.rerun()
+            for choice_letter, full_sentence_text in options_dict.items():
+                is_selected = (current_selection == choice_letter)
+                
+                # Highlight selected options visually
+                button_label = f"➔   {full_sentence_text}" if is_selected else f"      {full_sentence_text}"
+                button_type = "primary" if is_selected else "secondary"
+                
+                # Render vertically stacked options that feel like a cohesive card quiz list
+                if st.button(
+                    label=button_label, 
+                    key=f"q_{i}_opt_{choice_letter}_btn", 
+                    use_container_width=True, # Spans width of the small 3-unit left column only
+                    type=button_type
+                ):
+                    st.session_state.user_selections[i] = choice_letter
+                    st.rerun()
 
         st.write("---")
 
-    # Regular reactive grading action button outside form containment
+    # Standalone Reactive Grading Button outside forms
     submitted = st.button("Submit for Grading", type="primary", use_container_width=True)
 
     if submitted:
-        # Use actual number of questions from the parsed collection
         num_actual_questions = len(individual_questions)
-        
-        # Convert active answers tracking map into an ordered tracking list array
         user_answers = [st.session_state.user_selections.get(idx, None) for idx in range(num_actual_questions)]
         user_input = "\n".join([f"Q{idx+1}: {ans if ans else 'No Answer'}" for idx, ans in enumerate(user_answers)])
         
-        # Safely cross reference with the true answer key sequence
         correct_key = st.session_state.current_key[:num_actual_questions]
         correct_key_formatted = "\n".join([f"Q{idx+1}: {ans}" for idx, ans in enumerate(correct_key)])
         
-        # Save these metrics onto tracking state storage buffers
         st.session_state.last_user_input = user_input
         st.session_state.last_correct_key = correct_key_formatted
         st.session_state.last_user_answers_list = user_answers
@@ -960,7 +960,6 @@ if st.session_state.current_exam:
             if u_ans == correct:
                 score += 1
             else:
-                # Clean HTML artifacts out of final evaluation metrics summaries
                 clean_q_snippet = re.sub(r'<br\s*/?>', ' ', individual_questions[i].split('\n')[0][:120])
                 incorrect_summary_markdown += f"**Question {i+1}:** *{clean_q_snippet}...*\n"
                 incorrect_summary_markdown += f"&nbsp;&nbsp;&nbsp;&nbsp;• **Your Answer:** `{u_ans}` | **Correct Answer:** `{correct}`\n\n"
@@ -976,7 +975,6 @@ if st.session_state.current_exam:
         st.session_state.last_score = score
         st.session_state.immediate_wrong_breakdown = incorrect_summary_markdown if incorrect_summary_markdown else " 🎉  **Perfect score! You got every question right!**"
         
-        # Dynamic difficulty levels configuration based on baseline performance scores
         percentage_correct = (score / num_actual_questions) * 100
         if (num_actual_questions - score) <= 1 or percentage_correct >= 90:
             st.session_state.current_level = min(50, st.session_state.current_level + 1)
