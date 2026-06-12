@@ -928,7 +928,7 @@ if st.session_state.current_exam:
 
             st.write("---")
         
-        submitted = st.button("Submit for Grading", type="primary")
+        submitted = st.form_submit_button("Submit for Grading")
         if submitted:
             # Use actual number of questions from current exam
             num_actual_questions = len(raw_questions)
