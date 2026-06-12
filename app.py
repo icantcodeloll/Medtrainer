@@ -430,41 +430,46 @@ def render_data_portability_interface():
 st.title("Trainer")
 st.sidebar.header("Stats & Controls")
 
+# Move Active Level metric here
 st.sidebar.metric("Active Level", f"{st.session_state.current_level}/50")
 
-# --- Subject Multi-Select (Default: Select All) ---
 df_sidebar = pd.read_csv(CSV_FILE)
-categories = sorted(df_sidebar['category'].fillna("Uncategorized").astype(str).unique().tolist())
-subject_filter = st.sidebar.multiselect(
-    "Subject:", 
-    options=categories, 
-    default=categories,  # Pre-selects all items
-    help="Select one or more categories"
-)
 
-# --- Exam Filter Multi-Select (Default: Select All) ---
+# --- Focus Mode Checkboxes (Default: Checked) ---
+st.sidebar.markdown("**Focus Mode:**")
+categories = sorted(df_sidebar['category'].fillna("Uncategorized").astype(str).unique().tolist())
+focus_mode = []
+for cat in categories:
+    if st.sidebar.checkbox(cat, value=True, key=f"focus_{cat}", help="Toggle category"):
+        focus_mode.append(cat)
+
+st.sidebar.markdown("---")
+
+# --- Exam Filter Checkboxes (Default: Checked) ---
+exam_filter = []
 if 'exam' in df_sidebar.columns:
+    st.sidebar.markdown("**Exam Filter:**")
     exams = sorted(df_sidebar['exam'].fillna("Uncategorized").astype(str).unique().tolist())
-    exam_filter = st.sidebar.multiselect(
-        "Exam Filter:", 
-        options=exams, 
-        default=exams,  # Pre-selects all items
-        help="Select one or more exams"
-)
+    for ex in exams:
+        if st.sidebar.checkbox(ex, value=True, key=f"exam_{ex}", help="Toggle exam"):
+            exam_filter.append(ex)
 else:
     exam_filter = []
 
-# --- Systems Filter Multi-Select (Default: Select All) ---
+st.sidebar.markdown("---")
+
+# --- Systems Filter Checkboxes (Default: Checked) ---
+system_filter = []
 if 'system' in df_sidebar.columns:
-    system = sorted(df_sidebar['system'].fillna("Uncategorized").astype(str).unique().tolist())
-    system_filter = st.sidebar.multiselect(
-        "System Filter:", 
-        options=system, 
-        default=system,  # Pre-selects all items
-        help="Select one or more systems"
-)
+    st.sidebar.markdown("**System Filter:**")
+    systems = sorted(df_sidebar['system'].fillna("Uncategorized").astype(str).unique().tolist())
+    for sys in systems:
+        if st.sidebar.checkbox(sys, value=True, key=f"sys_{sys}", help="Toggle system"):
+            system_filter.append(sys)
 else:
     system_filter = []
+
+st.sidebar.markdown("---")
 
 
 if st.sidebar.button("Generate New Exam"):
