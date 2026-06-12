@@ -42,7 +42,7 @@ def initialize_app(active_user, force_reset=False):
         "missed_questions": loaded_progress.get("missed_questions", []),
         "current_exam": loaded_progress.get("current_exam", ""),
         "current_key": loaded_progress.get("current_key", []),
-        "key_index": loaded_progress.get("key_index", random.randint(0, max(1, len(API_KEYS) - 1))),
+        "key_index": min(loaded_progress.get("key_index", 0), max(0, len(API_KEYS) - 1)) if len(API_KEYS) > 0 else 0,
         "current_categories": loaded_progress.get("current_categories", []),
         "previous_test_data": {},
         "use_search": False,
