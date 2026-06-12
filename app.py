@@ -969,7 +969,13 @@ if st.session_state.current_exam:
             current_selection = st.session_state.user_selections.get(i, None)
             choice_keys = list(options_dict.keys())
 
-            # 1. Inject a style trick to completely hide this specific row of native radio selectors
+            # --- 1. SAFE PRE-INITIALIZATION PATTERN ---
+            # This ensures the session state matches your selection *before* the radio is initialized, preventing the exception.
+            radio_key = f"native_radio_q_{i}"
+            if current_selection in choice_keys:
+                st.session_state[radio_key] = current_selection
+
+            # 2. Inject a style trick to completely hide this specific row of native radio selectors
             st.markdown(f"""
             <style>
             div[data-testid="stRadio"] {{
@@ -978,26 +984,26 @@ if st.session_state.current_exam:
             </style>
             """, unsafe_allow_html=True)
 
-            # 2. Render background state tracker with an 'on_change' callback mapping
-            # This allows it to update seamlessly without dropping execution momentum
+            # 3. Render background state tracker with a callback mapping to handle values safely
+            def on_radio_change(q_index=i):
+                val = st.session_state.get(f"native_radio_q_{q_index}")
+                if val:
+                    st.session_state.user_selections[q_index] = val
+
             selected_letter = st.radio(
                 label=f"Radio Select Q{i}",
                 options=choice_keys,
-                index=choice_keys.index(current_selection) if current_selection in choice_keys else None,
-                key=f"native_radio_q_{i}",
+                key=radio_key,
                 label_visibility="collapsed",
-                on_change=update_user_selection,
-                args=(i,)
+                on_change=on_radio_change
             )
 
-            # 3. Render custom choices as large clickable blocks
-            # Clicking them sets the value in st.session_state directly and forces a local UI sync, bypasses slow manual re-execution
+            # 4. Render options as quick response custom buttons
             for choice_letter, full_sentence_text in options_dict.items():
                 is_selected = (current_selection == choice_letter)
                 btn_type = "primary" if is_selected else "secondary"
                 prefix = "➔   " if is_selected else "      "
 
-                # Check if exam is submitted to disable buttons after submission
                 is_disabled = st.session_state.get('exam_submitted', False)
 
                 if st.button(
@@ -1007,12 +1013,11 @@ if st.session_state.current_exam:
                     type=btn_type,
                     disabled=is_disabled
                 ):
-                    # Setting this key automatically fires the 'on_change' routine internally
-                    st.session_state[f"native_radio_q_{i}"] = choice_letter
+                    # Save selection immediately into the tracking arrays
                     st.session_state.user_selections[i] = choice_letter
-                    
-                    # Instead of forcing a hard global refresh via st.rerun(), we let 
-                    # Streamlit naturally re-render just the button active states
+                    st.session_state[radio_key] = choice_letter
+                    # Instantly rerun to reflect the visual highlight change on screen with no error
+                    st.rerun()
 
             # --- NEW: INJECT PER-QUESTION AI FEEDBACK RIGHT HERE ---
             if st.session_state.get('exam_submitted') and st.session_state.get('ai_feedback_clean'):
