@@ -879,18 +879,18 @@ if st.session_state.current_exam:
 
     # --- RENDER QUESTIONS DYNAMICALLY (NO st.form CONTAINER) ---
     for i, q_text in enumerate(individual_questions):
-        # Make the Question Title highly prominent
-        st.markdown(f"## Question {i+1}")
+        # Retained original subheader size for the Question numbering title
+        st.subheader(f"Question {i+1}")
         
-        # 1. Parse out the core clinical question prompt before option A begins (handles spaced and tight text variants)
+        # 1. Parse out the core clinical question prompt before option A begins
         prompt_match = re.search(r"(\d+\s*\.\s*.*?)(?=A\s*\.\s*)", q_text, re.DOTALL)
         q_prompt = prompt_match.group(1).strip() if prompt_match else q_text
         
-        # Render the question text noticeably bigger using an H3 header style
-        st.markdown(f"### {q_prompt.replace('\n', '<br>')}", unsafe_allow_html=True)
+        # Render the question text at its original font size using native markdown text
+        st.markdown(q_prompt.replace("\n", "<br>"), unsafe_allow_html=True)
         st.write("") 
 
-        # 2. Extract choices handling both formats ("A.") and AI spaced-out outputs ("A .")
+        # 2. Extract choices handling both tight ("A.") and spaced-out outputs ("A .")
         opt_A = re.search(r"(A\s*\.\s*.*?)(?=[B-D]\s*\.\s*|$)", q_text, re.DOTALL)
         opt_B = re.search(r"(B\s*\.\s*.*?)(?=[A,C,D]\s*\.\s*|$)", q_text, re.DOTALL)
         opt_C = re.search(r"(C\s*\.\s*.*?)(?=[A,B,D]\s*\.\s*|$)", q_text, re.DOTALL)
@@ -903,8 +903,7 @@ if st.session_state.current_exam:
             "D": opt_D.group(1).strip() if opt_D else "D. Option D"
         }
 
-        # 3. Create structural layouts: Constrain options to a narrower 60% wide left column 
-        # instead of stretching across 100% of the ultra-wide browser window.
+        # 3. Constrain option widths using standard columns so they aren't overly large or wide
         left_constrained_column, empty_right_space = st.columns([3, 2])
         
         with left_constrained_column:
@@ -917,11 +916,11 @@ if st.session_state.current_exam:
                 button_label = f"➔   {full_sentence_text}" if is_selected else f"      {full_sentence_text}"
                 button_type = "primary" if is_selected else "secondary"
                 
-                # Render vertically stacked options that feel like a cohesive card quiz list
+                # Clicking anywhere on these options saves selection and reloads cleanly
                 if st.button(
                     label=button_label, 
                     key=f"q_{i}_opt_{choice_letter}_btn", 
-                    use_container_width=True, # Spans width of the small 3-unit left column only
+                    use_container_width=True, # Strictly bounded by the left column size layout
                     type=button_type
                 ):
                     st.session_state.user_selections[i] = choice_letter
@@ -929,7 +928,7 @@ if st.session_state.current_exam:
 
         st.write("---")
 
-    # Standalone Reactive Grading Button outside forms
+    # Standalone Grading Button outside form constraints
     submitted = st.button("Submit for Grading", type="primary", use_container_width=True)
 
     if submitted:
@@ -983,27 +982,27 @@ if st.session_state.current_exam:
 
         st.rerun()
 
-    # --- 2. THE FEEDBACK (Fully outside the st.form block) ---
-    if st.session_state.get('exam_submitted'):
-        st.markdown("---")
-        st.header(f"Results: {st.session_state.last_score}/{st.session_state.num_questions}")
-        
-        # --- IMMEDIATE FEEDBACK PANEL ---
-        st.subheader("Score Breakdown")
-        st.info(st.session_state.get('immediate_wrong_breakdown', 'No grading data found.'))
-        st.markdown("---")
-        
-        # --- DETAILED AI EXPLANATIONS LOOP ---
-        st.subheader("Deep Analysis")
-        with st.spinner("Analyzing answers"):
-            feedback = get_ai_grading(
-                st.session_state.current_exam,
-                st.session_state.last_user_input,
-                st.session_state.last_correct_key,
-                st.session_state.last_score
-            )
-            st.markdown(feedback)
-        st.write("---")
+        # --- 2. THE FEEDBACK (Fully outside the st.form block) ---
+        if st.session_state.get('exam_submitted'):
+            st.markdown("---")
+            st.header(f"Results: {st.session_state.last_score}/{st.session_state.num_questions}")
+            
+            # --- IMMEDIATE FEEDBACK PANEL ---
+            st.subheader("Score Breakdown")
+            st.info(st.session_state.get('immediate_wrong_breakdown', 'No grading data found.'))
+            st.markdown("---")
+            
+            # --- DETAILED AI EXPLANATIONS LOOP ---
+            st.subheader("Deep Analysis")
+            with st.spinner("Analyzing answers"):
+                feedback = get_ai_grading(
+                    st.session_state.current_exam,
+                    st.session_state.last_user_input,
+                    st.session_state.last_correct_key,
+                    st.session_state.last_score
+                )
+                st.markdown(feedback)
+            st.write("---")
         
 
 # Missed Questions Bank in Sidebar
