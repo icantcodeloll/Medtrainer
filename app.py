@@ -1267,8 +1267,8 @@ def render_stats_page():
 
 # Create the navigation router
 pg = st.navigation([
-    st.Page(render_trainer_page, title="Exam Trainer", icon=""),
-    st.Page(render_stats_page, title="Performance Insights", icon="")
+    st.Page(render_trainer_page, title="Exam Trainer", icon="📝"),
+    st.Page(render_stats_page, title="Performance Insights", icon="📊")
 ])
 pg.run()
 
