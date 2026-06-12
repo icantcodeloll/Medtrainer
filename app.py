@@ -86,9 +86,9 @@ loaded_progress = load_progress(active_user)
 if 'current_level' not in st.session_state:
     st.session_state.current_level = loaded_progress.get("current_level", 1)
 if 'exam_model' not in st.session_state:
-    st.session_state.exam_model = 'gemini-3.1-flash-lite'
+    st.session_state.exam_model = loaded_progress.get("exam_model", 'gemini-3.1-flash-lite')
 if 'num_questions' not in st.session_state:
-    st.session_state.num_questions = loaded_progress.get("num_questions", 5) 
+    st.session_state.num_questions = loaded_progress.get("num_questions", 5)
 if 'missed_questions' not in st.session_state:
     st.session_state.missed_questions = loaded_progress.get("missed_questions", [])
 if 'current_exam' not in st.session_state:
@@ -100,13 +100,21 @@ if 'key_index' not in st.session_state:
 if 'current_categories' not in st.session_state:
     st.session_state.current_categories = loaded_progress.get("current_categories", [])
 if 'samples_df' not in st.session_state:
-    st.session_state.samples_df = loaded_progress.get("samples_df", pd.DataFrame())
+    # Handle reconstructing the DataFrame if saved as a dict/list structure
+    saved_samples = loaded_progress.get("samples_df", None)
+    if isinstance(saved_samples, pd.DataFrame):
+        st.session_state.samples_df = saved_samples
+    elif isinstance(saved_samples, dict) or isinstance(saved_samples, list):
+        st.session_state.samples_df = pd.DataFrame(saved_samples)
+    else:
+        st.session_state.samples_df = pd.DataFrame()
 if 'previous_test_data' not in st.session_state:
     st.session_state.previous_test_data = {}
 if "use_search" not in st.session_state:
     st.session_state.use_search = False
 if 'thinking_level' not in st.session_state:
     st.session_state.thinking_level = "MEDIUM"
+
 
 
 if st.sidebar.button("Save Progress", help="Manually save your current progress"):
@@ -537,12 +545,24 @@ if st.sidebar.button("Generate New Exam"):
                 st.error("No active objectives found. Mark some as 'y' in your CSV.")
                 st.stop()
     
-        # --- SMART SAMPLING (EXAM WEIGHTED ONLY) ---
-        # Map exam weights to the dataframe based on category blueprints
-        df['sampling_weight'] = df['category'].map(EXAM_WEIGHTS).fillna(0.05)
-            
+        # --- SMART SAMPLING (LECTURE WEIGHTED EQUALLY) ---
+        # 1. Map the base category weights from your blueprint
+        df['base_weight'] = df['category'].map(EXAM_WEIGHTS).fillna(0.05)
 
-        # 3. Sample using the calculated weights
+        # 2. Count how many rows (learning objectives) each unique lecture has
+        # This uses your JOIN_COLUMN ("lecture_id") to find the size of each lecture
+        lecture_counts = df.groupby(JOIN_COLUMN).size().to_dict()
+
+        # 3. Normalize the weight: divide the base weight by the number of objectives in that lecture
+        # This ensures a lecture's total weight is split equally among its rows
+        df['sampling_weight'] = df.apply(
+            lambda row: row['base_weight'] / lecture_counts[row[JOIN_COLUMN]] 
+            if row[JOIN_COLUMN] in lecture_counts and lecture_counts[row[JOIN_COLUMN]] > 0 
+            else 0.05, 
+            axis=1
+        )
+
+        # 4. Sample using the normalized lecture-balanced weights
         try:
             # We use replace=False so we don't duplicate questions in the same exam
             st.session_state.samples_df = df.sample(min(n, len(df)), weights='sampling_weight', replace=False)
@@ -580,30 +600,47 @@ if st.sidebar.button("Generate New Exam"):
             rotated_sentences = sentences[start_idx:] + sentences[:start_idx]
             return " ".join(rotated_sentences)
 
-        # Apply the sentence-level randomization to your data columns
-        randomized_explanations = samples_df['explanation'].fillna('').astype(str).apply(randomize_paragraph_start)
-        randomized_content = samples_df['content'].fillna('').astype(str).apply(randomize_paragraph_start)
-        randomized_flashcards = samples_df['flashcards'].fillna('').astype(str).apply(randomize_paragraph_start)
+        # 1. Helper function to safely merge the columns into a single continuous string per row
+        def combine_row_text(row):
+            explanation = str(row.get('explanation', '')).strip()
+            content = str(row.get('content', '')).strip()
+            flashcards = str(row.get('flashcards', '')).strip()
+            
+            # Filter out empty fields so we don't introduce awkward spacing or isolated punctuation
+            valid_segments = [seg for seg in [explanation, content, flashcards] if seg]
+            
+            # Join them with a space so they form a continuous stream of sentences
+            return " ".join(valid_segments)
 
-        # Compile into the final list for the prompt
-        samples = (randomized_explanations + "\n[Notes: " + randomized_content + randomized_flashcards + "]").tolist()
+        # 2. Combine the fields first across the dataframe row-by-row
+        combined_raw_text = samples_df.apply(combine_row_text, axis=1)
+
+        # 3. Apply your rotation function to the entire combined block of sentences
+        # This allows sentences from 'content' or 'flashcards' to seamlessly shift to the front!
+        samples = combined_raw_text.apply(randomize_paragraph_start).tolist()
         
         with st.spinner(f"Generating {n} questions at Level {st.session_state.current_level}..."):
-            raw_response = ""
             raw_response = get_blind_exam(samples, st.session_state.current_level, n)
 
             if "[KEY:" in raw_response:
                 # Use a split that keeps the questions separate from the key
                 text, key_part = raw_response.split("[KEY:")
-                
-                # CLEANING: Remove the key section from the visible text 
-                # so it doesn't show up in the last radio button question
-                st.session_state.current_exam = text.strip() 
-                
+
+                # CLEANING: Remove the key section from the visible text
+                st.session_state.current_exam = text.strip()
                 st.session_state.current_key = re.findall(r'[A-D]', key_part)
+                
+                # --- AUTO-SAVE ON GENERATION ---
+                # This ensures if the tab closes, the file on disk has the fresh exam
+                try:
+                    save_progress(st.session_state, active_user)
+                except Exception:
+                    pass # Prevent any background file saving hitches from stopping the app
+                # -------------------------------
+
                 st.rerun()
             else:
-                st.error(f"Failed to generate a perfectly formatted exam after {max_retries} attempts. Please click generate again.")
+                st.error(f"Failed to generate a perfectly formatted exam. Please click generate again.")
     except Exception as e:
         st.error(f"File Error: Ensure {CSV_FILE} and {NOTES_FILE} are in the folder. ({e})")
 
@@ -696,8 +733,8 @@ if st.session_state.get('show_settings', False):
         if os.path.exists(user_specific_progress):
             os.remove(user_specific_progress)
             # Reset session state to defaults
-            st.session_state.current_level = 10
-            st.session_state.num_questions = 10
+            st.session_state.current_level = 1
+            st.session_state.num_questions = 5
             st.session_state.missed_questions = []
             st.session_state.current_exam = None
             st.session_state.current_key = []

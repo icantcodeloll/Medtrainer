@@ -1,232 +1,232 @@
-﻿objective,explanation,lecture_id,include,category,mastery_score,exam,system
-Identify key anatomical structures & relationships in thorax,,"Clinical anatomy of lungs, pleura & spaces",y,Anatomy,1,Exam 1,Respiratory
-Define the thoracic (and abdominal) spaces,,"Clinical anatomy of lungs, pleura & spaces",y,Anatomy,1,Exam 1,Respiratory
-Compare and contrast pleura and peritoneum,,"Clinical anatomy of lungs, pleura & spaces",y,Anatomy,1,Exam 1,Respiratory
-Describe innervation of the pleura,,"Clinical anatomy of lungs, pleura & spaces",y,Anatomy,1,Exam 1,Respiratory
-"Compare and contrast lines of pleura reflection & surface projection of the lungs, and apply this to clinical exams",,"Clinical anatomy of lungs, pleura & spaces",y,Anatomy,1,Exam 1,Respiratory
-Draw the layers of the thoracic & abdominal spaces,,"Clinical anatomy of lungs, pleura & spaces",y,Anatomy,1,Exam 1,Respiratory
-"Define the terms: Intraperitoneal, retroperitoneal, and secondarily retroperitoneal and identify anatomical structures which fit into each category",,"Clinical anatomy of lungs, pleura & spaces",y,Anatomy,1,Exam 1,Respiratory
-Describe the mechanics of pulmonary ventilation (Breathing),,Respiratory module 1: Biomechanics of breathing,y,Physiology,1,Exam 1,Respiratory
-Describe the factors that determine mechanical ventilation,,Respiratory module 1: Biomechanics of breathing,y,Physiology,1,Exam 1,Respiratory
-Explain the role of lung compliance during breathing,,Respiratory module 1: Biomechanics of breathing,y,Physiology,1,Exam 1,Respiratory
-Explain the effect of airway radius on ventilation,,Respiratory module 1: Biomechanics of breathing,y,Physiology,1,Exam 1,Respiratory
-Define lung volumes and capacities as measured by spirometry,,Respiratory module 1: Biomechanics of breathing,y,Physiology,1,Exam 1,Respiratory
-Describe the factors that affect gas diffusion in the lungs,,Respiratory module 2: Ventilation perfusion and gas exchange,y,Physiology,1,Exam 1,Respiratory
-Describe how gas diffusion in the lung is measured,,Respiratory module 2: Ventilation perfusion and gas exchange,y,Physiology,1,Exam 1,Respiratory
-Explain the local mechanisms that regulate lung perfusion and ventilation,,Respiratory module 2: Ventilation perfusion and gas exchange,y,Physiology,1,Exam 1,Respiratory
-Explain how O2 and CO2 are transported in plasma,,Respiratory module 3: Transport of gases and control of breathing,y,Physiology,1,Exam 1,Respiratory
-Describe the location and function of the brain's respiratory centre,,Respiratory module 3: Transport of gases and control of breathing,y,Physiology,1,Exam 1,Respiratory
-Compare the roles of O2 and CO2 in control of ventilation,,Respiratory module 3: Transport of gases and control of breathing,y,Physiology,1,Exam 1,Respiratory
-Evaluate the effects of barometric pressure on respiration,,Respiratory module 3: Transport of gases and control of breathing,y,Physiology,1,Exam 1,Respiratory
-Apply the principles of control of breathing to the problems caused by breath hold diving,,Respiratory module 3: Transport of gases and control of breathing,y,Physiology,1,Exam 1,Respiratory
-Appreciate the range of common respiratory tract infections (RTIs),,Upper respiratory tract infections,y,Microbiology,1,Exam 1,Respiratory
-Recognise the major respiratory pathogens and describe the infections caused,,Upper respiratory tract infections,y,Microbiology,1,Exam 1,Respiratory
-Describe the basic symptoms and steps taken to diagnose RTIs,,Upper respiratory tract infections,y,Microbiology,1,Exam 1,Respiratory
-Assess critically the need for antibiotics,,Upper respiratory tract infections,y,Microbiology,1,Exam 1,Respiratory
-Be aware of rare but potentially serious respiratory infections requiring urgent attention,,Upper respiratory tract infections,y,Microbiology,1,Exam 1,Respiratory
-Summarise the immune-anatomy and evaluate the importance of physical barriers in the respiratory system,,"Respiratory immunology, allergy, and host defence",y,Immunology,1,Exam 1,Respiratory
-"Distinguish the roles of the innate immune macrophages, neutrophils and dendritic cells in respiratory immunity",,"Respiratory immunology, allergy, and host defence",y,Immunology,1,Exam 1,Respiratory
-Appraise the role of adaptive immune cells in the respiratory tract and explain the requirement for mucosal IgA to be noninflammatory,,"Respiratory immunology, allergy, and host defence",y,Immunology,1,Exam 1,Respiratory
-Analyse the development and pathology of allergic responses to aero-antigens,,"Respiratory immunology, allergy, and host defence",y,Immunology,1,Exam 1,Respiratory
-Describe the major characteristics of asthma and how they drive treatment,,Asthma and COPD,y,Pharmacology,1,Exam 1,Respiratory
-Understand the mechanisms of action and use of different classes of medication used to treat asthma,,Asthma and COPD,y,Pharmacology,1,Exam 1,Respiratory
-Describe the major causes and characteristics of Chronic Obstructive Pulmonary Disease (COPD) and how they drive treatment,,Asthma and COPD,y,Pharmacology,1,Exam 1,Respiratory
-Understand the mechanisms of action and use of different classes of medication used to treat COPD,,Asthma and COPD,y,Pharmacology,1,Exam 1,Respiratory
-Discuss the role of pharmacological agents for the treatment of respiratory infections,,Pulmonary antimicrobials,y,Pharmacology,1,Exam 1,Respiratory
-Explain the factors that guide your decisions,,Pulmonary antimicrobials,y,Pharmacology,1,Exam 1,Respiratory
-Identify the sources of information that will guide your decisions about drug choices for these conditions,,Pulmonary antimicrobials,y,Pharmacology,1,Exam 1,Respiratory
-Identify the organs which develop from the gut tube,,Development & adult anatomy of the foregut,y,Anatomy,1,Exam 1,GIT
-Describe the key steps involved with gut development,,Development & adult anatomy of the foregut,y,Anatomy,1,Exam 1,GIT
-"Compare and contrast typical foregut development with atypical development, noting the anatomical implications related to anatomical relationships",,Development & adult anatomy of the foregut,y,Anatomy,1,Exam 1,GIT
-Identify the adult anatomical relationships determined during fetal development,,Development & adult anatomy of the foregut,y,Anatomy,1,Exam 1,GIT
-"Describe the driver of foregut rotation, and the typical axis of this rotation",,Development & adult anatomy of the foregut,y,Anatomy,1,Exam 1,GIT
-Compare and contrast adult peritoneal ligaments/reflections/mesentery with mesoderm,,Development & adult anatomy of the foregut,y,Anatomy,1,Exam 1,GIT
+﻿objective,explanation,lecture_id,include,category,exam,system
+Identify key anatomical structures & relationships in thorax,,"Clinical anatomy of lungs, pleura & spaces",y,Anatomy,Exam 1,Respiratory
+Define the thoracic (and abdominal) spaces,,"Clinical anatomy of lungs, pleura & spaces",y,Anatomy,Exam 1,Respiratory
+Compare and contrast pleura and peritoneum,,"Clinical anatomy of lungs, pleura & spaces",y,Anatomy,Exam 1,Respiratory
+Describe innervation of the pleura,,"Clinical anatomy of lungs, pleura & spaces",y,Anatomy,Exam 1,Respiratory
+"Compare and contrast lines of pleura reflection & surface projection of the lungs, and apply this to clinical exams",,"Clinical anatomy of lungs, pleura & spaces",y,Anatomy,Exam 1,Respiratory
+Draw the layers of the thoracic & abdominal spaces,,"Clinical anatomy of lungs, pleura & spaces",y,Anatomy,Exam 1,Respiratory
+"Define the terms: Intraperitoneal, retroperitoneal, and secondarily retroperitoneal and identify anatomical structures which fit into each category",,"Clinical anatomy of lungs, pleura & spaces",y,Anatomy,Exam 1,Respiratory
+Describe the mechanics of pulmonary ventilation (Breathing),,Respiratory module 1: Biomechanics of breathing,y,Physiology,Exam 1,Respiratory
+Describe the factors that determine mechanical ventilation,,Respiratory module 1: Biomechanics of breathing,y,Physiology,Exam 1,Respiratory
+Explain the role of lung compliance during breathing,,Respiratory module 1: Biomechanics of breathing,y,Physiology,Exam 1,Respiratory
+Explain the effect of airway radius on ventilation,,Respiratory module 1: Biomechanics of breathing,y,Physiology,Exam 1,Respiratory
+Define lung volumes and capacities as measured by spirometry,,Respiratory module 1: Biomechanics of breathing,y,Physiology,Exam 1,Respiratory
+Describe the factors that affect gas diffusion in the lungs,,Respiratory module 2: Ventilation perfusion and gas exchange,y,Physiology,Exam 1,Respiratory
+Describe how gas diffusion in the lung is measured,,Respiratory module 2: Ventilation perfusion and gas exchange,y,Physiology,Exam 1,Respiratory
+Explain the local mechanisms that regulate lung perfusion and ventilation,,Respiratory module 2: Ventilation perfusion and gas exchange,y,Physiology,Exam 1,Respiratory
+Explain how O2 and CO2 are transported in plasma,,Respiratory module 3: Transport of gases and control of breathing,y,Physiology,Exam 1,Respiratory
+Describe the location and function of the brain's respiratory centre,,Respiratory module 3: Transport of gases and control of breathing,y,Physiology,Exam 1,Respiratory
+Compare the roles of O2 and CO2 in control of ventilation,,Respiratory module 3: Transport of gases and control of breathing,y,Physiology,Exam 1,Respiratory
+Evaluate the effects of barometric pressure on respiration,,Respiratory module 3: Transport of gases and control of breathing,y,Physiology,Exam 1,Respiratory
+Apply the principles of control of breathing to the problems caused by breath hold diving,,Respiratory module 3: Transport of gases and control of breathing,y,Physiology,Exam 1,Respiratory
+Appreciate the range of common respiratory tract infections (RTIs),,Upper respiratory tract infections,y,Microbiology,Exam 1,Respiratory
+Recognise the major respiratory pathogens and describe the infections caused,,Upper respiratory tract infections,y,Microbiology,Exam 1,Respiratory
+Describe the basic symptoms and steps taken to diagnose RTIs,,Upper respiratory tract infections,y,Microbiology,Exam 1,Respiratory
+Assess critically the need for antibiotics,,Upper respiratory tract infections,y,Microbiology,Exam 1,Respiratory
+Be aware of rare but potentially serious respiratory infections requiring urgent attention,,Upper respiratory tract infections,y,Microbiology,Exam 1,Respiratory
+Summarise the immune-anatomy and evaluate the importance of physical barriers in the respiratory system,,"Respiratory immunology, allergy, and host defence",y,Immunology,Exam 1,Respiratory
+"Distinguish the roles of the innate immune macrophages, neutrophils and dendritic cells in respiratory immunity",,"Respiratory immunology, allergy, and host defence",y,Immunology,Exam 1,Respiratory
+Appraise the role of adaptive immune cells in the respiratory tract and explain the requirement for mucosal IgA to be noninflammatory,,"Respiratory immunology, allergy, and host defence",y,Immunology,Exam 1,Respiratory
+Analyse the development and pathology of allergic responses to aero-antigens,,"Respiratory immunology, allergy, and host defence",y,Immunology,Exam 1,Respiratory
+Describe the major characteristics of asthma and how they drive treatment,,Asthma and COPD,y,Pharmacology,Exam 1,Respiratory
+Understand the mechanisms of action and use of different classes of medication used to treat asthma,,Asthma and COPD,y,Pharmacology,Exam 1,Respiratory
+Describe the major causes and characteristics of Chronic Obstructive Pulmonary Disease (COPD) and how they drive treatment,,Asthma and COPD,y,Pharmacology,Exam 1,Respiratory
+Understand the mechanisms of action and use of different classes of medication used to treat COPD,,Asthma and COPD,y,Pharmacology,Exam 1,Respiratory
+Discuss the role of pharmacological agents for the treatment of respiratory infections,,Pulmonary antimicrobials,y,Pharmacology,Exam 1,Respiratory
+Explain the factors that guide your decisions,,Pulmonary antimicrobials,y,Pharmacology,Exam 1,Respiratory
+Identify the sources of information that will guide your decisions about drug choices for these conditions,,Pulmonary antimicrobials,y,Pharmacology,Exam 1,Respiratory
+Identify the organs which develop from the gut tube,,Development & adult anatomy of the foregut,y,Anatomy,Exam 1,GIT
+Describe the key steps involved with gut development,,Development & adult anatomy of the foregut,y,Anatomy,Exam 1,GIT
+"Compare and contrast typical foregut development with atypical development, noting the anatomical implications related to anatomical relationships",,Development & adult anatomy of the foregut,y,Anatomy,Exam 1,GIT
+Identify the adult anatomical relationships determined during fetal development,,Development & adult anatomy of the foregut,y,Anatomy,Exam 1,GIT
+"Describe the driver of foregut rotation, and the typical axis of this rotation",,Development & adult anatomy of the foregut,y,Anatomy,Exam 1,GIT
+Compare and contrast adult peritoneal ligaments/reflections/mesentery with mesoderm,,Development & adult anatomy of the foregut,y,Anatomy,Exam 1,GIT
 "Add to your classification of the visceral relationships with peritoneum (i.e. intra-, retro-, and secondarily retro-
-peritoneal)",,Development & adult anatomy of the foregut,y,Anatomy,1,Exam 1,GIT
-"Review embryonic folding, and identify how this process impacts midgut and hindgut development",,Development & adult anatomy of the midgut and hindgut,y,Anatomy,1,Exam 1,GIT
-Identify the axis and steps of midgut rotation,,Development & adult anatomy of the midgut and hindgut,y,Anatomy,1,Exam 1,GIT
-"Discuss how midgut loop rotation impacts the infant and adult anatomical relationships of the foregut, midgut, and hindgut",,Development & adult anatomy of the midgut and hindgut,y,Anatomy,2,Exam 1,GIT
-Identify the relationships of abdominal viscera to the peritoneum,,Development & adult anatomy of the midgut and hindgut,y,Anatomy,1,Exam 1,GIT
-"Compare and contrast appendix/ascending colon development to transverse and descending colon, with a focus on adult positioning",,Development & adult anatomy of the midgut and hindgut,y,Anatomy,1,Exam 1,GIT
-"Identify the steps of hindgut development, and discuss how the germ layer derivatives impact innervation, lymphatic drainage, and vascular supply",,Development & adult anatomy of the midgut and hindgut,y,Anatomy,1,Exam 1,GIT
-Describe some of the functions of the anterior abdominal wall,,Anterior abdominal wall & descent of testes,y,Anatomy,1,Exam 1,GIT
-Compare and contrast the muscular layers of the anterior abdominal wall,,Anterior abdominal wall & descent of testes,y,Anatomy,1,Exam 1,GIT
-Compare and contrast the layers (muscular and fascial) of the anterior abdominal wall superior and inferior to the arcuate line,,Anterior abdominal wall & descent of testes,y,Anatomy,1,Exam 1,GIT
-"Identify the nervous innervation of the anterior abdominal wall, and how the anatomical relationships of these nerves apply to a surgical scenario",,Anterior abdominal wall & descent of testes,y,Anatomy,1,Exam 1,GIT
-"Trace the pathways of the vascular supply of the anterior abdominal wall, and identify the layers this sit in",,Anterior abdominal wall & descent of testes,y,Anatomy,1,Exam 1,GIT
-Identify the boundaries and location of the inguinal canal,,Anterior abdominal wall & descent of testes,y,Anatomy,1,Exam 1,GIT
-"Describe the developmental steps involved with testes descent, and how this relates to the anterior abdominal wall",,Anterior abdominal wall & descent of testes,y,Anatomy,1,Exam 1,GIT
-Compare and contrast the lymphatic drainage of the testes and the scrotum,,Anterior abdominal wall & descent of testes,y,Anatomy,1,Exam 1,GIT
-"Draw a diagram showing the different sections of the gastrointestinal tract/gut, as well as the accessory glands and organs",,Introduction and neuronal control of the gut,y,Physiology,1,Exam 1,GIT
-List the four major functions of the gut,,Introduction and neuronal control of the gut,y,Physiology,1,Exam 1,GIT
-Explain how the circular and longitudinal smooth muscle layers of the gut alter the length and diameter of the gut tube,,Introduction and neuronal control of the gut,y,Physiology,1,Exam 1,GIT
-Describe oesophageal peristalsis as an example of gut motility,,Introduction and neuronal control of the gut,y,Physiology,1,Exam 1,GIT
-List the smooth and skeletal muscle sphincters in the gut and label them on a diagram of the gut,,Introduction and neuronal control of the gut,y,Physiology,1,Exam 1,GIT
-Describe the anatomy of the enteric nervous system,,Introduction and neuronal control of the gut,y,Physiology,1,Exam 1,GIT
-"Discuss the control of motility, secretions and smooth muscle sphincter opening/closing by the autonomic and the enteric nervous systems",,Introduction and neuronal control of the gut,y,Physiology,1,Exam 1,GIT
-Include what triggers these types of motility and their neuronal control,,Gut motility,y,Physiology,1,Exam 1,GIT
-Include what triggers these types of motility and their neuronal control,,Gut motility,y,Physiology,1,Exam 1,GIT
-"Use examples of homeostatic imbalance (constipation, diarrhea) to explain normal digestive function in the intestines",,Gut motility,y,Physiology,1,Exam 1,GIT
-"Explain the roles of sensory, autonomic, enteric and somatic nerves in the defecation reflex",,Gut motility,y,Physiology,1,Exam 1,GIT
-List five functions of saliva and explain these functions in the context of the effects of xerostomia,,Gut secretions 1,y,Physiology,1,Exam 1,GIT
-Describe how salivation is regulated by parasympathetic nerve activation,,Gut secretions 1,y,Physiology,1,Exam 1,GIT
-Explain drugs that modulate muscarinic receptor activation to treat ptyalism or xerostomia,,Gut secretions 1,y,Physiology,1,Exam 1,GIT
-Describe the three phases of swallowing (deglutition),,Gut secretions 1,y,Physiology,1,Exam 1,GIT
-Explain the neuronal control of swallowing,,Gut secretions 1,y,Physiology,1,Exam 1,GIT
-Discuss common causes and treatment of dysphasia,,Gut secretions 1,y,Physiology,1,Exam 1,GIT
-Draw an acid/HCl-secreting parietal cell showing basal HCl secretion,,Gut secretions 1,y,Physiology,1,Exam 1,GIT
-"Explain the receptor-mediated increases in HCl secretion with histamine, gastrin and acetylcholine during the 3 phases of gastric secretory activity",,Gut secretions 1,y,Physiology,1,Exam 1,GIT
-Discuss pharmacological treatments of excess parietal HCl secretion,,Gut secretions 1,y,Physiology,1,Exam 1,GIT
-"Explain the roles of bile, cholecystokinin (CCK) and secretin in the emulsification and chemical digestion of fats",,Gut secretions 2,y,Physiology,1,Exam 1,GIT
-Describe what triggers the secretion of CCK and secretin following ingestion of a meal,,Gut secretions 2,y,Physiology,1,Exam 1,GIT
-"Describe the roles of pancreatic (exocrine) secretions in fat, protein and carbohydrate digestion",,Gut secretions 2,y,Physiology,1,Exam 1,GIT
-"Discuss how the entry of pancreatic secretions into the duodenum is regulated by CCK, secretin and vagal/parasympathetic nerve activation",,Gut secretions 2,y,Physiology,1,Exam 1,GIT
-Use the effects of pancreatitis to explain normal pancreatic functions in digestive physiology,,Gut secretions 2,y,Physiology,1,Exam 1,GIT
-Describe the composition of bile and the functions of its key constituents,,Bile synthesis and the enterohepatic circulation,y,Physiology,1,Exam 1,GIT
-"Explain the synthesis, secretion, and flow of bile through the biliary system to the duodenum",,Bile synthesis and the enterohepatic circulation,y,Physiology,1,Exam 1,GIT
-"Discuss the enterohepatic circulation of bile components, particularly bile salts, and their physiological significance",,Bile synthesis and the enterohepatic circulation,y,Physiology,1,Exam 1,GIT
-Define jaundice and outline its underlying causes,,Jaundice,y,Physiology,1,Exam 1,GIT
-"Explain the classification of jaundice into prehepatic, hepatic, and posthepatic types",,Jaundice,y,Physiology,1,Exam 1,GIT
-Recognize the key clinical features and typical investigation findings associated with each type of jaundice,,Jaundice,y,Physiology,1,Exam 1,GIT
-"Appreciate that GIT infections can be caused by viral, bacterial, protozoal or helminth (worms) type pathogens",,Infection of the gut,y,Microbiology,1,Exam 1,GIT
-Name and give examples of some common important viral and bacterial causative agents of GIT infections,,Infection of the gut,y,Microbiology,1,Exam 1,GIT
-Relate the most common clinical presentations to the pathogenesis of the viral or bacterial agent,,Infection of the gut,y,Microbiology,1,Exam 1,GIT
-Indicate how common bacterial and viral GIT infections may be diagnosed and managed,,Infection of the gut,y,Microbiology,1,Exam 1,GIT
-Explain the actions of drugs used to modify gut motility,,Drugs affecting GIT motility,y,Pharmacology,1,Exam 1,GIT
-Identify the factors responsible for vomiting,,Drugs affecting GIT motility,y,Pharmacology,1,Exam 1,GIT
-Describe the mode of action of pharmacological agents used in the treatment of vomiting,,Drugs affecting GIT motility,y,Pharmacology,1,Exam 1,GIT
-Define the nutrients and non-nutrients and their biological roles,,Key concepts in nutrition science,y,Nutrition,1,Exam 1,GIT
-"Explain energy balance and energy density, and their use in human nutrition",,Key concepts in nutrition science,y,Nutrition,1,Exam 1,GIT
-Describe the techniques to assess energy intake & expenditure,,Key concepts in nutrition science,y,Nutrition,1,Exam 1,GIT
-Discuss the mechanisms that regulate energy balance,,Key concepts in nutrition science,y,Nutrition,1,Exam 1,GIT
-"Interpret the interactions between physiological, psychological, sociocultural & environmental factors that influence food intake",,Key concepts in nutrition science,y,Nutrition,1,Exam 1,GIT
-Describe how national nutrient intake recommendations are derived,,"Nutrients in the body, deficiencies and excesses",y,Nutrition,1,Exam 1,GIT
-Identify requirements and food sources for macronutrients in healthy adults,,"Nutrients in the body, deficiencies and excesses",y,Nutrition,1,Exam 1,GIT
-Describe the effect of altering macronutrient quantity and distribution,,"Nutrients in the body, deficiencies and excesses",y,Nutrition,1,Exam 1,GIT
-Identify key food sources of the micronutrients most at risk of deficiency or toxicity,,"Nutrients in the body, deficiencies and excesses",y,Nutrition,1,Exam 1,GIT
-Differentiate clinical symptoms of common nutrient deficiencies and excesses,,"Nutrients in the body, deficiencies and excesses",y,Nutrition,1,Exam 1,GIT
-Summarise the essential components of nutritional assessment,,Nutritional assessment & dietary guidelines,y,Nutrition,1,Exam 1,GIT
-Describe the common methods of assessing and interpreting food intake,,Nutritional assessment & dietary guidelines,y,Nutrition,1,Exam 1,GIT
-"Describe how national nutrient intake recommendations are derived, and their use and their limitations",,Nutritional assessment & dietary guidelines,y,Nutrition,1,Exam 1,GIT
-State the current national dietary guidelines,,Nutritional assessment & dietary guidelines,y,Nutrition,1,Exam 1,GIT
-Describe the basis for changing nutrient needs across the lifespan,,"Altered nutrition requirements, myths & misconceptions",y,Nutrition,1,Exam 1,GIT
-Differentiate between a food based and nutrient based approach to nutrition,,"Altered nutrition requirements, myths & misconceptions",y,Nutrition,1,Exam 1,GIT
-"Recognise the role of food literacy, health literacy and self-management behaviours",,"Altered nutrition requirements, myths & misconceptions",y,Nutrition,1,Exam 1,GIT
-Explain common myths or misconceptions about nutrition,,"Altered nutrition requirements, myths & misconceptions",y,Nutrition,1,Exam 1,GIT
-Identify the key anatomical structures of the posterior abdominal wall,,The nephron & posterior abdominal wall & kidneys,y,Anatomy,1,Exam 2,Renal
-Identify how anatomical structures in the thorax communicate with the abdomen,,The nephron & posterior abdominal wall & kidneys,y,Anatomy,1,Exam 2,Renal
-"Identify the relationships between the kidneys, ureters, and bony landmarks",,The nephron & posterior abdominal wall & kidneys,y,Anatomy,1,Exam 2,Renal
-Understand the gross anatomy and blood supply of the kidney,,The nephron & posterior abdominal wall & kidneys,y,Anatomy,1,Exam 2,Renal
-Understand the pattern of pain referral from the kidney and ureter,,The nephron & posterior abdominal wall & kidneys,y,Anatomy,1,Exam 2,Renal
-Identify the major anatomical components that comprise the nephron,,The nephron & posterior abdominal wall & kidneys,y,Anatomy,1,Exam 2,Renal
-Understand that nephrogenesis occurs by interactions between the uretic bud and metanephric mesenchyme,,Developmental & congenital abnormalities of the renal system,y,Anatomy,1,Exam 2,Renal
-Understand the stages of nephrogenesis,,Developmental & congenital abnormalities of the renal system,y,Anatomy,1,Exam 2,Renal
-Identify the embryological origin of structures in the adult kidney,,Developmental & congenital abnormalities of the renal system,y,Anatomy,1,Exam 2,Renal
-Understand that both environmental factors and genetic factors contribute to the kidney and urinary tract (CAKUT),,Developmental & congenital abnormalities of the renal system,y,Anatomy,1,Exam 2,Renal
-Understand that the healthy adult kidney can have large variations in nephron number,,Developmental & congenital abnormalities of the renal system,y,Anatomy,1,Exam 2,Renal
-Understand how congenital kidney abnormalities relate to developmental processes,,Developmental & congenital abnormalities of the renal system,y,Anatomy,1,Exam 2,Renal
-Understand the embryological basis for anatomical variations relating to the ureter,,Developmental & congenital abnormalities of the renal system,y,Anatomy,1,Exam 2,Renal
-"Understand the process of kidney ""migration"", rotation and acquisition of blood supply",,Developmental & congenital abnormalities of the renal system,y,Anatomy,1,Exam 2,Renal
+peritoneal)",,Development & adult anatomy of the foregut,y,Anatomy,Exam 1,GIT
+"Review embryonic folding, and identify how this process impacts midgut and hindgut development",,Development & adult anatomy of the midgut and hindgut,y,Anatomy,Exam 1,GIT
+Identify the axis and steps of midgut rotation,,Development & adult anatomy of the midgut and hindgut,y,Anatomy,Exam 1,GIT
+"Discuss how midgut loop rotation impacts the infant and adult anatomical relationships of the foregut, midgut, and hindgut",,Development & adult anatomy of the midgut and hindgut,y,Anatomy,Exam 1,GIT
+Identify the relationships of abdominal viscera to the peritoneum,,Development & adult anatomy of the midgut and hindgut,y,Anatomy,Exam 1,GIT
+"Compare and contrast appendix/ascending colon development to transverse and descending colon, with a focus on adult positioning",,Development & adult anatomy of the midgut and hindgut,y,Anatomy,Exam 1,GIT
+"Identify the steps of hindgut development, and discuss how the germ layer derivatives impact innervation, lymphatic drainage, and vascular supply",,Development & adult anatomy of the midgut and hindgut,y,Anatomy,Exam 1,GIT
+Describe some of the functions of the anterior abdominal wall,,Anterior abdominal wall & descent of testes,y,Anatomy,Exam 1,GIT
+Compare and contrast the muscular layers of the anterior abdominal wall,,Anterior abdominal wall & descent of testes,y,Anatomy,Exam 1,GIT
+Compare and contrast the layers (muscular and fascial) of the anterior abdominal wall superior and inferior to the arcuate line,,Anterior abdominal wall & descent of testes,y,Anatomy,Exam 1,GIT
+"Identify the nervous innervation of the anterior abdominal wall, and how the anatomical relationships of these nerves apply to a surgical scenario",,Anterior abdominal wall & descent of testes,y,Anatomy,Exam 1,GIT
+"Trace the pathways of the vascular supply of the anterior abdominal wall, and identify the layers this sit in",,Anterior abdominal wall & descent of testes,y,Anatomy,Exam 1,GIT
+Identify the boundaries and location of the inguinal canal,,Anterior abdominal wall & descent of testes,y,Anatomy,Exam 1,GIT
+"Describe the developmental steps involved with testes descent, and how this relates to the anterior abdominal wall",,Anterior abdominal wall & descent of testes,y,Anatomy,Exam 1,GIT
+Compare and contrast the lymphatic drainage of the testes and the scrotum,,Anterior abdominal wall & descent of testes,y,Anatomy,Exam 1,GIT
+"Draw a diagram showing the different sections of the gastrointestinal tract/gut, as well as the accessory glands and organs",,Introduction and neuronal control of the gut,y,Physiology,Exam 1,GIT
+List the four major functions of the gut,,Introduction and neuronal control of the gut,y,Physiology,Exam 1,GIT
+Explain how the circular and longitudinal smooth muscle layers of the gut alter the length and diameter of the gut tube,,Introduction and neuronal control of the gut,y,Physiology,Exam 1,GIT
+Describe oesophageal peristalsis as an example of gut motility,,Introduction and neuronal control of the gut,y,Physiology,Exam 1,GIT
+List the smooth and skeletal muscle sphincters in the gut and label them on a diagram of the gut,,Introduction and neuronal control of the gut,y,Physiology,Exam 1,GIT
+Describe the anatomy of the enteric nervous system,,Introduction and neuronal control of the gut,y,Physiology,Exam 1,GIT
+"Discuss the control of motility, secretions and smooth muscle sphincter opening/closing by the autonomic and the enteric nervous systems",,Introduction and neuronal control of the gut,y,Physiology,Exam 1,GIT
+Include what triggers these types of motility and their neuronal control,,Gut motility,y,Physiology,Exam 1,GIT
+Include what triggers these types of motility and their neuronal control,,Gut motility,y,Physiology,Exam 1,GIT
+"Use examples of homeostatic imbalance (constipation, diarrhea) to explain normal digestive function in the intestines",,Gut motility,y,Physiology,Exam 1,GIT
+"Explain the roles of sensory, autonomic, enteric and somatic nerves in the defecation reflex",,Gut motility,y,Physiology,Exam 1,GIT
+List five functions of saliva and explain these functions in the context of the effects of xerostomia,,Gut secretions 1,y,Physiology,Exam 1,GIT
+Describe how salivation is regulated by parasympathetic nerve activation,,Gut secretions 1,y,Physiology,Exam 1,GIT
+Explain drugs that modulate muscarinic receptor activation to treat ptyalism or xerostomia,,Gut secretions 1,y,Physiology,Exam 1,GIT
+Describe the three phases of swallowing (deglutition),,Gut secretions 1,y,Physiology,Exam 1,GIT
+Explain the neuronal control of swallowing,,Gut secretions 1,y,Physiology,Exam 1,GIT
+Discuss common causes and treatment of dysphasia,,Gut secretions 1,y,Physiology,Exam 1,GIT
+Draw an acid/HCl-secreting parietal cell showing basal HCl secretion,,Gut secretions 1,y,Physiology,Exam 1,GIT
+"Explain the receptor-mediated increases in HCl secretion with histamine, gastrin and acetylcholine during the 3 phases of gastric secretory activity",,Gut secretions 1,y,Physiology,Exam 1,GIT
+Discuss pharmacological treatments of excess parietal HCl secretion,,Gut secretions 1,y,Physiology,Exam 1,GIT
+"Explain the roles of bile, cholecystokinin (CCK) and secretin in the emulsification and chemical digestion of fats",,Gut secretions 2,y,Physiology,Exam 1,GIT
+Describe what triggers the secretion of CCK and secretin following ingestion of a meal,,Gut secretions 2,y,Physiology,Exam 1,GIT
+"Describe the roles of pancreatic (exocrine) secretions in fat, protein and carbohydrate digestion",,Gut secretions 2,y,Physiology,Exam 1,GIT
+"Discuss how the entry of pancreatic secretions into the duodenum is regulated by CCK, secretin and vagal/parasympathetic nerve activation",,Gut secretions 2,y,Physiology,Exam 1,GIT
+Use the effects of pancreatitis to explain normal pancreatic functions in digestive physiology,,Gut secretions 2,y,Physiology,Exam 1,GIT
+Describe the composition of bile and the functions of its key constituents,,Bile synthesis and the enterohepatic circulation,y,Physiology,Exam 1,GIT
+"Explain the synthesis, secretion, and flow of bile through the biliary system to the duodenum",,Bile synthesis and the enterohepatic circulation,y,Physiology,Exam 1,GIT
+"Discuss the enterohepatic circulation of bile components, particularly bile salts, and their physiological significance",,Bile synthesis and the enterohepatic circulation,y,Physiology,Exam 1,GIT
+Define jaundice and outline its underlying causes,,Jaundice,y,Physiology,Exam 1,GIT
+"Explain the classification of jaundice into prehepatic, hepatic, and posthepatic types",,Jaundice,y,Physiology,Exam 1,GIT
+Recognize the key clinical features and typical investigation findings associated with each type of jaundice,,Jaundice,y,Physiology,Exam 1,GIT
+"Appreciate that GIT infections can be caused by viral, bacterial, protozoal or helminth (worms) type pathogens",,Infection of the gut,y,Microbiology,Exam 1,GIT
+Name and give examples of some common important viral and bacterial causative agents of GIT infections,,Infection of the gut,y,Microbiology,Exam 1,GIT
+Relate the most common clinical presentations to the pathogenesis of the viral or bacterial agent,,Infection of the gut,y,Microbiology,Exam 1,GIT
+Indicate how common bacterial and viral GIT infections may be diagnosed and managed,,Infection of the gut,y,Microbiology,Exam 1,GIT
+Explain the actions of drugs used to modify gut motility,,Drugs affecting GIT motility,y,Pharmacology,Exam 1,GIT
+Identify the factors responsible for vomiting,,Drugs affecting GIT motility,y,Pharmacology,Exam 1,GIT
+Describe the mode of action of pharmacological agents used in the treatment of vomiting,,Drugs affecting GIT motility,y,Pharmacology,Exam 1,GIT
+Define the nutrients and non-nutrients and their biological roles,,Key concepts in nutrition science,y,Nutrition,Exam 1,GIT
+"Explain energy balance and energy density, and their use in human nutrition",,Key concepts in nutrition science,y,Nutrition,Exam 1,GIT
+Describe the techniques to assess energy intake & expenditure,,Key concepts in nutrition science,y,Nutrition,Exam 1,GIT
+Discuss the mechanisms that regulate energy balance,,Key concepts in nutrition science,y,Nutrition,Exam 1,GIT
+"Interpret the interactions between physiological, psychological, sociocultural & environmental factors that influence food intake",,Key concepts in nutrition science,y,Nutrition,Exam 1,GIT
+Describe how national nutrient intake recommendations are derived,,"Nutrients in the body, deficiencies and excesses",y,Nutrition,Exam 1,GIT
+Identify requirements and food sources for macronutrients in healthy adults,,"Nutrients in the body, deficiencies and excesses",y,Nutrition,Exam 1,GIT
+Describe the effect of altering macronutrient quantity and distribution,,"Nutrients in the body, deficiencies and excesses",y,Nutrition,Exam 1,GIT
+Identify key food sources of the micronutrients most at risk of deficiency or toxicity,,"Nutrients in the body, deficiencies and excesses",y,Nutrition,Exam 1,GIT
+Differentiate clinical symptoms of common nutrient deficiencies and excesses,,"Nutrients in the body, deficiencies and excesses",y,Nutrition,Exam 1,GIT
+Summarise the essential components of nutritional assessment,,Nutritional assessment & dietary guidelines,y,Nutrition,Exam 1,GIT
+Describe the common methods of assessing and interpreting food intake,,Nutritional assessment & dietary guidelines,y,Nutrition,Exam 1,GIT
+"Describe how national nutrient intake recommendations are derived, and their use and their limitations",,Nutritional assessment & dietary guidelines,y,Nutrition,Exam 1,GIT
+State the current national dietary guidelines,,Nutritional assessment & dietary guidelines,y,Nutrition,Exam 1,GIT
+Describe the basis for changing nutrient needs across the lifespan,,"Altered nutrition requirements, myths & misconceptions",y,Nutrition,Exam 1,GIT
+Differentiate between a food based and nutrient based approach to nutrition,,"Altered nutrition requirements, myths & misconceptions",y,Nutrition,Exam 1,GIT
+"Recognise the role of food literacy, health literacy and self-management behaviours",,"Altered nutrition requirements, myths & misconceptions",y,Nutrition,Exam 1,GIT
+Explain common myths or misconceptions about nutrition,,"Altered nutrition requirements, myths & misconceptions",y,Nutrition,Exam 1,GIT
+Identify the key anatomical structures of the posterior abdominal wall,,The nephron & posterior abdominal wall & kidneys,y,Anatomy,Exam 2,Renal
+Identify how anatomical structures in the thorax communicate with the abdomen,,The nephron & posterior abdominal wall & kidneys,y,Anatomy,Exam 2,Renal
+"Identify the relationships between the kidneys, ureters, and bony landmarks",,The nephron & posterior abdominal wall & kidneys,y,Anatomy,Exam 2,Renal
+Understand the gross anatomy and blood supply of the kidney,,The nephron & posterior abdominal wall & kidneys,y,Anatomy,Exam 2,Renal
+Understand the pattern of pain referral from the kidney and ureter,,The nephron & posterior abdominal wall & kidneys,y,Anatomy,Exam 2,Renal
+Identify the major anatomical components that comprise the nephron,,The nephron & posterior abdominal wall & kidneys,y,Anatomy,Exam 2,Renal
+Understand that nephrogenesis occurs by interactions between the uretic bud and metanephric mesenchyme,,Developmental & congenital abnormalities of the renal system,y,Anatomy,Exam 2,Renal
+Understand the stages of nephrogenesis,,Developmental & congenital abnormalities of the renal system,y,Anatomy,Exam 2,Renal
+Identify the embryological origin of structures in the adult kidney,,Developmental & congenital abnormalities of the renal system,y,Anatomy,Exam 2,Renal
+Understand that both environmental factors and genetic factors contribute to the kidney and urinary tract (CAKUT),,Developmental & congenital abnormalities of the renal system,y,Anatomy,Exam 2,Renal
+Understand that the healthy adult kidney can have large variations in nephron number,,Developmental & congenital abnormalities of the renal system,y,Anatomy,Exam 2,Renal
+Understand how congenital kidney abnormalities relate to developmental processes,,Developmental & congenital abnormalities of the renal system,y,Anatomy,Exam 2,Renal
+Understand the embryological basis for anatomical variations relating to the ureter,,Developmental & congenital abnormalities of the renal system,y,Anatomy,Exam 2,Renal
+"Understand the process of kidney ""migration"", rotation and acquisition of blood supply",,Developmental & congenital abnormalities of the renal system,y,Anatomy,Exam 2,Renal
 "Understand that the gonads and reproductive organs arise from the mesonephroi, mesonephric and paramesonephric
-ducts.",,Developmental & congenital abnormalities of the renal system,y,Anatomy,1,Exam 2,Renal
-Identify the embryological origin of the reproductive organs,,Developmental & congenital abnormalities of the renal system,y,Anatomy,1,Exam 2,Renal
+ducts.",,Developmental & congenital abnormalities of the renal system,y,Anatomy,Exam 2,Renal
+Identify the embryological origin of the reproductive organs,,Developmental & congenital abnormalities of the renal system,y,Anatomy,Exam 2,Renal
 "Understand the embryological basis for anatomical variations relating to the mesonephric and paramesonephric ducts
-(PUV and M√ºllerian duct syndrome as examples)",,Developmental & congenital abnormalities of the renal system,y,Anatomy,1,Exam 2,Renal
+(PUV and M√ºllerian duct syndrome as examples)",,Developmental & congenital abnormalities of the renal system,y,Anatomy,Exam 2,Renal
 "Understand that CAKUT is associated with several human malformation syndromes environmental factors and genetic
-factors contribute to CAKUT (it is complex)",,Developmental & congenital abnormalities of the renal system,y,Anatomy,1,Exam 2,Renal
-List the functions of the kidneys,,Renal filtration and clearance,y,Physiology,1,Exam 2,Renal
-Draw and label the functional unit of the kidney,,Renal filtration and clearance,y,Physiology,1,Exam 2,Renal
-"Draw and label pathways for solute and fluid filtration, reabsorption, secretion and excretion",,Renal filtration and clearance,y,Physiology,1,Exam 2,Renal
-Describe the glomerular filtration barrier,,Renal filtration and clearance,y,Physiology,1,Exam 2,Renal
+factors contribute to CAKUT (it is complex)",,Developmental & congenital abnormalities of the renal system,y,Anatomy,Exam 2,Renal
+List the functions of the kidneys,,Renal filtration and clearance,y,Physiology,Exam 2,Renal
+Draw and label the functional unit of the kidney,,Renal filtration and clearance,y,Physiology,Exam 2,Renal
+"Draw and label pathways for solute and fluid filtration, reabsorption, secretion and excretion",,Renal filtration and clearance,y,Physiology,Exam 2,Renal
+Describe the glomerular filtration barrier,,Renal filtration and clearance,y,Physiology,Exam 2,Renal
 "Describe the forces that drive and oppose filtration of fluids and solutes from the glomerular capillaries into the
-Bowman‚Äôs capsule (i.e. glomerular filtration)",,Renal filtration and clearance,y,Physiology,1,Exam 2,Renal
-Define the glomerular filtration rate (GFR) and its clinical significance,,Renal filtration and clearance,y,Physiology,1,Exam 2,Renal
-Define micturition and urinary continence,,Micturition and continence,y,Physiology,1,Exam 2,Renal
-Describe the specializations of the bladder for storage and periodic voiding,,Micturition and continence,y,Physiology,1,Exam 2,Renal
-Outline urinary bladder innervation and control of voiding,,Micturition and continence,y,Physiology,1,Exam 2,Renal
-Define incontinence and identify clinical features,,Micturition and continence,y,Physiology,1,Exam 2,Renal
-Describe the common organisms causing UTIs,,Urinary tract infections,y,Microbiology,1,Exam 2,Renal
-Describe the pathophysiology and risk factors for UTIs,,Urinary tract infections,y,Microbiology,1,Exam 2,Renal
-Describe clinical presentation & general principles of diagnosis and management of UTIs,,Urinary tract infections,y,Microbiology,1,Exam 2,Renal
-Explain the difference between passive and active reabsorption across the renal tubules,,Renal tubular mechanisms,y,Physiology,1,Exam 2,Renal
-Use the reabsorption of glucose to describe the transport maximum,,Renal tubular mechanisms,y,Physiology,1,Exam 2,Renal
-Describe how changes in afferent and efferent renal arteriole resistance affect RBF and GFR,,Renal tubular mechanisms,y,Physiology,1,Exam 2,Renal
-Describe the structure and function of the juxtaglomerular apparatus,,Renal tubular mechanisms,y,Physiology,1,Exam 2,Renal
-Describe how the myogenic mechanism and tubuloglomerular feedback maintain RBF and GFR,,Renal tubular mechanisms,y,Physiology,1,Exam 2,Renal
-List the main inputs and outputs of Na+ from the body,,Renal tubular mechanisms,y,Physiology,1,Exam 2,Renal
-Describe how the body detects changes in total body Na+,,Renal tubular mechanisms,y,Physiology,1,Exam 2,Renal
-Explain the ‚Äö√Ñ√≤pressure natriuresis‚Äö√Ñ√¥ mechanism,,Renal tubular mechanisms,y,Physiology,1,Exam 2,Renal
-Describe the reabsorption of Na+ in the renal tubules and the role of aldosterone,,Renal tubular mechanisms,y,Physiology,1,Exam 2,Renal
-Discuss the renin-angiotensin-aldosterone system,,Renal tubular mechanisms,y,Physiology,1,Exam 2,Renal
-Describe the factors that control plasma levels of renin,,Renal tubular mechanisms,y,Physiology,1,Exam 2,Renal
-Describe the normal distribution of water within body fluid compartments,,Fluid osmolarity and water balance,y,Physiology,1,Exam 2,Renal
-Define osmolarity and major solutes involved,,Fluid osmolarity and water balance,y,Physiology,1,Exam 2,Renal
-Explain how osmolarity influences water diffusion,,Fluid osmolarity and water balance,y,Physiology,1,Exam 2,Renal
-List the main inputs and outputs of H2O from the body,,Fluid osmolarity and water balance,y,Physiology,1,Exam 2,Renal
-Discuss physiological responses to drinking H2O and dehydration,,Fluid osmolarity and water balance,y,Physiology,1,Exam 2,Renal
-Explain why a renal interstitial hyperosmotic gradient is required for concentrated urine,,Fluid osmolarity and water balance,y,Physiology,1,Exam 2,Renal
-Briefly describe the counter-current exchange mechanism,,Fluid osmolarity and water balance,y,Physiology,1,Exam 2,Renal
-Describe the importance of buffer systems for homeostasis,,Acid/base balance of biological fluids,y,Physiology,1,Exam 2,Renal
-Outline the major buffer systems of the body,,Acid/base balance of biological fluids,y,Physiology,1,Exam 2,Renal
-Describe how bicarbonate is reabsorbed at different areas of the kidney,,Renal handling of bicarbonate,y,Physiology,1,Exam 2,Renal
-"Describe how the kidney is able to generate ""new"" bicarbonate",,Renal handling of bicarbonate,y,Physiology,1,Exam 2,Renal
-Describe essential and secondary forms of hypertension,,Introduction to the pharmacology of hypertension,y,Pharmacology,1,Exam 2,Renal
-Discuss the non-pharmacological management of hypertension,,Introduction to the pharmacology of hypertension,y,Pharmacology,1,Exam 2,Renal
-Explain therapeutic strategies to treat hypertension for different patient groups,,Introduction to the pharmacology of hypertension,y,Pharmacology,1,Exam 2,Renal
-Explain the mechanisms of new & niche antihypertensive drugs,,Introduction to the pharmacology of hypertension,y,Pharmacology,1,Exam 2,Renal
-List the sites and mechanisms of action of the major classes of diuretics,,Diuretics and pharmacological treatment of renal disorders,y,Pharmacology,1,Exam 2,Renal
+Bowman‚Äôs capsule (i.e. glomerular filtration)",,Renal filtration and clearance,y,Physiology,Exam 2,Renal
+Define the glomerular filtration rate (GFR) and its clinical significance,,Renal filtration and clearance,y,Physiology,Exam 2,Renal
+Define micturition and urinary continence,,Micturition and continence,y,Physiology,Exam 2,Renal
+Describe the specializations of the bladder for storage and periodic voiding,,Micturition and continence,y,Physiology,Exam 2,Renal
+Outline urinary bladder innervation and control of voiding,,Micturition and continence,y,Physiology,Exam 2,Renal
+Define incontinence and identify clinical features,,Micturition and continence,y,Physiology,Exam 2,Renal
+Describe the common organisms causing UTIs,,Urinary tract infections,y,Microbiology,Exam 2,Renal
+Describe the pathophysiology and risk factors for UTIs,,Urinary tract infections,y,Microbiology,Exam 2,Renal
+Describe clinical presentation & general principles of diagnosis and management of UTIs,,Urinary tract infections,y,Microbiology,Exam 2,Renal
+Explain the difference between passive and active reabsorption across the renal tubules,,Renal tubular mechanisms,y,Physiology,Exam 2,Renal
+Use the reabsorption of glucose to describe the transport maximum,,Renal tubular mechanisms,y,Physiology,Exam 2,Renal
+Describe how changes in afferent and efferent renal arteriole resistance affect RBF and GFR,,Renal tubular mechanisms,y,Physiology,Exam 2,Renal
+Describe the structure and function of the juxtaglomerular apparatus,,Renal tubular mechanisms,y,Physiology,Exam 2,Renal
+Describe how the myogenic mechanism and tubuloglomerular feedback maintain RBF and GFR,,Renal tubular mechanisms,y,Physiology,Exam 2,Renal
+List the main inputs and outputs of Na+ from the body,,Renal tubular mechanisms,y,Physiology,Exam 2,Renal
+Describe how the body detects changes in total body Na+,,Renal tubular mechanisms,y,Physiology,Exam 2,Renal
+Explain the ‚Äö√Ñ√≤pressure natriuresis‚Äö√Ñ√¥ mechanism,,Renal tubular mechanisms,y,Physiology,Exam 2,Renal
+Describe the reabsorption of Na+ in the renal tubules and the role of aldosterone,,Renal tubular mechanisms,y,Physiology,Exam 2,Renal
+Discuss the renin-angiotensin-aldosterone system,,Renal tubular mechanisms,y,Physiology,Exam 2,Renal
+Describe the factors that control plasma levels of renin,,Renal tubular mechanisms,y,Physiology,Exam 2,Renal
+Describe the normal distribution of water within body fluid compartments,,Fluid osmolarity and water balance,y,Physiology,Exam 2,Renal
+Define osmolarity and major solutes involved,,Fluid osmolarity and water balance,y,Physiology,Exam 2,Renal
+Explain how osmolarity influences water diffusion,,Fluid osmolarity and water balance,y,Physiology,Exam 2,Renal
+List the main inputs and outputs of H2O from the body,,Fluid osmolarity and water balance,y,Physiology,Exam 2,Renal
+Discuss physiological responses to drinking H2O and dehydration,,Fluid osmolarity and water balance,y,Physiology,Exam 2,Renal
+Explain why a renal interstitial hyperosmotic gradient is required for concentrated urine,,Fluid osmolarity and water balance,y,Physiology,Exam 2,Renal
+Briefly describe the counter-current exchange mechanism,,Fluid osmolarity and water balance,y,Physiology,Exam 2,Renal
+Describe the importance of buffer systems for homeostasis,,Acid/base balance of biological fluids,y,Physiology,Exam 2,Renal
+Outline the major buffer systems of the body,,Acid/base balance of biological fluids,y,Physiology,Exam 2,Renal
+Describe how bicarbonate is reabsorbed at different areas of the kidney,,Renal handling of bicarbonate,y,Physiology,Exam 2,Renal
+"Describe how the kidney is able to generate ""new"" bicarbonate",,Renal handling of bicarbonate,y,Physiology,Exam 2,Renal
+Describe essential and secondary forms of hypertension,,Introduction to the pharmacology of hypertension,y,Pharmacology,Exam 2,Renal
+Discuss the non-pharmacological management of hypertension,,Introduction to the pharmacology of hypertension,y,Pharmacology,Exam 2,Renal
+Explain therapeutic strategies to treat hypertension for different patient groups,,Introduction to the pharmacology of hypertension,y,Pharmacology,Exam 2,Renal
+Explain the mechanisms of new & niche antihypertensive drugs,,Introduction to the pharmacology of hypertension,y,Pharmacology,Exam 2,Renal
+List the sites and mechanisms of action of the major classes of diuretics,,Diuretics and pharmacological treatment of renal disorders,y,Pharmacology,Exam 2,Renal
 "Describe the major clinical uses of diuretic drugs for CVD, HTN, and HF
 - importance of furosemide, thiazides, spironoloactone
-- drug-induced decreases/increases K+",,Diuretics and pharmacological treatment of renal disorders,y,Pharmacology,1,Exam 2,Renal
-Understand mannitol and SGLT2 inhibitors,,Diuretics and pharmacological treatment of renal disorders,y,Pharmacology,1,Exam 2,Renal
-Understand the role of AVP in control of fluid volume,,Diuretics and pharmacological treatment of renal disorders,y,Pharmacology,1,Exam 2,Renal
+- drug-induced decreases/increases K+",,Diuretics and pharmacological treatment of renal disorders,y,Pharmacology,Exam 2,Renal
+Understand mannitol and SGLT2 inhibitors,,Diuretics and pharmacological treatment of renal disorders,y,Pharmacology,Exam 2,Renal
+Understand the role of AVP in control of fluid volume,,Diuretics and pharmacological treatment of renal disorders,y,Pharmacology,Exam 2,Renal
 "Understand general aspects of renal disease relating to:
 - pharmacokinetics/drug toxicity
-- acute versus chronic renal failure",,Diuretics and pharmacological treatment of renal disorders,y,Pharmacology,1,Exam 2,Renal
-Describe the four main types of acid-base disorders and their compensations,,Acid/base disorders and compensation,y,Physiology,1,Exam 2,Renal
-Distinguish acute from chronic acid-base disturbances,,Acid/base disorders and compensation,y,Physiology,1,Exam 2,Renal
-Explain how the respiratory and renal systems participate in buffering,,Acid/base disorders and compensation,y,Physiology,1,Exam 2,Renal
-Interpret blood gas data to identify disorders and apply Boston bedside rules,,Acid/base disorders and compensation,y,Physiology,1,Exam 2,Renal
-State the definition and classification of AKI and CKD,,Acute kidney injury and chronic kidney disease,y,Physiology,1,Exam 2,Renal
-Describe the pathophysiology and clinical manifestations of AKI and CKD,,Acute kidney injury and chronic kidney disease,y,Physiology,1,Exam 2,Renal
-Differentiate AKI and CKD based on clinical characteristics,,Acute kidney injury and chronic kidney disease,y,Physiology,1,Exam 2,Renal
-Describe the characteristics of endocrine communication,,Components of the endocrine system,y,Physiology,1,Exam 2,Endocrine
-List the classic endocrine glands of the body,,Components of the endocrine system,y,Physiology,1,Exam 2,Endocrine
-Give examples of steroid/protein/amine hormones,,Components of the endocrine system,y,Physiology,1,Exam 2,Endocrine
-Describe different signal transduction pathways,,Components of the endocrine system,y,Physiology,1,Exam 2,Endocrine
-Describe factors that determine hormone plasma concentrations,,Components of the endocrine system,y,Physiology,1,Exam 2,Endocrine
-Give an example of a hormone that exerts negative feedback control,,Components of the endocrine system,y,Physiology,1,Exam 2,Endocrine
-Describe the anatomy of the hypothalamus and pituitary gland,,The hypothalamus and pituitary gland,y,Physiology,1,Exam 2,Endocrine
-State which hormones are produced and secreted by the hypothalamus and pituitary gland,,The hypothalamus and pituitary gland,y,Physiology,1,Exam 2,Endocrine
-Give an example of a hormone that exerts negative feedback control,,The hypothalamus and pituitary gland,y,Physiology,1,Exam 2,Endocrine
-Explain how growth hormone release is regulated and its actions on growth,,The hypothalamus and pituitary gland,y,Physiology,1,Exam 2,Endocrine
-List other hormones affecting growth,,The hypothalamus and pituitary gland,y,Physiology,1,Exam 2,Endocrine
-Describe the outcomes of growth hormone excess and deficiency,,The hypothalamus and pituitary gland,y,Physiology,1,Exam 2,Endocrine
-Describe the effector sites of calcium regulation,,Calcium balance,y,Physiology,1,Exam 2,Endocrine
-Describe the steps and importance of bone remodelling,,Calcium balance,y,Physiology,1,Exam 2,Endocrine
-Describe the role of the parathyroid gland and PTH in calcium homeostasis,,Calcium balance,y,Physiology,1,Exam 2,Endocrine
-"Explain the importance of 1,25-dihydroxyvitamin D in Ca2+ homeostasis",,Calcium balance,y,Physiology,1,Exam 2,Endocrine
-List the most common bone diseases,,Calcium balance,y,Physiology,1,Exam 2,Endocrine
-Identify the risks and consequences of osteoporosis,,Osteoporosis,y,Pharmacology,1,Exam 2,Endocrine
-Discuss the factors that influence the treatment and mechanisms of action of drugs for osteoporosis,,Osteoporosis,y,Pharmacology,1,Exam 2,Endocrine
-Describe the anatomy of the adrenal gland,,Endocrine response to stress,y,Physiology,1,Exam 2,Endocrine
-"Utilise the specific actions of catecholamines to explain the ""fight-or-flight"" response",,Endocrine response to stress,y,Physiology,1,Exam 2,Endocrine
-Draw the hypothalamic-pituitary-adrenal axis,,Endocrine response to stress,y,Physiology,1,Exam 2,Endocrine
-Describe the mechanisms of action and functions of cortisol,,Endocrine response to stress,y,Physiology,1,Exam 2,Endocrine
-Define stress and describe the coordinated stress response,,Endocrine response to stress,y,Physiology,1,Exam 2,Endocrine
-Describe the anatomy and histology of the thyroid gland,,Thyroid gland,y,Physiology,1,Exam 2,Endocrine
-Diagram the hypothalamic-pituitary-thyroid axis,,Thyroid gland,y,Physiology,1,Exam 2,Endocrine
-Explain how thyroid hormones are synthesised and their mechanisms of action,,Thyroid gland,y,Physiology,1,Exam 2,Endocrine
-"Describe the actions of thyroid hormone during development, on metabolism, and the cardiovascular system",,Thyroid gland,y,Physiology,1,Exam 2,Endocrine
-Discuss approaches to treatment of thyroid disorders,,Drugs and thyroid disease,y,Pharmacology,1,Exam 2,Endocrine
-Discuss the pharmacology of drugs used in hypothyroid and hyperthyroid states,,Drugs and thyroid disease,y,Pharmacology,1,Exam 2,Endocrine
-Explain the difference between glucose transporters and their locations,,Diabetes overview  and complications of diabetes,y,Physiology,1,Exam 2,Endocrine
-Describe the actions of insulin and glucagon to maintain glucose homeostasis,,Diabetes overview  and complications of diabetes,y,Physiology,1,Exam 2,Endocrine
-Differentiate between the causes and effects of type I and II diabetes,,Diabetes overview  and complications of diabetes,y,Physiology,1,Exam 2,Endocrine
-Describe the effects of chronic hyperglycaemia,,Diabetes overview  and complications of diabetes,y,Physiology,1,Exam 2,Endocrine
-Describe the role of insulin (and glucagon) in the control of blood glucose levels,,Diabetes therapeutics,y,Pharmacology,1,Exam 2,Endocrine
-List the different formulations of insulin,,Diabetes therapeutics,y,Pharmacology,1,Exam 2,Endocrine
-Describe the mode of action of oral hypoglycaemic agents,,Diabetes therapeutics,y,Pharmacology,1,Exam 2,Endocrine
+- acute versus chronic renal failure",,Diuretics and pharmacological treatment of renal disorders,y,Pharmacology,Exam 2,Renal
+Describe the four main types of acid-base disorders and their compensations,,Acid/base disorders and compensation,y,Physiology,Exam 2,Renal
+Distinguish acute from chronic acid-base disturbances,,Acid/base disorders and compensation,y,Physiology,Exam 2,Renal
+Explain how the respiratory and renal systems participate in buffering,,Acid/base disorders and compensation,y,Physiology,Exam 2,Renal
+Interpret blood gas data to identify disorders and apply Boston bedside rules,,Acid/base disorders and compensation,y,Physiology,Exam 2,Renal
+State the definition and classification of AKI and CKD,,Acute kidney injury and chronic kidney disease,y,Physiology,Exam 2,Renal
+Describe the pathophysiology and clinical manifestations of AKI and CKD,,Acute kidney injury and chronic kidney disease,y,Physiology,Exam 2,Renal
+Differentiate AKI and CKD based on clinical characteristics,,Acute kidney injury and chronic kidney disease,y,Physiology,Exam 2,Renal
+Describe the characteristics of endocrine communication,,Components of the endocrine system,y,Physiology,Exam 2,Endocrine
+List the classic endocrine glands of the body,,Components of the endocrine system,y,Physiology,Exam 2,Endocrine
+Give examples of steroid/protein/amine hormones,,Components of the endocrine system,y,Physiology,Exam 2,Endocrine
+Describe different signal transduction pathways,,Components of the endocrine system,y,Physiology,Exam 2,Endocrine
+Describe factors that determine hormone plasma concentrations,,Components of the endocrine system,y,Physiology,Exam 2,Endocrine
+Give an example of a hormone that exerts negative feedback control,,Components of the endocrine system,y,Physiology,Exam 2,Endocrine
+Describe the anatomy of the hypothalamus and pituitary gland,,The hypothalamus and pituitary gland,y,Physiology,Exam 2,Endocrine
+State which hormones are produced and secreted by the hypothalamus and pituitary gland,,The hypothalamus and pituitary gland,y,Physiology,Exam 2,Endocrine
+Give an example of a hormone that exerts negative feedback control,,The hypothalamus and pituitary gland,y,Physiology,Exam 2,Endocrine
+Explain how growth hormone release is regulated and its actions on growth,,The hypothalamus and pituitary gland,y,Physiology,Exam 2,Endocrine
+List other hormones affecting growth,,The hypothalamus and pituitary gland,y,Physiology,Exam 2,Endocrine
+Describe the outcomes of growth hormone excess and deficiency,,The hypothalamus and pituitary gland,y,Physiology,Exam 2,Endocrine
+Describe the effector sites of calcium regulation,,Calcium balance,y,Physiology,Exam 2,Endocrine
+Describe the steps and importance of bone remodelling,,Calcium balance,y,Physiology,Exam 2,Endocrine
+Describe the role of the parathyroid gland and PTH in calcium homeostasis,,Calcium balance,y,Physiology,Exam 2,Endocrine
+"Explain the importance of 1,25-dihydroxyvitamin D in Ca2+ homeostasis",,Calcium balance,y,Physiology,Exam 2,Endocrine
+List the most common bone diseases,,Calcium balance,y,Physiology,Exam 2,Endocrine
+Identify the risks and consequences of osteoporosis,,Osteoporosis,y,Pharmacology,Exam 2,Endocrine
+Discuss the factors that influence the treatment and mechanisms of action of drugs for osteoporosis,,Osteoporosis,y,Pharmacology,Exam 2,Endocrine
+Describe the anatomy of the adrenal gland,,Endocrine response to stress,y,Physiology,Exam 2,Endocrine
+"Utilise the specific actions of catecholamines to explain the ""fight-or-flight"" response",,Endocrine response to stress,y,Physiology,Exam 2,Endocrine
+Draw the hypothalamic-pituitary-adrenal axis,,Endocrine response to stress,y,Physiology,Exam 2,Endocrine
+Describe the mechanisms of action and functions of cortisol,,Endocrine response to stress,y,Physiology,Exam 2,Endocrine
+Define stress and describe the coordinated stress response,,Endocrine response to stress,y,Physiology,Exam 2,Endocrine
+Describe the anatomy and histology of the thyroid gland,,Thyroid gland,y,Physiology,Exam 2,Endocrine
+Diagram the hypothalamic-pituitary-thyroid axis,,Thyroid gland,y,Physiology,Exam 2,Endocrine
+Explain how thyroid hormones are synthesised and their mechanisms of action,,Thyroid gland,y,Physiology,Exam 2,Endocrine
+"Describe the actions of thyroid hormone during development, on metabolism, and the cardiovascular system",,Thyroid gland,y,Physiology,Exam 2,Endocrine
+Discuss approaches to treatment of thyroid disorders,,Drugs and thyroid disease,y,Pharmacology,Exam 2,Endocrine
+Discuss the pharmacology of drugs used in hypothyroid and hyperthyroid states,,Drugs and thyroid disease,y,Pharmacology,Exam 2,Endocrine
+Explain the difference between glucose transporters and their locations,,Diabetes overview  and complications of diabetes,y,Physiology,Exam 2,Endocrine
+Describe the actions of insulin and glucagon to maintain glucose homeostasis,,Diabetes overview  and complications of diabetes,y,Physiology,Exam 2,Endocrine
+Differentiate between the causes and effects of type I and II diabetes,,Diabetes overview  and complications of diabetes,y,Physiology,Exam 2,Endocrine
+Describe the effects of chronic hyperglycaemia,,Diabetes overview  and complications of diabetes,y,Physiology,Exam 2,Endocrine
+Describe the role of insulin (and glucagon) in the control of blood glucose levels,,Diabetes therapeutics,y,Pharmacology,Exam 2,Endocrine
+List the different formulations of insulin,,Diabetes therapeutics,y,Pharmacology,Exam 2,Endocrine
+Describe the mode of action of oral hypoglycaemic agents,,Diabetes therapeutics,y,Pharmacology,Exam 2,Endocrine
 Indicate where the parietal pleura is particularly vulnerable to a penetrating injury (noting sites of extension beyond the bony thorax). Compare and contrast innervation of the parietal pleura with that of the visceral pleura (noting the difference between somatic and visceral pain).,"## Vulnerable Sites of the Parietal Pleura (Extension Beyond the Bony Thorax)
 
 While the bony thoracic cage provides excellent structural protection for most of the respiratory system, there are three classic locations where the parietal pleura extends **beyond the boundaries of the ribs and costal cartilages**. These regions are highly vulnerable to accidental puncture during clinical procedures or from penetrating trauma (such as stab wounds to the lower neck or upper abdomen).
@@ -281,7 +281,7 @@ Somatic sensory fibers travel via the **intercostal nerves** (supplying the cost
 Visceral sensory fibers travel alongside the autonomic pathways of the **pulmonary plexus**.
 
 * **Silent Pathology:** The visceral pleura completely lacks somatic touch or pain receptors. You can slice, burn, or biopsy the visceral pleura in an awake patient, and they will feel absolutely nothing.
-* **Vague Presentation:** It only registers a signal if there is extensive, widespread tissue ischemia or massive traction/stretch. Because these visceral C-fibers are sparse and converge diffusely onto multiple segments of the spinal cord without matching a neat cutaneous map, any pain generated is highly unlocalized. It presents as a vague, deep-seated pressure or dull ache behind the sternum, making it clinically indistinguishable from general mediastinal or cardiac discomfort.",,y,Anatomy,1,Exam 1,Respiratory
+* **Vague Presentation:** It only registers a signal if there is extensive, widespread tissue ischemia or massive traction/stretch. Because these visceral C-fibers are sparse and converge diffusely onto multiple segments of the spinal cord without matching a neat cutaneous map, any pain generated is highly unlocalized. It presents as a vague, deep-seated pressure or dull ache behind the sternum, making it clinically indistinguishable from general mediastinal or cardiac discomfort.",,y,Anatomy,Exam 1,Respiratory
 "Explain the significance of accumulation of air, fluid or blood in the pleural cavity and how you would assess this based on anatomy (noting the particular danger of a tension pneumothorax and clinical relevance of tracheal deviation).","The accumulation of air (**pneumothorax**), fluid (**pleural effusion**), or blood (**haemothorax**) within the pleural cavity disrupts the critical mechanics of respiration. Understanding the anatomical significance of these spaces and how to assess them is a foundational clinical skill.
 
 ---
@@ -352,7 +352,7 @@ This indicates a **loss of volume** on the diseased side, creating an ipsilatera
 * **Complete Lung Atelectasis:** Obstructive collapse of an entire lung (e.g., from a foreign body or mucus plug in a main bronchus).
 * **Pneumonectomy:** Surgical removal of a lung leaves an empty space that the mediastinum shifts into over time.
 
-> ⚠️ **Clinical Rule:** In an emergency presentation of respiratory distress with shock, **tracheal deviation away from the quiet, hyper-resonant side** equals a tension pneumothorax. Treatment via needle decompression or chest tube insertion must be performed immediately based on these clinical anatomical signs **without** waiting for a chest X-ray.",,y,Anatomy,1,Exam 1,Respiratory
+> ⚠️ **Clinical Rule:** In an emergency presentation of respiratory distress with shock, **tracheal deviation away from the quiet, hyper-resonant side** equals a tension pneumothorax. Treatment via needle decompression or chest tube insertion must be performed immediately based on these clinical anatomical signs **without** waiting for a chest X-ray.",,y,Anatomy,Exam 1,Respiratory
 Outline the lymph drainage of the lungs and how this lymphatic drainage is impacted by lung cancer spread (noting significance of widening of the angle of the carina observed on bronchoscopy and relevance to malignancy).,"## Lymphatic Drainage of the Lungs
 
 The lymphatic system of the lungs is organized into two distinct vascular networks that drain sequentially toward the center of the chest cavity.
@@ -419,7 +419,7 @@ During a flexible or rigid bronchoscopy, a clinician looks down the trachea to v
 * The normal angle between the left and right main bronchi to **widen significantly**.
 
 
-* **Clinical Implications:** A widened, blunted carina observed on bronchoscopy is a classic, high-yield sign of **advanced mediastinal disease (N2 or N3 status)**. It indicates that the cancer has escaped the primary lung tissue and invaded the central mediastinum, which often changes a patient's prognosis and indicates that the tumor may no longer be a candidate for primary surgical resection.",,y,Anatomy,1,Exam 1,Respiratory
+* **Clinical Implications:** A widened, blunted carina observed on bronchoscopy is a classic, high-yield sign of **advanced mediastinal disease (N2 or N3 status)**. It indicates that the cancer has escaped the primary lung tissue and invaded the central mediastinum, which often changes a patient's prognosis and indicates that the tumor may no longer be a candidate for primary surgical resection.",,y,Anatomy,Exam 1,Respiratory
 "Describe the anatomical landmarks used in subclavian central line insertion, and potential complications related to nearby structures. Compare and contrast the anatomy of subclavian central line insertion with that of a peripherally inserted central catheter (PICC) and peripheral intravenous cannula (noting the course of the different catheters through the venous system).","To safely perform or understand central venous access, clinicians rely heavily on precise surface and deep structural anatomy. Here is the anatomical breakdown of subclavian central lines, followed by a comparison with PICC lines and peripheral IV cannulas.
 
 ---
@@ -496,7 +496,7 @@ The route taken by each catheter through the venous system dictates its clinical
 2. The short plastic cannula (typically 2–5 cm) terminates right inside that same local peripheral vein.
 3. Because the tip sits in a small vessel rather than the high-flow SVC, hypertonic solutions, vesicants, or highly acidic medications cannot be safely infused through it without risking chemical phlebitis and local tissue necrosis.
 
-If you are reviewing this for an upcoming clinical skills assessment or exam, would you like to go over the specific steps of the Seldinger technique used to thread the central line guide wire?",,y,Anatomy,1,Exam 1,Respiratory
+If you are reviewing this for an upcoming clinical skills assessment or exam, would you like to go over the specific steps of the Seldinger technique used to thread the central line guide wire?",,y,Anatomy,Exam 1,Respiratory
 Illustrate the typical sites of constriction of the oesophagus and discuss the relationships of nearby structures impacting these constrictions (visible on oesophagoscopy).A224,"During an oesophagoscopy, navigating the normal anatomical constrictions of the oesophagus is crucial. These normal narrowings correspond to areas where external anatomical structures cross or compress the muscular tube, or where intrinsic muscular sphincters reside.
 
 Clinically, these areas are measured by their distance from the **incisor teeth** and represent common sites for foreign body impaction, stricture formation, and initial resistance when advancing an endoscope.
@@ -540,7 +540,7 @@ Anatomically, there are four primary locations where the lumen narrows.
 
 ---
 
-> **Clinical Correlation:** Malignant lesions or severe chemical burns are particularly dangerous at these constriction sites. Because the oesophagus lacks a true serosal layer (except for its brief intra-abdominal segment), tumors at the thoracic constrictions can easily invade adjacent high-stakes structures, such as the aorta or the tracheobiliary tree.",,y,Anatomy,1,Exam 1,Respiratory
+> **Clinical Correlation:** Malignant lesions or severe chemical burns are particularly dangerous at these constriction sites. Because the oesophagus lacks a true serosal layer (except for its brief intra-abdominal segment), tumors at the thoracic constrictions can easily invade adjacent high-stakes structures, such as the aorta or the tracheobiliary tree.",,y,Anatomy,Exam 1,Respiratory
 "Indicate potential sources of referred pain to dermatomes over thorax (noting why cardiac pain and oesophageal pain may mimic each other) and from thoracic structures (particularly myocardium, pericardium and pleura) to dermatomes over other sites.","Referred pain occurs when visceral nociceptive (pain) afferent fibers enter the spinal cord at the same segmental level as somatic afferent fibers from the skin. The brain misinterprets the signals coming from the internal organ as originating from the corresponding dermatome supplied by those spinal cord segments.
 
 ---
@@ -600,7 +600,7 @@ The site of referred pleuritic pain depends entirely on *which part* of the pleu
 
 * **Central Diaphragmatic and Mediastinal Pleura:**
 * **Referred Sites:** **The ipsilateral shoulder and root of the neck.**
-* **Mechanism:** Like the parietal pericardium, the central portion of the diaphragmatic pleura and the mediastinal pleura are entirely innervated by the **phrenic nerve (C3–C5)**. Irritation here sends signals up the phrenic nerve, causing the brain to perceive the pain in the corresponding **C3–C4** dermatomes over the shoulder.",,y,Anatomy,1,Exam 1,Respiratory
+* **Mechanism:** Like the parietal pericardium, the central portion of the diaphragmatic pleura and the mediastinal pleura are entirely innervated by the **phrenic nerve (C3–C5)**. Irritation here sends signals up the phrenic nerve, causing the brain to perceive the pain in the corresponding **C3–C4** dermatomes over the shoulder.",,y,Anatomy,Exam 1,Respiratory
 "Explain how the autonomic nervous system and conduction system of the heart result in controlled and coordinated cardiac function, include in your discussion the anatomical position and relations of the structures involved. Discuss potential consequences of denervation of the autonomic nervous system (to the heart (e.g. immediately following a heart transplant)","Controlled and coordinated cardiac function relies on an intrinsic electrical conduction system that generates and propagates impulses, coupled with the extrinsic regulation of the Autonomic Nervous System (ANS) that modulates this baseline activity.
 
 ---
@@ -689,7 +689,7 @@ Similarly, when exercise stops, the heart rate does not drop rapidly because the
 
 ### D. Absence of Angina (Silent Ischemia)
 
-Because the visceral afferent (pain) fibers running alongside the sympathetic nerves are also severed during transplantation, a post-transplant patient **cannot feel ischemic cardiac pain**. If the donor heart develops coronary artery disease or experiences rejection-induced ischemia, the patient will not experience classic angina. This makes routine surveillance biopsies, coronary angiograms, or non-invasive imaging critical for monitoring these patients.",,y,Anatomy,1,Exam 1,Respiratory
+Because the visceral afferent (pain) fibers running alongside the sympathetic nerves are also severed during transplantation, a post-transplant patient **cannot feel ischemic cardiac pain**. If the donor heart develops coronary artery disease or experiences rejection-induced ischemia, the patient will not experience classic angina. This makes routine surveillance biopsies, coronary angiograms, or non-invasive imaging critical for monitoring these patients.",,y,Anatomy,Exam 1,Respiratory
 "Illustrate the anatomy of the thoracic aorta, highlighting the different parts, branches and surrounding structures. Discuss the presentation and potential complications of a thoracic aortic dissection, including the anatomical basis of the referred pain.","The **thoracic aorta** is the massive, high-pressure arterial trunk that carries oxygenated blood from the left ventricle through the thoracic cavity before continuing into the abdomen.
 
 ---
@@ -778,8 +778,8 @@ The structural failure of the aortic wall can cause catastrophic ischemic or mec
 * **Acute Aortic Regurgitation:** Retrograde propagation can disrupt the structural integrity of the aortic root and the fibrous annulus of the aortic valve, causing the valve leaflets to prolapse and resulting in acute, severe heart failure.
 * **Acute Stroke or Upper Limb Ischemia:** If the dissection moves into the branches of the aortic arch (brachiocephalic trunk or left common carotid), it can instantly compromise cerebral perfusion, presenting as a sudden focal neurological deficit (stroke).
 * **Myocardial Infarction (MI):** Extension of the tear into the coronary ostia (most commonly the right coronary artery) can occlude coronary blood flow, triggering an acute transmural inferior MI alongside the dissection.
-* **Exsanguination:** If the weakened outer layer (tunica adventitia) of the descending aorta gives way entirely, it leads to rapid, fatal bleeding into the left pleural cavity or mediastinum.",,y,Anatomy,1,Exam 1,Respiratory
-"Describe common sites of abdominal hernias, focussing on hernias related to the inguinal and femoral canals. Discuss the presentation and potential complications of hernias (including incarceration, obstruction and strangulation), and explain why a femoral hernia is particularly likely to strangulate.","Describe common sites of abdominal hernias, focussing on hernias related to the inguinal and femoral canals. Discuss the presentation and potential complications of hernias (including incarceration, obstruction and strangulation), and explain why a femoral hernia is particularly likely to strangulate.",,y,Anatomy,1,Exam 1,GIT
+* **Exsanguination:** If the weakened outer layer (tunica adventitia) of the descending aorta gives way entirely, it leads to rapid, fatal bleeding into the left pleural cavity or mediastinum.",,y,Anatomy,Exam 1,Respiratory
+"Describe common sites of abdominal hernias, focussing on hernias related to the inguinal and femoral canals. Discuss the presentation and potential complications of hernias (including incarceration, obstruction and strangulation), and explain why a femoral hernia is particularly likely to strangulate.","Describe common sites of abdominal hernias, focussing on hernias related to the inguinal and femoral canals. Discuss the presentation and potential complications of hernias (including incarceration, obstruction and strangulation), and explain why a femoral hernia is particularly likely to strangulate.",,y,Anatomy,Exam 1,GIT
 "Overview the pathway of testicular 'descent', and explain the significance of ‚Äö√Ñ√≤undescended‚Äö√Ñ√¥, ‚Äö√Ñ√≤ectopic‚Äö√Ñ√¥ and ‚Äö√Ñ√≤retractile‚Äö√Ñ√¥ testes.'Describe the arterial supply and venous drainage of the testes, including differences in the venous drainage for the left versus the right testis.","The development and anatomical arrangement of the testes are defined by their long embryological journey from the posterior abdominal wall down into the scrotum. This pathway explains both the clinical presentations of mispositioned testes and the unique asymmetrical layout of their vascular supply.
 
 ---
@@ -852,7 +852,7 @@ As the pampiniform plexus travels superiorly through the inguinal ring, it conde
 
 Because the left testicular vein enters the left renal vein at a $90^\circ$ angle, it lacks the hemodynamic efficiency of the right side. Furthermore, the left renal vein can sometimes be compressed between the abdominal aorta and the superior mesenteric artery (known as the **""Nutcracker Phenomenon""**).
 
-This anatomical configuration creates backpressure on the left side, frequently causing the valves in the pampiniform plexus to fail. This results in a **varicocele**—an abnormal dilation and tortuosity of the pampiniform plexus, often described clinically as a ""bag of worms."" **Over 85–90% of clinical varicoceles occur on the left side.** A isolated, new-onset right-sided varicocele is rare and highly suspicious, often prompting clinicians to investigate for retroperitoneal masses blocking the IVC.",,y,Anatomy,1,Exam 1,GIT
+This anatomical configuration creates backpressure on the left side, frequently causing the valves in the pampiniform plexus to fail. This results in a **varicocele**—an abnormal dilation and tortuosity of the pampiniform plexus, often described clinically as a ""bag of worms."" **Over 85–90% of clinical varicoceles occur on the left side.** A isolated, new-onset right-sided varicocele is rare and highly suspicious, often prompting clinicians to investigate for retroperitoneal masses blocking the IVC.",,y,Anatomy,Exam 1,GIT
 Define the term ‚Äö√Ñ√≤torsion‚Äö√Ñ√¥ of testis (noting mechanism and effects). Indicate the site of pain referral (noting scrotal contents should also be examined in abdominal pain).,"Testicular torsion is a critical urological emergency defined by the twisting of the spermatic cord, which cuts off the blood supply to the testis and its surrounding structures.
 Mechanism & Effects
 
@@ -871,7 +871,7 @@ While acute, severe localized scrotal pain is classic, testicular torsion freque
 This referral pattern exists because the testes share their embryological origin and nerve supply with the kidneys and upper abdominal structures. The visceral afferent pain fibers from the testis travel alongside the sympathetic nerves back to the T10 to T11 spinal cord segments.
 The Abdominal Pain Caveat
 Critical Clinical Rule: A thorough examination of the scrotal contents is mandatory in any male presenting with acute abdominal or groin pain.
-Because of the T10-T11 nerve pathways, a patient—particularly a young adolescent—may present complaining only of severe lower abdominal pain or nausea and vomiting, completely omitting any mention of testicular discomfort due to referred pain pathways or modesty. Relying solely on an abdominal exam can easily lead to a misdiagnosis of acute appendicitis or gastroenteritis, missing the narrow window to save the testis.",,y,Anatomy,1,Exam 1,GIT
+Because of the T10-T11 nerve pathways, a patient—particularly a young adolescent—may present complaining only of severe lower abdominal pain or nausea and vomiting, completely omitting any mention of testicular discomfort due to referred pain pathways or modesty. Relying solely on an abdominal exam can easily lead to a misdiagnosis of acute appendicitis or gastroenteritis, missing the narrow window to save the testis.",,y,Anatomy,Exam 1,GIT
 "Compare and contrast the path of lymph drainage of the testis with that of scrotum (noting significance in cancer spread). Compare and contrast this with lymph drainage from the stomach (another organ supplied by branches from the abdominal aorta). For both the stomach and testis, explain why the first palpable lymph node tends to be the left supraclavicular node.","Understanding the lymphatic drainage pathways is one of the most elegant exercises in anatomy because the lymph almost always **follows the arterial supply** back to its embryonic origin. When it comes to cancer, these pathways dictate exactly where a tumor will metastasize first.
 
 Here is the breakdown of how the testis, scrotum, and stomach drain, and why they all weirdly share a connection to the left neck.
@@ -927,7 +927,7 @@ The thoracic duct terminates in the root of the neck, emptying into the junction
 
 Just before it empties into the venous system, the duct passes right next to the **left supraclavicular lymph nodes**. Because cancer cells from the stomach or testis are traveling up this high-pressure lymphatic highway, they can get caught in the final filter—these supraclavicular nodes.
 
-Furthermore, if the tumor cells block the entrance to the vein, the lymph regurgitates backward into these local neck nodes, causing them to enlarge. Because the right side of the body has a completely separate, much shorter lymphatic duct (the right lymphatic duct), this phenomenon is overwhelmingly isolated to the **left side**.",,y,Anatomy,1,Exam 1,GIT
+Furthermore, if the tumor cells block the entrance to the vein, the lymph regurgitates backward into these local neck nodes, causing them to enlarge. Because the right side of the body has a completely separate, much shorter lymphatic duct (the right lymphatic duct), this phenomenon is overwhelmingly isolated to the **left side**.",,y,Anatomy,Exam 1,GIT
 Indicate the vertebral levels of the abdominal viscera and indicate the lowest parts of the peritoneal cavity in the supine position of someone with or without a uterus (noting fluid such as pus or blood can accumulate in these sites).,"Understanding the precise anatomical landmarks of the abdomen and pelvis is crucial for diagnostic imaging, physical exams, and predicting where fluid will track pathology-wise.
 
 Here is the breakdown of the major abdominal viscera vertebral levels and the dependent recesses of the peritoneal cavity.
@@ -1007,7 +1007,7 @@ In individuals without a uterus, the peritoneum simply reflects from the superio
 Connecting the upper abdomen to the pelvis are the **right and left paracolic gutters**—peritoneal depressions lateral to the ascending and descending colon.
 
 * The **right paracolic gutter** is clinically distinct because it forms a continuous, unobstructed highway for fluid to travel directly from the hepatorenal recess down into the pelvic recesses (and vice versa).
-* The **left paracolic gutter** is narrower and partially obstructed superiorly by the phrenicocolic ligament, making fluid transit to the upper abdomen less free on the left side.",,y,Anatomy,1,Exam 1,GIT
+* The **left paracolic gutter** is narrower and partially obstructed superiorly by the phrenicocolic ligament, making fluid transit to the upper abdomen less free on the left side.",,y,Anatomy,Exam 1,GIT
 Explain the difference between somatic and visceral pain in the abdomen (compare and contrast nerve supply of parietal peritoneum with visceral peritoneum). Explain why abdominal rigidity occurs with peritonitis.,"Understanding the neuroanatomy of the abdominal cavity is key to making sense of how clinical presentations shift—like the classic transition from the vague periumbilical ache of early appendicitis to the sharp, localized pain in the right lower quadrant.
 
 The differences between somatic (parietal) and visceral abdominal pain stem entirely from how their respective peritoneal layers are wired.
@@ -1071,7 +1071,7 @@ The mechanism relies on a classic **somatic reflex arc**:
 3. **The Reflex Loop:** Instead of just sending this information up to the brain for processing, the massive sensory inflow spills over within the spinal cord segment, directly stimulating the **alpha motor neurons** in the anterior horn.
 4. **The Efferent Response:** These motor neurons fire an immediate, involuntary command out to the skeletal muscles of the abdominal wall (the rectus abdominis, transversus abdominis, and obliques) causing them to tonically contract.
 
-Because this reflex bypasses conscious cortical control, the resulting ""board-like"" rigidity cannot be voluntarily relaxed by the patient during palpation, serving as a reliable clinical sign of an acute abdomen requiring surgical evaluation.",,y,Anatomy,1,Exam 1,GIT
+Because this reflex bypasses conscious cortical control, the resulting ""board-like"" rigidity cannot be voluntarily relaxed by the patient during palpation, serving as a reliable clinical sign of an acute abdomen requiring surgical evaluation.",,y,Anatomy,Exam 1,GIT
 Explain the difference in referred pain for paired vs unpaired organs. Describe the typical regions of referred pain for the following organs: a. Stomach b. Gallbladder c. Small and large intestine d. Kidneys e. Ureters,"The phenomenon of referred pain occurs because visceral sensory fibers (from internal organs) and somatic sensory fibers (from skin and muscle) converge on the same second-order neurons in the spinal cord dorsal horn. The brain, more accustomed to receiving input from the somatic pathways, misinterprets the visceral signal as coming from the corresponding body surface (dermatome).
 Paired vs. Unpaired Organs: The Lateralization of Pain
 The key difference in how paired and unpaired organs refer pain comes down to their embryological development and bilateral versus unilateral nerve supply.
@@ -1103,7 +1103,7 @@ Nuance: Because the kidneys are paired, retroperitoneal organs with unilateral i
 e. Ureters
 Primary Region: The classic ""loin to groin"" distribution. Pain radiates from the flank, wraps around the flank down into the ipsilateral iliac fossa, inguinal canal, and eventually to the scrotum or labia majora and the anterior thigh.
 Spinal Levels: T11 to L2.
-Nuance: This dynamic ""radiation"" pattern is highly characteristic of ureteric colic (e.g., a passing kidney stone). As the stone moves down the lumen, it sequentially irritates dermatomes from T11 down to L2, tracking down the groin.",,y,Anatomy,1,Exam 1,GIT
+Nuance: This dynamic ""radiation"" pattern is highly characteristic of ureteric colic (e.g., a passing kidney stone). As the stone moves down the lumen, it sequentially irritates dermatomes from T11 down to L2, tracking down the groin.",,y,Anatomy,Exam 1,GIT
 "Define the transpyloric plane, and explain why it is a useful (noting that factors like posture, phase of respiration, pregnancy, age, sex and body build can affect whether structures can be found on any particular plane in real life imaging). Illustrate and label structures typically found at this level.","The **transpyloric plane** (also known as Addison’s plane) is one of the most critical transverse landmarks used in clinical anatomy to map the location of internal organs.
 
 Here is a breakdown of its definition, its clinical utility, and the major structures you can expect to find intersecting it.
@@ -1169,7 +1169,7 @@ An elegant way to memorize the structures at this level is to follow the plane f
 * **Spleen:** The anterior pole of the spleen reaches near the mid-axillary line at this horizontal level.
 * **Conus medullaris:** In adults, the spinal cord typically terminates around the L1-L2 intervertebral disc, meaning the very tip of the cord sits at or just above this plane.
 
-How are you approaching your anatomy studies at the moment? If you are prepping for a specific imaging or clinical exam, we can dive deeper into how these relations change on a sagittal view.",,y,Anatomy,1,Exam 1,GIT
+How are you approaching your anatomy studies at the moment? If you are prepping for a specific imaging or clinical exam, we can dive deeper into how these relations change on a sagittal view.",,y,Anatomy,Exam 1,GIT
 "Define peptic ulceration and describe the potential anatomical location of peptic ulcers. Relate the location of peptic ulcers to surrounding structures (including blood vessels) and discuss potential complications of peptic ulcers, including the anatomical basis of melaena?","Definition of Peptic Ulceration
 Peptic ulceration refers to a focal breach in the gastrointestinal mucosa that extends through the muscularis mucosae into the submucosa or deeper layers. It occurs in areas of the alimentary tract exposed to aggressive acidic gastric secretions and pepsin, developing when homeostatic mucosal defense mechanisms (such as bicarbonate secretion, mucus layers, and prostaglandins) are overwhelmed by destructive factors like Helicobacter pylori infection or non-steroidal anti-inflammatory drugs (NSAIDs).
 Anatomical Locations & Relations to Surrounding Structures
@@ -1234,7 +1234,7 @@ Acid Exposure & Oxidation: Once a vessel like the gastroduodenal or left gastric
  ).
 Formation of Hematins: This chemical oxidation creates hematin (or acid hematin), which is dark brown/black.
 Bacterial Degradation: As this altered blood transits through the small and large intestines, resident colonic bacteria further degrade the lipid and protein components, releasing sulfur compounds. These compounds produce the characteristic sticky, tarry consistency and intensely pungent odor observed clinically.
-(Note: For melaena to manifest, the blood typically needs to remain within the gastrointestinal tract for at least 8 to 14 hours to undergo complete degradation. If upper GI bleeding is massive and rapid, intestinal transit time drops significantly, and it may present instead as hematochezia—bright red blood per rectum—due to inadequate time for oxidation.)",,y,Anatomy,1,Exam 1,GIT
+(Note: For melaena to manifest, the blood typically needs to remain within the gastrointestinal tract for at least 8 to 14 hours to undergo complete degradation. If upper GI bleeding is massive and rapid, intestinal transit time drops significantly, and it may present instead as hematochezia—bright red blood per rectum—due to inadequate time for oxidation.)",,y,Anatomy,Exam 1,GIT
 Define anatomical and physiological lobes of the liver (noting what separates right from left with each). Define hepatic segments (noting what separates them from each other) and explain their significance.,"Understanding the division of the liver is an absolute must for clinical practice, especially when it comes to surgery. While the **anatomical** divisions are based on what we can see on the surface, the **physiological (functional)** divisions and **segments** are based on the internal blood supply and biliary drainage.
 
 Here is the breakdown of how the liver is split, what forms the boundaries, and why it matters.
@@ -1301,7 +1301,7 @@ The primary significance of Couinaud’s hepatic segments is **safe, parenchyma-
 
 * **Segmentectomies:** Because each segment carries its own isolated ""portal triad"" (artery, vein, duct) and boundaries are demarcated by avascular planes containing the hepatic veins, a surgeon can resect a single diseased segment (or group of segments) without compromising the blood supply or biliary drainage of the remaining tissue.
 * **Minimizing Blood Loss:** Surgeons can isolate and ligate the specific segmental vessels before cutting into the liver tissue, vastly reducing intraoperative hemorrhage.
-* **Preserving Functional Liver Mass:** In patients with colorectal liver metastases or hepatocellular carcinoma (HCC), maximizing the future liver remnant (FLR) is critical to prevent post-hepatectomy liver failure. Segmental anatomy allows for targeted removal of tumors while leaving as much healthy tissue behind as possible.",,y,Anatomy,1,Exam 1,GIT
+* **Preserving Functional Liver Mass:** In patients with colorectal liver metastases or hepatocellular carcinoma (HCC), maximizing the future liver remnant (FLR) is critical to prevent post-hepatectomy liver failure. Segmental anatomy allows for targeted removal of tumors while leaving as much healthy tissue behind as possible.",,y,Anatomy,Exam 1,GIT
 Discuss the potential complications of a cholecystectomy (noting that variations occur with the origin and course of the cystic artery as well as with the biliary tree).,"Cholecystectomy is one of the most frequently performed general surgical procedures worldwide. While generally safe, the surgical landscape of the right upper quadrant is notorious for anatomical shifts.
 The primary operative safeguard against major complications is achieving the Critical View of Safety (CVS). This requires clear identification of Calot's triangle—bounded by the cystic duct, the common hepatic duct, and the inferior border of the liver—ensuring that only two structures (the cystic duct and the cystic artery) enter the gallbladder before any division occurs.
 
@@ -1333,7 +1333,7 @@ Intraoperative Mitigations
 When dense inflammation or aberrant anatomy prevents a clear view of safety, surgeons utilize specific bail-out strategies to mitigate these risks:
 Intraoperative Cholangiography (IOC): Real-time fluoroscopic imaging of the bile ducts to clarify ambiguous anatomy and check for retained stones.
 Subtotal Cholecystectomy: Leaving the posterior wall or a small remnant of the gallbladder neck intact to avoid dissection in a scarred, dangerous Calot's triangle.
-Conversion to Open Surgery: Transitioning from a laparoscopic approach to maximize tactile feedback and anatomical visualization.",,y,Anatomy,1,Exam 1,GIT
+Conversion to Open Surgery: Transitioning from a laparoscopic approach to maximize tactile feedback and anatomical visualization.",,y,Anatomy,Exam 1,GIT
 "Define appendicitis and state its potential complications. Explain patterns of referred pain in cases of appendicitis, including why the pain typically starts in the umbilical region then shifts to the right iliac fossa.","What is Appendicitis?
 Appendicitis is the acute inflammation of the vermiform appendix, a small, blind-ended pouch projecting from the cecum near the junction of the small and large intestines. It typically occurs when the appendiceal lumen becomes obstructed—most commonly by a fecalith (hardened stool), lymphoid hyperplasia (swollen tissue), or occasionally foreign bodies or tumors. This blockage causes intraluminal pressure to rise, restricting blood flow and triggering bacterial overgrowth, ischemia, and tissue necrosis.
 
@@ -1361,7 +1361,7 @@ Anatomic Site	Appendiceal wall (Midgut)	Parietal peritoneum (Abdominal wall)
 Nerve Fiber Type	General Visceral Afferent (GVA)	General Somatic Afferent (GSA)
 Spinal / Local Level	T10 Spinal Segment	Localized peripheral nerves (Right Iliac Fossa)
 Pain Character	Dull, aching, poorly localized	Sharp, severe, precisely localized
-Location	Umbilical region (Periumbilical)	Right iliac fossa (McBurney's point)",,y,Anatomy,1,Exam 1,GIT
+Location	Umbilical region (Periumbilical)	Right iliac fossa (McBurney's point)",,y,Anatomy,Exam 1,GIT
 Indicate the site and content of a diaphragmatic hiatus hernia,"A diaphragmatic hiatus hernia (commonly called a hiatal hernia) occurs when abdominal structures protrude upward into the thoracic cavity through an anatomically defined opening in the diaphragm.
 Here is the precise breakdown of its site and content:
 1. The Site
@@ -1382,7 +1382,7 @@ These are less common but clinically more severe due to the risk of volvulus (tw
 Type II (True Paraesophageal): The GE junction remains fixed in its normal anatomical position below the diaphragm. The content is the fundus of the stomach, which rolls up alongside the esophagus into the thorax.
 Type III (Mixed): A combination of Types I and II. Content includes both the GE junction and a large portion of the stomach (both cardia and fundus) herniating above the diaphragm.
 Type IV (Complex): The defect is large enough that the content includes the stomach along with other abdominal viscera. This can commonly include the greater omentum, colon (frequently the transverse colon), small intestine, or occasionally the spleen.
-",,y,Anatomy,1,Exam 1,GIT
+",,y,Anatomy,Exam 1,GIT
 "Illustrate the branches of the abdominal aorta. Define the terms aneurysm (as in an abdominal aortic aneurysm or ‚Äö√Ñ√≤AAA‚Äö√Ñ√¥) and dissection. Link the anatomy of the abdominal aorta and its relations to how these conditions may present (e.g. where blood could accumulate in a ruptured AAA, structures which may have their blood supply impaired through a clot or tear in the wall of the aorta, etc.). In cases of a ruptured AAA, describe the spaces blood may accumulate in.","The abdominal aorta is the largest artery in the abdominal cavity. It begins at the aortic hiatus of the diaphragm (at the level of the T12 vertebra) and terminates by bifurcating into the right and left common iliac arteries (at the level of the L4 vertebra).
 Branches of the Abdominal Aorta
 The branches of the abdominal aorta are categorized by their function and destination:
@@ -1415,7 +1415,7 @@ The aorta is located in the retroperitoneal space (behind the peritoneal cavity)
 Retroperitoneal Space: This is the most common site of rupture. The blood is often contained by the surrounding tissues, creating a retroperitoneal hematoma. This can cause severe back or flank pain and may track into the pelvic cavity.
 Peritoneal Cavity: If the rupture occurs anteriorly and breaches the posterior parietal peritoneum, blood flows directly into the abdominal cavity (intraperitoneal). This leads to rapid, massive internal hemorrhage, clinical shock, and a rigid, distended abdomen.
 Adherent Structures: Occasionally, a rupture can create a fistula (abnormal connection) into adjacent structures, such as the duodenum (leading to massive gastrointestinal bleeding) or the inferior vena cava (leading to high-output heart failure).
-",,y,Anatomy,1,Exam 1,GIT
+",,y,Anatomy,Exam 1,GIT
 Define the term ‚Äö√Ñ√≤portal-systemic anastomosis‚Äö√Ñ√¥ and indicate sites of such anastomoses (noting veins involved at the major sites). Explain the significance of this in portal hypertension (noting its major cause and potential complications).,"A **portal-systemic (or portacaval) anastomosis** is a specific circulatory connection between the veins of the **portal venous system** (which drains blood from the gastrointestinal tract and spleen to the liver) and the veins of the **systemic venous system** (which returns blood directly to the right atrium of the heart).
 
 Under normal physiological conditions, these collateral pathways are functional but remain small and carry minimal blood flow. However, they become vital clinical landmarks during instances of restricted liver blood flow.
@@ -1471,7 +1471,7 @@ As pressure builds up in the portal system, blood forces its way backward throug
 * **Ruptured Esophageal Varices:** This is the most life-threatening complication. The engorged esophageal veins can easily rupture due to mechanical friction or sudden pressure spikes, leading to massive, hematemesis (vomiting blood) and hemorrhagic shock.
 * **Ascites:** Driven by increased hydrostatic pressure in the portal capillaries combined with hypoalbuminemia (due to decreased liver synthetic function), fluid transudates directly into the peritoneal cavity.
 * **Hepatic Encephalopathy:** When portal blood bypasses the liver through these systemic shunts, toxic metabolic byproducts (chiefly **ammonia**, $NH_3$) skip hepatic detoxification. These neurotoxins enter the systemic circulation, cross the blood-brain barrier, and cause altered mental status, asterixis (flapping tremor), and potentially coma.
-* **Splenomegaly:** Chronic passive congestion forces blood back into the splenic vein, causing splenic enlargement. This often leads to hypersplenism, resulting in the premature destruction of red blood cells, white blood cells, and platelets (thrombocytopenia).",,y,Anatomy,1,Exam 1,GIT
+* **Splenomegaly:** Chronic passive congestion forces blood back into the splenic vein, causing splenic enlargement. This often leads to hypersplenism, resulting in the premature destruction of red blood cells, white blood cells, and platelets (thrombocytopenia).",,y,Anatomy,Exam 1,GIT
 Describe the venous drainage pattern of the gut (e.g. colon) versus a paired viscera (e.g. kidney/suprarenal gland). Compare and contrast venous spread of cancer from the gut with that from paired viscera.,"Understanding how blood leaves abdominal organs is one of the most elegant ways to make sense of how cancers behave. The human body uses two completely separate plumbing systems to drain the abdomen: the portal venous system for the gastrointestinal tract and the systemic venous system for paired retroperitoneal structures.
 1. Venous Drainage Patterns
 Unpaired Viscera: The Gastrointestinal Tract (e.g., Colon)
@@ -1496,74 +1496,74 @@ Unique Vascular Behavior	Tumor emboli seed microvasculature; rare structural mac
 Anatomical Exceptions	Distal Rectum: Drains via inferior/middle rectal veins into the internal iliac veins (systemic), skipping the liver to metastasize directly to the lungs.	Left-sided tumors: Left renal cell or adrenal carcinomas can block the left renal vein, causing retrograde pressure that leads to a left-sided varicocele (swollen testicular veins).
 Key Mechanistic Takeaways
 The Hepatic Filter vs. The Pulmonary Filter: Gastrointestinal cells are effectively trapped by the tight, low-pressure sinusoidal network of the liver. Paired visceral cancers enter the wide highway of the IVC, breeze through the right side of the heart, and get trapped in the next available capillary bed: the lungs.
-Mechanical Thrombi: Renal Cell Carcinoma (RCC) is uniquely notorious for its ""angioinvasive"" nature. Instead of just shedding microscopic cells, it can grow as a solid physical column of tumor inside the lumen of the renal vein, sometimes traveling all the way up the IVC into the right atrium of the heart.",,y,Anatomy,1,Exam 1,GIT
-Describe the basic musculoskeletal anatomy of the thorax.,,,y,Anatomy,1,Exam 1,Respiratory
-Define the mediastinum and relate the major cardiovascular (and associated soft-tissue structures) to the subdivisions of the mediastinum).,,,y,Anatomy,1,Exam 1,Respiratory
-Describe the basic structures of the heart and relate these to heart function.,,,y,Anatomy,1,Exam 1,Respiratory
-"Identify the parietal pleura (including costal, cervical, mediastinal and diaphragmatic components, noting the nerve supply of each).",,,y,Anatomy,1,Exam 1,Respiratory
-Distinguish the visceral pleura from the parietal pleura (compare and contrast its neurovascular supply with that of the parietal pleura).,,,y,Anatomy,1,Exam 1,Respiratory
-Note the lines of pleural reflection (from costal pleura to the other components of parietal pleura).,,,y,Anatomy,1,Exam 1,Respiratory
-Identify the pleural cavities (noting recesses).,,,y,Anatomy,1,Exam 1,Respiratory
-"Describe the lobes, fissures and surfaces of lungs (noting grooves).",,,y,Anatomy,1,Exam 1,Respiratory
-Outline the contents and arrangement of the lung hilum (compare and contrast the left versus right lung hilum).,,,y,Anatomy,1,Exam 1,Respiratory
-"Identify and describe the contents of the superior, anterior, middle and posterior mediastinum (including thymus).",,,y,Anatomy,1,Exam 1,Respiratory
-"Define the sternal angle ('of Louis'), and structures in this plane.",,,y,Anatomy,1,Exam 1,Respiratory
-Outline structures transmitted through the superior thoracic aperture.,,,y,Anatomy,1,Exam 1,Respiratory
-"Explain the anatomy of the pulmonary and systemic circulations in the thorax, including the role of the azygos venous system).",,,y,Anatomy,1,Exam 1,Respiratory
-Outline the groups of lymph nodes in the thorax.,,,y,Anatomy,1,Exam 1,Respiratory
-"Describe the regions of the body drained by the thoracic duct (noting its origin, course in the thorax and where it drains to).",,,y,Anatomy,1,Exam 1,Respiratory
-Compare and contrast the main somatic and visceral nerves of the thorax.,,,y,Anatomy,1,Exam 1,Respiratory
-Describe the layers of the antero-lateral abdominal wall (compare and contrast those lateral and medial to the edge of the rectus sheath).,,,y,Anatomy,1,Exam 1,GIT
-Indicate the arrangement and contents of the antero-lateral abdominal wall muscles and the rectus sheath.,,,y,Anatomy,1,Exam 1,GIT
-Indicate sites of abdominal openings and potential areas of weakness (noting potential hernial sites).,,,y,Anatomy,1,Exam 1,GIT
-"Outline the vasculature of the antero-lateral abdominal wall (noting major sites of arterial anastomoses, venous communications and lymph watershed zones).",,,y,Anatomy,1,Exam 1,GIT
-Describe the nerves of the antero-lateral abdominal wall and associated dermatomes (noting overlap).,,,y,Anatomy,1,Exam 1,GIT
-"Define the boundaries of the inguinal canal and transmitted structures (noting the oblique course of the spermatic cord through the abdominal wall, which tends to prevent herniation).",,,y,Anatomy,1,Exam 1,GIT
-Describe the coverings and contents of the spermatic cord.,,,y,Anatomy,1,Exam 1,GIT
-List the layers of scrotum (noting the corresponding layer of anterior abdominal wall for each).,,,y,Anatomy,1,Exam 1,GIT
-State the contents of the scrotum (noting the position of the testis and parts of the epididymis).,,,y,Anatomy,1,Exam 1,GIT
-"Delineate the parts of the gut (foregut, midgut and hindgut).",,,y,Anatomy,1,Exam 1,GIT
-"Describe the mesenteries of the foregut (ventral and dorsal mesogastrium), midgut and hindgut (the mesentery, transverse mesocolon and sigmoid mesocolon).",,,y,Anatomy,1,Exam 1,GIT
-Outline the greater and lesser sacs of the peritoneal cavity (with omental foramen between them).,,,y,Anatomy,1,Exam 1,GIT
-"List out the superficial (unpaired, intraperitoneal), middle (unpaired, retroperitoneal) and deep (paired, retroperitoneal) layers of viscera.",,,y,Anatomy,1,Exam 1,GIT
-Note the arrangement of the peritoneum and peritoneal cavity in the pelvis (compare and contrast the lowest part in someone who has uterus versus someone without an uterus).,,,y,Anatomy,1,Exam 1,GIT
-"Describe the arrangement in situ of the urinary, digestive and internal genital organs (we will cover further detail in pelvis next semester).",,,y,Anatomy,1,Exam 1,GIT
-"Identify the parts and major features of the liver, gallbladder, pancreas (including pancreatic duct), spleen, biliary tract and portal venous system (its course and major tributaries).",,,y,Anatomy,1,Exam 1,GIT
-"Compare and contrast the major features of the abdominal oesophagus, stomach, duodenum, jejunum, ileum, caecum (and appendix), colon (ascending, transverse, descending and sigmoid) and rectum (including relevant parts, where appropriate).",,,y,Anatomy,1,Exam 1,GIT
-"Describe the arterial supply to the foregut, midgut and hindgut.",,,y,Anatomy,1,Exam 1,GIT
-Identify the parts and major anatomical features of the kidneys and associated structures (noting internal and external features and the relevant vasculature).,,,y,Anatomy,1,Exam 1,Renal
-Describe the anatomy of the posterior abdominal wall (and identify key relationships to this anatomical region).,,,y,Anatomy,1,Exam 1,Renal
-Examine the issues around integrative medicine (IM) research and funding,,Evidence in integrative medicine,y,Int Med,1,Exam 1,Extra
-Use selected examples of research to illustrate principles,,Evidence in integrative medicine,y,Int Med,1,Exam 1,Extra
-Cultivate healthy scepticism regarding healthcare,,Evidence in integrative medicine,y,Int Med,1,Exam 1,Extra
-"Understand ethical, legal and economic issues associated with integrated medicine",,Ethical and economic issues,y,Int Med,1,Exam 1,Extra
-"View these issues in the context of case studies, guiding principles and regulation issues",,Ethical and economic issues,y,Int Med,1,Exam 1,Extra
-"Understand applicable medicine in the field of asthma, cancer, immunity, menopause, and Multiple Sclerosis",,Application of integrative medicine health care,y,Int Med,1,Exam 1,Extra
-Understand the placebo response,,Mind and body 1,y,Int Med,1,Exam 1,Extra
-Understand stress psychology and physiology,,Mind and body 2,y,Int Med,1,Exam 1,Extra
-"Understand the mind, emotion and health",,Mind and body 3,y,Int Med,1,Exam 1,Extra
-Understand MBM (Mind-Body Medicine) in the treatment of illness,,Mind and body 4,y,Int Med,1,Exam 1,Extra
-Understand epigenetics,,Mind and body 5,y,Int Med,1,Exam 1,Extra
-"Understand the science and clinical implications of mind-body medicine regarding technology, attention regulation, PNI, humour, and music",,Mind and body 2,y,Int Med,1,Exam 1,Extra
-"Understand applicable medicine in the field of asthma, cancer, immunity, menopause, and Multiple Sclerosis",,Mind and body 2,y,Int Med,1,Exam 1,Extra
-Define Evidence-Based Medicine (EBM),,Introduction to Evidence-Based Medicine (EBM),y,EBM,1,Exam 2,Extra
-Identify and describe the principles of EBM,,Introduction to Evidence-Based Medicine (EBM),y,EBM,1,Exam 2,Extra
-Explore and discuss strengths and limitations of EBM,,Introduction to Evidence-Based Medicine (EBM),y,EBM,1,Exam 2,Extra
-Discuss the steps of EBM,,Introduction to Evidence-Based Medicine (EBM),y,EBM,1,Exam 2,Extra
-Discuss and demonstrate the steps of evidence-based medicine,,Ask & access to the best available evidence,y,EBM,1,Exam 2,Extra
-Develop research questions,,Ask & access to the best available evidence,y,EBM,1,Exam 2,Extra
-Locate and critically appraise the best available evidence,,Ask & access to the best available evidence,y,EBM,1,Exam 2,Extra
-Demonstrate the steps and components of a critical appraisal of a paper,,Appraising the evidence critically,y,EBM,1,Exam 2,Extra
-Describe key characteristics of a systematic review,,Appraising the evidence critically,y,EBM,1,Exam 2,Extra
-Interpret a meta-analysis and funnel plot,,Appraising the evidence critically,y,EBM,1,Exam 2,Extra
-Examine the process of clinical reasoning and things that can go wrong with it,,Applying your findings and clinical reasoning,y,EBM,1,Exam 2,Extra
-Review the concepts of sensitivity and specificity and use them to calculate likelihood ratios,,Applying your findings and clinical reasoning,y,EBM,1,Exam 2,Extra
-Use likelihood ratios to estimate post-test probabilities from pre-test probabilities,,Applying your findings and clinical reasoning,y,EBM,1,Exam 2,Extra
-Use likelihood ratios to choose tests to rule in and rule out diagnoses,,Applying your findings and clinical reasoning,y,EBM,1,Exam 2,Extra
-Identify the role of clinical guidelines in practice,,Assessing clinical practice guidelines,y,EBM,1,Exam 2,Extra
-Discuss the role of clinical guidelines and their importance,,Assessing clinical practice guidelines,y,EBM,1,Exam 2,Extra
-Demonstrate the ability to apply clinical guidelines to be context-specific,,Assessing clinical practice guidelines,y,EBM,1,Exam 2,Extra
-Illustrate examples of situations in which a doctor might need clinical guidelines,,Assessing clinical practice guidelines,y,EBM,1,Exam 2,Extra
+Mechanical Thrombi: Renal Cell Carcinoma (RCC) is uniquely notorious for its ""angioinvasive"" nature. Instead of just shedding microscopic cells, it can grow as a solid physical column of tumor inside the lumen of the renal vein, sometimes traveling all the way up the IVC into the right atrium of the heart.",,y,Anatomy,Exam 1,GIT
+Describe the basic musculoskeletal anatomy of the thorax.,,,y,Anatomy,Exam 1,Respiratory
+Define the mediastinum and relate the major cardiovascular (and associated soft-tissue structures) to the subdivisions of the mediastinum).,,,y,Anatomy,Exam 1,Respiratory
+Describe the basic structures of the heart and relate these to heart function.,,,y,Anatomy,Exam 1,Respiratory
+"Identify the parietal pleura (including costal, cervical, mediastinal and diaphragmatic components, noting the nerve supply of each).",,,y,Anatomy,Exam 1,Respiratory
+Distinguish the visceral pleura from the parietal pleura (compare and contrast its neurovascular supply with that of the parietal pleura).,,,y,Anatomy,Exam 1,Respiratory
+Note the lines of pleural reflection (from costal pleura to the other components of parietal pleura).,,,y,Anatomy,Exam 1,Respiratory
+Identify the pleural cavities (noting recesses).,,,y,Anatomy,Exam 1,Respiratory
+"Describe the lobes, fissures and surfaces of lungs (noting grooves).",,,y,Anatomy,Exam 1,Respiratory
+Outline the contents and arrangement of the lung hilum (compare and contrast the left versus right lung hilum).,,,y,Anatomy,Exam 1,Respiratory
+"Identify and describe the contents of the superior, anterior, middle and posterior mediastinum (including thymus).",,,y,Anatomy,Exam 1,Respiratory
+"Define the sternal angle ('of Louis'), and structures in this plane.",,,y,Anatomy,Exam 1,Respiratory
+Outline structures transmitted through the superior thoracic aperture.,,,y,Anatomy,Exam 1,Respiratory
+"Explain the anatomy of the pulmonary and systemic circulations in the thorax, including the role of the azygos venous system).",,,y,Anatomy,Exam 1,Respiratory
+Outline the groups of lymph nodes in the thorax.,,,y,Anatomy,Exam 1,Respiratory
+"Describe the regions of the body drained by the thoracic duct (noting its origin, course in the thorax and where it drains to).",,,y,Anatomy,Exam 1,Respiratory
+Compare and contrast the main somatic and visceral nerves of the thorax.,,,y,Anatomy,Exam 1,Respiratory
+Describe the layers of the antero-lateral abdominal wall (compare and contrast those lateral and medial to the edge of the rectus sheath).,,,y,Anatomy,Exam 1,GIT
+Indicate the arrangement and contents of the antero-lateral abdominal wall muscles and the rectus sheath.,,,y,Anatomy,Exam 1,GIT
+Indicate sites of abdominal openings and potential areas of weakness (noting potential hernial sites).,,,y,Anatomy,Exam 1,GIT
+"Outline the vasculature of the antero-lateral abdominal wall (noting major sites of arterial anastomoses, venous communications and lymph watershed zones).",,,y,Anatomy,Exam 1,GIT
+Describe the nerves of the antero-lateral abdominal wall and associated dermatomes (noting overlap).,,,y,Anatomy,Exam 1,GIT
+"Define the boundaries of the inguinal canal and transmitted structures (noting the oblique course of the spermatic cord through the abdominal wall, which tends to prevent herniation).",,,y,Anatomy,Exam 1,GIT
+Describe the coverings and contents of the spermatic cord.,,,y,Anatomy,Exam 1,GIT
+List the layers of scrotum (noting the corresponding layer of anterior abdominal wall for each).,,,y,Anatomy,Exam 1,GIT
+State the contents of the scrotum (noting the position of the testis and parts of the epididymis).,,,y,Anatomy,Exam 1,GIT
+"Delineate the parts of the gut (foregut, midgut and hindgut).",,,y,Anatomy,Exam 1,GIT
+"Describe the mesenteries of the foregut (ventral and dorsal mesogastrium), midgut and hindgut (the mesentery, transverse mesocolon and sigmoid mesocolon).",,,y,Anatomy,Exam 1,GIT
+Outline the greater and lesser sacs of the peritoneal cavity (with omental foramen between them).,,,y,Anatomy,Exam 1,GIT
+"List out the superficial (unpaired, intraperitoneal), middle (unpaired, retroperitoneal) and deep (paired, retroperitoneal) layers of viscera.",,,y,Anatomy,Exam 1,GIT
+Note the arrangement of the peritoneum and peritoneal cavity in the pelvis (compare and contrast the lowest part in someone who has uterus versus someone without an uterus).,,,y,Anatomy,Exam 1,GIT
+"Describe the arrangement in situ of the urinary, digestive and internal genital organs (we will cover further detail in pelvis next semester).",,,y,Anatomy,Exam 1,GIT
+"Identify the parts and major features of the liver, gallbladder, pancreas (including pancreatic duct), spleen, biliary tract and portal venous system (its course and major tributaries).",,,y,Anatomy,Exam 1,GIT
+"Compare and contrast the major features of the abdominal oesophagus, stomach, duodenum, jejunum, ileum, caecum (and appendix), colon (ascending, transverse, descending and sigmoid) and rectum (including relevant parts, where appropriate).",,,y,Anatomy,Exam 1,GIT
+"Describe the arterial supply to the foregut, midgut and hindgut.",,,y,Anatomy,Exam 1,GIT
+Identify the parts and major anatomical features of the kidneys and associated structures (noting internal and external features and the relevant vasculature).,,,y,Anatomy,Exam 1,Renal
+Describe the anatomy of the posterior abdominal wall (and identify key relationships to this anatomical region).,,,y,Anatomy,Exam 1,Renal
+Examine the issues around integrative medicine (IM) research and funding,,Evidence in integrative medicine,y,Int Med,Exam 1,Extra
+Use selected examples of research to illustrate principles,,Evidence in integrative medicine,y,Int Med,Exam 1,Extra
+Cultivate healthy scepticism regarding healthcare,,Evidence in integrative medicine,y,Int Med,Exam 1,Extra
+"Understand ethical, legal and economic issues associated with integrated medicine",,Ethical and economic issues,y,Int Med,Exam 1,Extra
+"View these issues in the context of case studies, guiding principles and regulation issues",,Ethical and economic issues,y,Int Med,Exam 1,Extra
+"Understand applicable medicine in the field of asthma, cancer, immunity, menopause, and Multiple Sclerosis",,Application of integrative medicine health care,y,Int Med,Exam 1,Extra
+Understand the placebo response,,Mind and body 1,y,Int Med,Exam 1,Extra
+Understand stress psychology and physiology,,Mind and body 2,y,Int Med,Exam 1,Extra
+"Understand the mind, emotion and health",,Mind and body 3,y,Int Med,Exam 1,Extra
+Understand MBM (Mind-Body Medicine) in the treatment of illness,,Mind and body 4,y,Int Med,Exam 1,Extra
+Understand epigenetics,,Mind and body 5,y,Int Med,Exam 1,Extra
+"Understand the science and clinical implications of mind-body medicine regarding technology, attention regulation, PNI, humour, and music",,Mind and body 2,y,Int Med,Exam 1,Extra
+"Understand applicable medicine in the field of asthma, cancer, immunity, menopause, and Multiple Sclerosis",,Mind and body 2,y,Int Med,Exam 1,Extra
+Define Evidence-Based Medicine (EBM),,Introduction to Evidence-Based Medicine (EBM),y,EBM,Exam 2,Extra
+Identify and describe the principles of EBM,,Introduction to Evidence-Based Medicine (EBM),y,EBM,Exam 2,Extra
+Explore and discuss strengths and limitations of EBM,,Introduction to Evidence-Based Medicine (EBM),y,EBM,Exam 2,Extra
+Discuss the steps of EBM,,Introduction to Evidence-Based Medicine (EBM),y,EBM,Exam 2,Extra
+Discuss and demonstrate the steps of evidence-based medicine,,Ask & access to the best available evidence,y,EBM,Exam 2,Extra
+Develop research questions,,Ask & access to the best available evidence,y,EBM,Exam 2,Extra
+Locate and critically appraise the best available evidence,,Ask & access to the best available evidence,y,EBM,Exam 2,Extra
+Demonstrate the steps and components of a critical appraisal of a paper,,Appraising the evidence critically,y,EBM,Exam 2,Extra
+Describe key characteristics of a systematic review,,Appraising the evidence critically,y,EBM,Exam 2,Extra
+Interpret a meta-analysis and funnel plot,,Appraising the evidence critically,y,EBM,Exam 2,Extra
+Examine the process of clinical reasoning and things that can go wrong with it,,Applying your findings and clinical reasoning,y,EBM,Exam 2,Extra
+Review the concepts of sensitivity and specificity and use them to calculate likelihood ratios,,Applying your findings and clinical reasoning,y,EBM,Exam 2,Extra
+Use likelihood ratios to estimate post-test probabilities from pre-test probabilities,,Applying your findings and clinical reasoning,y,EBM,Exam 2,Extra
+Use likelihood ratios to choose tests to rule in and rule out diagnoses,,Applying your findings and clinical reasoning,y,EBM,Exam 2,Extra
+Identify the role of clinical guidelines in practice,,Assessing clinical practice guidelines,y,EBM,Exam 2,Extra
+Discuss the role of clinical guidelines and their importance,,Assessing clinical practice guidelines,y,EBM,Exam 2,Extra
+Demonstrate the ability to apply clinical guidelines to be context-specific,,Assessing clinical practice guidelines,y,EBM,Exam 2,Extra
+Illustrate examples of situations in which a doctor might need clinical guidelines,,Assessing clinical practice guidelines,y,EBM,Exam 2,Extra
 Describes the clinical significance of particular respiratory symptoms and their relevance to the processes of diagnosis and clinical decision-making,"Clinical Semiology of the Respiratory System:
 Bridging Anamnesis and Pathophysiological Diagnosis
 A Comprehensive Instructor Guide for Year 2 Clinical Skills Development
@@ -1662,7 +1662,7 @@ Slowly progressive, permanent shortness of breath that no longer responds to bro
 Long-term occupational exposure to fine wood dust at a sawmill, with a prior medical diagnosis of 'asthma from wood dust'.	Chronic inhalation of organic wood dust acts as a persistent irritant and allergen, causing ongoing immune-mediated inflammation in the airways. This occupational hazard directly caused his early industrial asthma and has contributed to permanent lung damage over decades of work.
 A 50 pack-year smoking history (25 cigarettes per day for approximately 40 years, stopped at age 60).	This heavy smoking history is a major cause of permanent lung damage, leading to the destruction of alveoli (emphysema) and chronic inflammation of the airways (chronic bronchitis). The combination of heavy smoking and decades of wood dust exposure has accelerated his decline in lung function.
 
-Clinical Synthesis for Case C: David’s clinical picture represents a complex combination of severe Chronic Obstructive Pulmonary Disease (COPD) and long-standing occupational asthma, often referred to as Asthma-COPD Overlap (ACO). The progressive nature of his breathlessness and the lack of response to inhalers confirm permanent airway damage. His 50 pack-year smoking history and decades of inhaling wood dust at the sawmill have combined to cause significant damage to both his airways and lung tissue. His situation is further complicated by social challenges, including difficulty getting groceries and inconsistent access to his medications, which directly impact his health and disease management.",,y,Clinical skills,1,Exam 1,Respiratory
+Clinical Synthesis for Case C: David’s clinical picture represents a complex combination of severe Chronic Obstructive Pulmonary Disease (COPD) and long-standing occupational asthma, often referred to as Asthma-COPD Overlap (ACO). The progressive nature of his breathlessness and the lack of response to inhalers confirm permanent airway damage. His 50 pack-year smoking history and decades of inhaling wood dust at the sawmill have combined to cause significant damage to both his airways and lung tissue. His situation is further complicated by social challenges, including difficulty getting groceries and inconsistent access to his medications, which directly impact his health and disease management.",,y,Clinical skills,Exam 1,Respiratory
 Describes the clinical significance of clinical signs found in the respiratory examination and their relevance to the processes of diagnosis and clinical decision-making,"The Semiology of Respiratory Physical Examination:
 Objective Diagnostics and Clinical Correlations
 A Clinical Reference Guide Linking Physical Manifestations to Pulmonary Pathophysiology
@@ -1749,7 +1749,7 @@ Pneumonia (Consolidation)	Tachypnoea, restricted movement on the affected side, 
 Pleural Effusion	Tachypnoea, reduced or absent chest wall movement on the affected side. Trachea may look shifted away if it is a large effusion.	Reduced chest expansion on the affected side. Vocal fremitus is absent or significantly decreased over the fluid. Trachea may be deviated away from the side of a large effusion.	Distinct stony dull percussion note over the fluid collection. Normal resonance may be present above the effusion line.	Absent or significantly reduced breath sounds over the effusion. Sparing of sounds above the fluid level, where a localized rub or bronchial breath sounds may be heard. Vocal resonance and whispering pectoriloquy are absent over the fluid.
 Pneumothorax	Tachypnoea, obvious respiratory distress, unilateral chest asymmetry with reduced or absent movement on the affected side. Tracheal deviation seen in a tension pneumothorax.	Significantly reduced or absent chest expansion on the affected side. Vocal fremitus is absent or markedly decreased. Trachea is deviated away from the affected side in a tension pneumothorax.	Hyper-resonant percussion note over the affected side due to the abnormal collection of air in the pleural space.	Absent or severely diminished breath sounds over the entire affected lung field. Added sounds are typically absent. Vocal resonance and whispering pectoriloquy are completely absent.
 
-In summary, executing an orderly and thorough respiratory physical examination transforms clinical observations into a structured assessment. By carefully correlating peripheral markers like cyanosis, asterixis, and lymphadenopathy with the corresponding inspection, palpation, percussion, and auscultation findings on the chest wall, clinicians can establish a clear connection between physical signs and the underlying pulmonary condition.",,y,Clinical skills,1,Exam 1,Respiratory
+In summary, executing an orderly and thorough respiratory physical examination transforms clinical observations into a structured assessment. By carefully correlating peripheral markers like cyanosis, asterixis, and lymphadenopathy with the corresponding inspection, palpation, percussion, and auscultation findings on the chest wall, clinicians can establish a clear connection between physical signs and the underlying pulmonary condition.",,y,Clinical skills,Exam 1,Respiratory
 "Identify the radiological features of common respiratory problems, and some clinical situations in which this investigation may be used","Respiratory Investigations and Device Pharmacotherapy:
 Pathophysiological Interpretation and Clinical Practice
 An Advanced Instructor Guide for Objective Pulmonary Diagnostics and Delivery Logistics
@@ -1856,7 +1856,7 @@ Peak Flow Meter	Measures maximum air speed on a single hard blast. Values are co
 Metered-Dose Inhaler (pMDI)	A pressurized canister that releases a fine aerosol spray. Requires coordinating the press with a slow, deep breath.	Delivers medicine directly to the lung tissue. Relievers quickly relax airway smooth muscles; steroid preventers reduce ongoing inflammation daily and require a mouth rinse.
 Spacer Chamber	A clear plastic suspension chamber. Must be air-dried without rinsing to prevent static buildup.	Holds the medicine mist suspended, removing the need for coordination. It traps large droplets to reduce side effects and delivers more medicine deep into the lungs.
 
-In summary, mastering the interpretation of objective diagnostic tools like chest X-rays and peak flow meters, along with the proper use of inhalers and spacers, is essential for delivering effective respiratory care. By combining systematic analysis with clear, patient-centered counseling, clinicians can significantly improve treatment outcomes and support long-term self-management for patients with chronic respiratory conditions.",,y,Clinical skills,1,Exam 1,Respiratory
+In summary, mastering the interpretation of objective diagnostic tools like chest X-rays and peak flow meters, along with the proper use of inhalers and spacers, is essential for delivering effective respiratory care. By combining systematic analysis with clear, patient-centered counseling, clinicians can significantly improve treatment outcomes and support long-term self-management for patients with chronic respiratory conditions.",,y,Clinical skills,Exam 1,Respiratory
 Describes the clinical significance of particular GIT symptoms and their relevance to the processes of diagnosis and clinical decision-making,"Clinical Semiology of the Gastrointestinal System
 An Instructor's Guide to History Taking, Physical Examination, and Diagnostic Logic
 
@@ -1950,7 +1950,7 @@ To maximize the educational value of these clinical scenarios, students should a
 •	Synthesize the History First: Always attempt to formulate a preliminary differential diagnosis using history findings alone before reviewing objective examination data. This practice strengthens deductive reasoning and mirrors real-world diagnostic workflows.
 •	Differentiate Localized vs. Generalized Signs: Carefully contrast localized peritoneal irritation signs (such as focal guarding, rebound tenderness, and Rovsing's or Murphy's signs) with diffuse, non-peritoneal tenderness. This distinction is critical for separating surgical emergencies from self-limiting medical conditions.
 •	Incorporate Laboratory Data Safely: Laboratory and imaging investigations should serve to confirm or refine clinical hypotheses, rather than replace detailed physical assessment. Always interpret findings like a neutrophilic leukocytosis or elevated CRP within the context of the patient's presentation.
-By systematically linking subjective clinical history, objective physical signs, and diagnostic findings, students develop the structured clinical reasoning necessary to deliver safe, accurate, and high-quality patient care.",,y,Clinical skills,1,Exam 1,GIT
+By systematically linking subjective clinical history, objective physical signs, and diagnostic findings, students develop the structured clinical reasoning necessary to deliver safe, accurate, and high-quality patient care.",,y,Clinical skills,Exam 1,GIT
 Describes the clinical significance of clinical signs found in the GIT examination and their relevance to the processes of diagnosis and clinical decision-making,"The Gastrointestinal System Physical Examination
 An Instructor's Comprehensive Guide to Clinical Signs, Surface Anatomy, and Diagnostic Correlation
 In clinical medicine, the physical examination of the gastrointestinal system (GIT) serves as a cornerstone of diagnostic reasoning. While modern medical imaging and laboratory diagnostics provide crucial metrics, a structured, meticulous bedside examination yields immediate, real-time insights into a patient's pathophysiological state. As clinical practitioners, our examination framework must be both thorough and empathetic, transforming objective physical observations into definitive diagnostic hypotheses. This reference manual maps out the comprehensive clinical methodology required for an institutional-grade gastrointestinal examination, explicitly detailing the clinical significance, anatomical correlations, and underlying pathologies linked to every observed sign.
@@ -2080,7 +2080,7 @@ Epigastric Renal Bruit	Renal Artery Stenosis	Turbulent blood flow through a narr
 To build the muscle memory needed for these techniques, students should practice regularly in groups of three, alternating through three specific clinical roles:
 •	The Doctor: Practices the physical exam sequence, focusing on maintaining visual contact with the patient's face to check for pain, and then summarizes and presents their findings clearly to the observer.
 •	The Patient: Focuses on the experience of being examined, noting whether the doctor's hands were warm, if the instructions were clear, and if their privacy and comfort were respected.
-•	The Observer: Uses a structured checklist to monitor the doctor's technique, timing, positioning, and patient communication, providing constructive feedback at the end of the session.",,y,Clinical skills,1,Exam 1,GIT
+•	The Observer: Uses a structured checklist to monitor the doctor's technique, timing, positioning, and patient communication, providing constructive feedback at the end of the session.",,y,Clinical skills,Exam 1,GIT
 Describe the clinical significance of particular gastrointestinal symptoms and signs found on examination of the gastrointestinal system – abdominal examination and their relevance to the processes of diagnosis and clinical decision-making.,"Advanced Clinical Reasoning in Gastrointestinal Medicine
 A Comprehensive Instructor Guide to Semiology, Sign-Disease Correlation, and Case Synthesis
 1. Introduction to Gastrointestinal Clinical Reasoning
@@ -2144,7 +2144,7 @@ Differential Diagnosis Evolution & Integration
 2. Post-Examination Synthesis: The physical coexistence of multiple spider naevi, palmar erythema, splenomegaly, and true percussible ascites confirms that the patient has progressed past simple fatty liver into decompensated Liver Cirrhosis with secondary Portal Hypertension. The small percussible liver span reflects the architectural remodeling and parenchymal contraction characteristic of end-stage hepatic fibrosis.
 Diagnostic Investigations & Definitive Conclusion
 The optimal workup demands a complete blood count (CBC), coagulation profile (INR), standard LFTs, and an abdominal ultrasound with Doppler evaluation of the portal vein. The investigation findings are highly characteristic: CBC reveals a profound macrocytic anemia (MCV 106 fL) and significant thrombocytopenia (platelets 85 x 10^9/L), reflecting hypersplenism secondary to portal congestion. The coagulation profile demonstrates an elevated INR of 1.6, confirming impaired hepatic synthetic function. LFTs show a classic AST to ALT ratio greater than 2:1 (AST 142 U/L, ALT 61 U/L) and a serum albumin level reduced to 28 g/L. Abdominal ultrasound confirms a nodular, shrunken, cirrhotic liver architecture, splenomegaly, a large volume of free ascitic fluid, and a dilated portal vein with attenuated, blunted hepatopetal blood flow.
-Definitive Diagnosis: Alcohol-induced decompensated liver cirrhosis, complicated by portal hypertension, ascites, and impaired hepatic synthetic capacity.",,y,Clinical skills,1,Exam 1,GIT
+Definitive Diagnosis: Alcohol-induced decompensated liver cirrhosis, complicated by portal hypertension, ascites, and impaired hepatic synthetic capacity.",,y,Clinical skills,Exam 1,GIT
 Describes the clinical significance of particular renal and urinary symptoms and clinical signs. Describe their relevance to the processes of diagnosis and clinical decision-making and understand the indications for and interpretation of a common urinary investigation,"Clinical Reasoning Framework for the Renal and Urinary System:
 Connecting Signs, Symptoms, and Pathophysiology
 In clinical medicine, the renal and urinary tract serves as a critical systemic lens. Pathophysiological alterations within this system manifest through a complex matrix of local changes in micturition, alterations in urinary physical traits, structural abdominal changes, and widespread peripheral constitutional signs. This master-level educational brief provides a thorough synthesis of renal and urinary clinical assessments, explicitly mapping historical symptoms and physical examination findings to their underlying medical pathologies.
@@ -2206,7 +2206,7 @@ Frothy Urine appearance	Glomerular Filtration Barrier	High-grade proteinuria cau
 Gross or Microscopic Haematuria	Entire Genitourinary Tract	Disruption of mucosal/vascular integrity (Malignancy, Stones, Nephritis)
 Asterixis & Sallow Complexion	Systemic / Neurological / Skin	Accumulation of toxic nitrogenous wastes due to severe kidney failure (Uremia)
 Renal Artery Bruit (Auscultation)	Renal Vasculature	Turbulent arterial blood flow through a narrowed, stenosed renal artery
-",,y,Clinical skills,1,Exam 2,Renal
+",,y,Clinical skills,Exam 2,Renal
 Describes the clinical significance of clinical signs found in the endocrine examination and their relevance to the processes of diagnosis and clinical decision-making,"CLINICAL ENDOCRINOLOGY: AN INSTRUCTOR'S GUIDE
 1. Overview of the Endocrine System
 The endocrine system represents a highly integrated and complex physiological regulatory network. Unlike discrete anatomical organ systems (such as the cardiovascular or respiratory systems), the endocrine system exerts its metabolic and physiological control globally across the entire body. Because localized symptoms frequently reflect systemic pathologies, the clinician must maintain a high index of suspicion during clinical evaluation. While diabetes mellitus stands as the most prevalent endocrine disorder encountered in general clinical practice, thyroid conditions are also extraordinarily common. Other endocrine pathologies involving the parathyroid, adrenal, and pituitary glands occur less frequently but carry profound diagnostic significance. This text systematically correlates clinical signs observed during physical examination with their underlying pathophysiological mechanisms, establishing an institutional-grade roadmap for diagnostic reasoning.
@@ -2232,7 +2232,7 @@ The clinician initially stands BEHIND the sitting patient, whose neck should be 
 • Percussion: 
 Percuss directly over the upper manubrium sterni. Normal mediastinal structures yield a resonant sound; dullness to percussion over the upper sternum indicates a large retrosternal extension of a goitre or mediastinal mass.
 • Auscultation: 
-Using the bell of the stethoscope, listen carefully over each lateral lobe. The presence of an audible systolic thyroid bruit indicates markedly accelerated, hyperdynamic local blood flow, highly characteristic of Graves' disease.",,y,Clinical skills,1,Exam 2,Endocrine
+Using the bell of the stethoscope, listen carefully over each lateral lobe. The presence of an audible systolic thyroid bruit indicates markedly accelerated, hyperdynamic local blood flow, highly characteristic of Graves' disease.",,y,Clinical skills,Exam 2,Endocrine
 Describes the clinical significance of particular endocrine symptoms and clinical signs. Describe their relevance to the processes of diagnosis and clinical decision-making,"3. Pathophysiological Correlations of Thyroid Disorders
 3.1 Hyperthyroidism and Thyrotoxicosis
 Thyrotoxicosis is the clinical syndrome resulting from elevated circulating levels of free T4, free T3, or both. The clinical features mirror a state of severe metabolic acceleration and heightened sympathetic nervous system sensitivity. The mechanisms driving these symptoms include:
@@ -2366,7 +2366,7 @@ Acromegaly is caused by autonomous hypersecretion of Growth Hormone (GH), almost
 The underlying pathophysiology depends on epiphyseal fusion. In children, prior to epiphyseal fusion, excess GH drives symmetric acceleration of linear bone growth, resulting in pituitary Gigantism. After the epiphyses have united in adulthood, no further linear skeletal growth is possible; instead, bones can only become broader, and soft tissues/viscera undergo progressive organomegaly. This accounts for the prominent facial features, prognathism, frontal bossing, and spade-shaped hands. Excess GH exerts an absolute anti-insulin, diabetogenic effect, increasing hepatic glucose output and inducing insulin resistance (impaired glucose tolerance). It concurrently promotes soft-tissue expansion and generalized fluid retention, causing secondary hypertension and mechanical compression of the median nerve within the wrist (carpal tunnel syndrome). As the GH-secreting pituitary adenoma undergoes upward expansion (suprasellar extension), it physically encroaches upon and compresses the decussating fibers of the optic chiasm situated directly above the sella turcica, causing an irreversible bitemporal hemianopia (loss of both outer visual fields).
 Hypopituitarism
 Hypopituitarism refers to a partial or complete deficiency of anterior (and occasionally posterior) pituitary hormones. Etiological causes include space-occupying lesions (pituitary macroadenomas, granulomata, craniopharyngiomas, local sarcomas, or metastatic carcinomas), iatrogenic damage (surgical removal or radiation therapy), severe head injuries, Sheehan's syndrome (acute postpartum pituitary necrosis secondary to severe obstetric haemorrhage and hypovolaemic shock), Empty Sella syndrome, acute pituitary infarction/apoplexy, and idiopathic causes.
-The clinical features directly mirror the sequential or global loss of downstream target endocrine organ function: 1. Gonadotrophin (LH/FSH) Deficiency: Leads to secondary hypogonadism, presenting as amenorrhoea and infertility in females, and decreased libido, erectile dysfunction, infertility, and loss of facial/body hair in males. In the acute postpartum period, a lack of prolactin prevents normal lactation. 2. Thyrotropin (TSH) Deficiency: Induces secondary hypothyroidism, presenting with marked fatigue, weight gain, and cold intolerance; notably, a goitre is entirely absent because TSH stimulation is lacking. 3. ACTH and Gonadotrophin Co-deficiency: Drives a severe, combined loss of secondary sex characteristics, resulting in rapid loss of axillary and pubic hair. 4. Corticotropin (ACTH) Deficiency: Causes secondary adrenal insufficiency, presenting with severe fatigue, weight loss, and hypometabolism; skin hyperpigmentation is characteristically absent because ACTH levels are low. Under acute physiological stress, unmanaged ACTH deficiency induces sudden severe hypotension, high fever, and profound, life-threatening hyponatremia, carrying an exceptionally high mortality rate if untreated.",,y,Clinical skills,1,Exam 2,Endocrine
+The clinical features directly mirror the sequential or global loss of downstream target endocrine organ function: 1. Gonadotrophin (LH/FSH) Deficiency: Leads to secondary hypogonadism, presenting as amenorrhoea and infertility in females, and decreased libido, erectile dysfunction, infertility, and loss of facial/body hair in males. In the acute postpartum period, a lack of prolactin prevents normal lactation. 2. Thyrotropin (TSH) Deficiency: Induces secondary hypothyroidism, presenting with marked fatigue, weight gain, and cold intolerance; notably, a goitre is entirely absent because TSH stimulation is lacking. 3. ACTH and Gonadotrophin Co-deficiency: Drives a severe, combined loss of secondary sex characteristics, resulting in rapid loss of axillary and pubic hair. 4. Corticotropin (ACTH) Deficiency: Causes secondary adrenal insufficiency, presenting with severe fatigue, weight loss, and hypometabolism; skin hyperpigmentation is characteristically absent because ACTH levels are low. Under acute physiological stress, unmanaged ACTH deficiency induces sudden severe hypotension, high fever, and profound, life-threatening hyponatremia, carrying an exceptionally high mortality rate if untreated.",,y,Clinical skills,Exam 2,Endocrine
 Describes the clinical significance of particular diabetes symptoms and clinical signs. Describe their relevance to the processes of diagnosis and clinical decision-making,"The Multi-System Semiology of Diabetes Mellitus
 A Clinical Reference Guide on the Diagnostic Translation of Signs to Underlying Pathophysiology
 Diabetes mellitus is a prototypical multi-system endocrine metabolic disorder. In clinical practice, it represents an intricate diagnostic paradigm where a single underlying metabolic derangement manifests across multiple anatomical boundaries, including the neurological, cardiovascular, musculoskeletal, and dermatological systems. The primary role of clinical assessment is to systematically combine comprehensive history-taking with a regional examination to map physical signs back to their precise pathophysiological origins and chronic microvascular or macrovascular complications.
@@ -2475,71 +2475,71 @@ Capillary blood glucose testing using a handheld glucometer provides a rapid est
 •	Device Preparation: Insert the electrode end of the test strip into the port, ensuring the device activates and displays a flashing 'blood drop' icon.
 •	Capillary Sampling: Perform a finger prick using the lancet device. Puncture the lateral or medial sides of the distal phalanx; avoid the highly sensitive central finger pad.
 •	Biochemical Reaction: Gently touch the drop of capillary blood to the yellow target area on the protruding end of the strip. The sample will be drawn upward into the reaction chamber via capillary action.
-•	Hemostasis & Disposal: Apply firm pressure to the puncture site using clean gauze. Safely discard the contaminated lancet directly into the sharps container and dispose of all clinical waste appropriately.",,y,Clinical skills,1,Exam 2,Endocrine
-Identify the components of the lung in histological sections,,Week 1 workshop resp histology,y,Anatomy,1,Exam 1,Respiratory
-Identify cells and tissues in the lung using light and electron microscopy,,Week 1 workshop resp histology,y,Anatomy,1,Exam 1,Respiratory
-Demonstrate knowledge of the key respiratory physiology mechanisms,,Week 1 workshop resp cases,y,Physiology,1,Exam 1,Respiratory
-"Understand and interpret flow-volume loops, comparing baseline data to data post-bronchodilator administration",,Week 1 workshop resp cases,y,Physiology,1,Exam 1,Respiratory
-"Understand and interpret spirometry data, lung volumes, airway function parameters, and CO transfer factors",,Week 1 workshop resp cases,y,Physiology,1,Exam 1,Respiratory
-Analyse a range of data in order to determine potential patient aetiologies in case-based learning,,Week 1 workshop resp cases,y,Physiology,1,Exam 1,Respiratory
-Apply your anatomical knowledge to develop a differential diagnosis based on patient symptoms as it relates to thoracic anatomy,,Week 2 workshop thoracic cases,y,Anatomy,1,Exam 1,Respiratory
-Appreciate the range of common respiratory infections,,Week 2 workshop lower rti cases,y,Microbiology,1,Exam 1,Respiratory
-Be familiar with the major respiratory pathogens & the infections caused,,Week 2 workshop lower rti cases,y,Microbiology,1,Exam 1,Respiratory
-Develop an approach to assessment and appropriate treatment of common respiratory infections,,Week 2 workshop lower rti cases,y,Microbiology,1,Exam 1,Respiratory
-Be aware of rare but potentially serious respiratory infections requiring urgent assessment & referral,,Week 2 workshop lower rti cases,y,Microbiology,1,Exam 1,Respiratory
-Assess critically the need for antibiotics in common respiratory infections,,Week 2 workshop lower rti cases,y,Microbiology,1,Exam 1,Respiratory
-"Engage clinical reasoning skills and begin to describe complexities related to ANS clinical diagnosis, management and treatment.",,Week 3 workshop git ans,y,Anatomy,1,Exam 1,GIT
-"Use your anatomical, physiology and pharmacology knowledge to develop a differential diagnosis based on patient symptoms as it relates to ANS.",,Week 3 workshop git ans,y,Anatomy,1,Exam 1,GIT
-Concept and consolidation - respiratory,,Week 3 workshop respiratory consolidation,y,Clinical skills,1,Exam 1,Respiratory
-Apply your anatomical knowledge to develop a differential diagnosis based on patient symptoms as it relates to gastrointestinal (GIT) anatomy.,,Week 4 workshop git cases,y,Anatomy,1,Exam 1,GIT
-Explain (using a diagram) basal and receptor-mediated secretion of HCl from gastric parietal cells.,,Week 4 workshop ulcer reflux,y,Pharmacology,1,Exam 1,GIT
-"Describe drugs that are commonly used to treat excess parietal HCl secretion (associated with gastric ulcers), including their mechanisms of action.",,Week 4 workshop ulcer reflux,y,Pharmacology,1,Exam 1,GIT
-Describe why a high percentage of toddlers suffer constipation and which pharmacological therapies are suitable.,,Week 4 workshop ulcer reflux,y,Pharmacology,1,Exam 1,GIT
-"Identify the components, cell types and functions of the layers of the gastrointestinal tract.",,Week 5 workshop git histology,y,Anatomy,1,Exam 1,GIT
-Explain the histological/structural and functional differences between different regions of the gastrointestinal tract,,Week 5 workshop git histology,y,Anatomy,1,Exam 1,GIT
-"Describe the histological structure and features of the liver, gall bladder and pancreas.",,Week 5 workshop git histology,y,Anatomy,1,Exam 1,GIT
-Concept and consolidation - GIT 1,,Week 5 workshop git consolidation 1,y,Clinical skills,1,Exam 1,GIT
-Recognize the impact of viral hepatitis and parasitic infections of the GIT,,Week 6 workshop infections of git,y,Microbiology,1,Exam 1,GIT
-Provide examples of specific intestinal parasitic organisms and describe the diseases caused,,Week 6 workshop infections of git,y,Microbiology,1,Exam 1,GIT
-Identify the most common forms of viral hepatitis,,Week 6 workshop infections of git,y,Microbiology,1,Exam 1,GIT
-"Describe the clinical presentation, complications and diagnosis of viral hepatitis and parasitic infections of the GIT",,Week 6 workshop infections of git,y,Microbiology,1,Exam 1,GIT
-"Antiparasitic Drug of Choice (Antiprotozoal and Anthelmintic), the mechanism of action and any precautions associated with the use of a particular drug.",,Week 6 workshop infections of git,y,Microbiology,1,Exam 1,GIT
-Concept and consolidation - GIT 2,,Week 6 workshop git consolidation 2,y,Clinical skills,1,Exam 1,GIT
-Apply your anatomical knowledge to develop a differential diagnosis based on patient symptoms as it relates to abdominal anatomy.,,Week 7 workshop posterior abdominal wall,y,Anatomy,1,Exam 2,Renal
-Apply your anatomical knowledge to develop a differential diagnosis based on patient symptoms as it relates to abdominal anatomy.,,Week 7 workshop posterior abdominal wall,y,Anatomy,1,Exam 2,Renal
-Apply your anatomical knowledge to develop a differential diagnosis based on patient symptoms as it relates to abdominal anatomy.,,Week 7 workshop posterior abdominal wall,y,Anatomy,1,Exam 2,Renal
-Apply your anatomical knowledge to develop a differential diagnosis based on patient symptoms as it relates to abdominal anatomy.,,Week 7 workshop posterior abdominal wall,y,Anatomy,1,Exam 2,Renal
-Describe the basic structure and function of the nephron,,Week 7 workshop urinary histology,y,Anatomy,1,Exam 2,Renal
-"Describe the function of the three cell types found in the glomerulus, and identify them using light microscopy",,Week 7 workshop urinary histology,y,Anatomy,1,Exam 2,Renal
-"Explain the function and structure of the glomerular filtration barrier, and identify using electron microscopy",,Week 7 workshop urinary histology,y,Anatomy,1,Exam 2,Renal
-"Describe the function and microscopic structure of the proximal and distal convoluted tubules, and identify them using light microscopy",,Week 7 workshop urinary histology,y,Anatomy,1,Exam 2,Renal
-"Define transitional epithelium, key features of ureter histology and function, and how it is made up of the four primary tissue types",,Week 7 workshop urinary histology,y,Anatomy,1,Exam 2,Renal
-Explain (using a diagram) the mechanisms of action of different classes of anti-hypertensive drugs,,Week 10 workshop hypertension,y,Pharmacology,1,Exam 2,Renal
-Describe drugs classes that are commonly used to treat hypertension and explain the patient and drug factors that influence the choice of anti-hypertensive therapy,,Week 10 workshop hypertension,y,Pharmacology,1,Exam 2,Renal
-Understand strategies for hypertension management associated with comorbidities,,Week 10 workshop hypertension,y,Pharmacology,1,Exam 2,Renal
-Describe how changes in total body sodium and water affect the volumes and osmolarities of the different body fluid compartments,,Week 10 workshop renal physiology,y,Physiology,1,Exam 2,Renal
-Understand the mechanisms of sodium reabsorption in the various portions of the tubules,,Week 10 workshop renal physiology,y,Physiology,1,Exam 2,Renal
-Explain the physiological mechanisms that regulate glomerular filtration rate (GFR) in response to changes in arterial blood pressure.,,Week 10 workshop renal physiology,y,Physiology,1,Exam 2,Renal
-Understand the role of the Renin-Angiotensin-Aldosterone System (RAAS) in regulating total body sodium and water and thus mean arterial blood pressure.,,Week 10 workshop renal physiology,y,Physiology,1,Exam 2,Renal
-Explain how the respiratory and renal systems participate in buffering of the body’s [H+].,,Week 11 workshop physiology,y,Physiology,1,Exam 2,Renal
-Describe the four main types of acid-base disorders and explain what compensations occur in them.,,Week 11 workshop physiology,y,Physiology,1,Exam 2,Renal
-Interpret blood gas data to identify acid-base disorders,,Week 11 workshop physiology,y,Physiology,1,Exam 2,Renal
-Evaluate what compensations occur in acid-base disorders,,Week 11 workshop physiology,y,Physiology,1,Exam 2,Renal
-Distinguish acute from chronic acid-base disturbances,,Week 11 workshop physiology,y,Physiology,1,Exam 2,Renal
-Understand the importance of the anion gap,,Week 11 workshop physiology,y,Physiology,1,Exam 2,Renal
-Apply the Bedside (Boston) rules,,Week 11 workshop physiology,y,Physiology,1,Exam 2,Renal
-Concept and consolidation - renal,,Week 11 workshop renal consolidation,y,Clinical skills,1,Exam 2,Renal
-Concept and consolidation - renal,,Week 11 workshop renal consolidation,y,Clinical skills,1,Exam 2,Renal
-Concept and consolidation - renal,,Week 11 workshop renal consolidation,y,Clinical skills,1,Exam 2,Renal
-Concept and consolidation - renal,,Week 11 workshop renal consolidation,y,Clinical skills,1,Exam 2,Renal
-Concept and consolidation - endocrine,,Week 12 workshop endocrine consolidation,y,Clinical skills,1,Exam 2,Endocrine
-Concept and consolidation - endocrine,,Week 12 workshop endocrine consolidation,y,Clinical skills,1,Exam 2,Endocrine
-Concept and consolidation - endocrine,,Week 12 workshop endocrine consolidation,y,Clinical skills,1,Exam 2,Endocrine
-Concept and consolidation - endocrine,,Week 12 workshop endocrine consolidation,y,Clinical skills,1,Exam 2,Endocrine
-Concept and consolidation - thyroid,,Week 12 workshop thyroid,y,Clinical skills,1,Exam 2,Endocrine
-Concept and consolidation - thyroid,,Week 12 workshop thyroid,y,Clinical skills,1,Exam 2,Endocrine
-Concept and consolidation - thyroid,,Week 12 workshop thyroid,y,Clinical skills,1,Exam 2,Endocrine
-Concept and consolidation - thyroid,,Week 12 workshop thyroid,y,Clinical skills,1,Exam 2,Endocrine
-"Understand the histology of the pituitary, adrenal and thyroid glands and be able to identify their composite cells and structures",,Week 12 workshop endocrine histology,y,Anatomy,1,Exam 2,Endocrine
-"Understand how the histology of the pituitary, adrenal and thyroid glands relate to their function",,Week 12 workshop endocrine histology,y,Anatomy,1,Exam 2,Endocrine
-"Know the basic functional histology of the endocrine components of the testes, ovaries and pancreas",,Week 12 workshop endocrine histology,y,Anatomy,1,Exam 2,Endocrine
+•	Hemostasis & Disposal: Apply firm pressure to the puncture site using clean gauze. Safely discard the contaminated lancet directly into the sharps container and dispose of all clinical waste appropriately.",,y,Clinical skills,Exam 2,Endocrine
+Identify the components of the lung in histological sections,,Week 1 workshop resp histology,y,Anatomy,Exam 1,Respiratory
+Identify cells and tissues in the lung using light and electron microscopy,,Week 1 workshop resp histology,y,Anatomy,Exam 1,Respiratory
+Demonstrate knowledge of the key respiratory physiology mechanisms,,Week 1 workshop resp cases,y,Physiology,Exam 1,Respiratory
+"Understand and interpret flow-volume loops, comparing baseline data to data post-bronchodilator administration",,Week 1 workshop resp cases,y,Physiology,Exam 1,Respiratory
+"Understand and interpret spirometry data, lung volumes, airway function parameters, and CO transfer factors",,Week 1 workshop resp cases,y,Physiology,Exam 1,Respiratory
+Analyse a range of data in order to determine potential patient aetiologies in case-based learning,,Week 1 workshop resp cases,y,Physiology,Exam 1,Respiratory
+Apply your anatomical knowledge to develop a differential diagnosis based on patient symptoms as it relates to thoracic anatomy,,Week 2 workshop thoracic cases,y,Anatomy,Exam 1,Respiratory
+Appreciate the range of common respiratory infections,,Week 2 workshop lower rti cases,y,Microbiology,Exam 1,Respiratory
+Be familiar with the major respiratory pathogens & the infections caused,,Week 2 workshop lower rti cases,y,Microbiology,Exam 1,Respiratory
+Develop an approach to assessment and appropriate treatment of common respiratory infections,,Week 2 workshop lower rti cases,y,Microbiology,Exam 1,Respiratory
+Be aware of rare but potentially serious respiratory infections requiring urgent assessment & referral,,Week 2 workshop lower rti cases,y,Microbiology,Exam 1,Respiratory
+Assess critically the need for antibiotics in common respiratory infections,,Week 2 workshop lower rti cases,y,Microbiology,Exam 1,Respiratory
+"Engage clinical reasoning skills and begin to describe complexities related to ANS clinical diagnosis, management and treatment.",,Week 3 workshop git ans,y,Anatomy,Exam 1,GIT
+"Use your anatomical, physiology and pharmacology knowledge to develop a differential diagnosis based on patient symptoms as it relates to ANS.",,Week 3 workshop git ans,y,Anatomy,Exam 1,GIT
+Concept and consolidation - respiratory,,Week 3 workshop respiratory consolidation,y,Clinical skills,Exam 1,Respiratory
+Apply your anatomical knowledge to develop a differential diagnosis based on patient symptoms as it relates to gastrointestinal (GIT) anatomy.,,Week 4 workshop git cases,y,Anatomy,Exam 1,GIT
+Explain (using a diagram) basal and receptor-mediated secretion of HCl from gastric parietal cells.,,Week 4 workshop ulcer reflux,y,Pharmacology,Exam 1,GIT
+"Describe drugs that are commonly used to treat excess parietal HCl secretion (associated with gastric ulcers), including their mechanisms of action.",,Week 4 workshop ulcer reflux,y,Pharmacology,Exam 1,GIT
+Describe why a high percentage of toddlers suffer constipation and which pharmacological therapies are suitable.,,Week 4 workshop ulcer reflux,y,Pharmacology,Exam 1,GIT
+"Identify the components, cell types and functions of the layers of the gastrointestinal tract.",,Week 5 workshop git histology,y,Anatomy,Exam 1,GIT
+Explain the histological/structural and functional differences between different regions of the gastrointestinal tract,,Week 5 workshop git histology,y,Anatomy,Exam 1,GIT
+"Describe the histological structure and features of the liver, gall bladder and pancreas.",,Week 5 workshop git histology,y,Anatomy,Exam 1,GIT
+Concept and consolidation - GIT 1,,Week 5 workshop git consolidation 1,y,Clinical skills,Exam 1,GIT
+Recognize the impact of viral hepatitis and parasitic infections of the GIT,,Week 6 workshop infections of git,y,Microbiology,Exam 1,GIT
+Provide examples of specific intestinal parasitic organisms and describe the diseases caused,,Week 6 workshop infections of git,y,Microbiology,Exam 1,GIT
+Identify the most common forms of viral hepatitis,,Week 6 workshop infections of git,y,Microbiology,Exam 1,GIT
+"Describe the clinical presentation, complications and diagnosis of viral hepatitis and parasitic infections of the GIT",,Week 6 workshop infections of git,y,Microbiology,Exam 1,GIT
+"Antiparasitic Drug of Choice (Antiprotozoal and Anthelmintic), the mechanism of action and any precautions associated with the use of a particular drug.",,Week 6 workshop infections of git,y,Microbiology,Exam 1,GIT
+Concept and consolidation - GIT 2,,Week 6 workshop git consolidation 2,y,Clinical skills,Exam 1,GIT
+Apply your anatomical knowledge to develop a differential diagnosis based on patient symptoms as it relates to abdominal anatomy.,,Week 7 workshop posterior abdominal wall,y,Anatomy,Exam 2,Renal
+Apply your anatomical knowledge to develop a differential diagnosis based on patient symptoms as it relates to abdominal anatomy.,,Week 7 workshop posterior abdominal wall,y,Anatomy,Exam 2,Renal
+Apply your anatomical knowledge to develop a differential diagnosis based on patient symptoms as it relates to abdominal anatomy.,,Week 7 workshop posterior abdominal wall,y,Anatomy,Exam 2,Renal
+Apply your anatomical knowledge to develop a differential diagnosis based on patient symptoms as it relates to abdominal anatomy.,,Week 7 workshop posterior abdominal wall,y,Anatomy,Exam 2,Renal
+Describe the basic structure and function of the nephron,,Week 7 workshop urinary histology,y,Anatomy,Exam 2,Renal
+"Describe the function of the three cell types found in the glomerulus, and identify them using light microscopy",,Week 7 workshop urinary histology,y,Anatomy,Exam 2,Renal
+"Explain the function and structure of the glomerular filtration barrier, and identify using electron microscopy",,Week 7 workshop urinary histology,y,Anatomy,Exam 2,Renal
+"Describe the function and microscopic structure of the proximal and distal convoluted tubules, and identify them using light microscopy",,Week 7 workshop urinary histology,y,Anatomy,Exam 2,Renal
+"Define transitional epithelium, key features of ureter histology and function, and how it is made up of the four primary tissue types",,Week 7 workshop urinary histology,y,Anatomy,Exam 2,Renal
+Explain (using a diagram) the mechanisms of action of different classes of anti-hypertensive drugs,,Week 10 workshop hypertension,y,Pharmacology,Exam 2,Renal
+Describe drugs classes that are commonly used to treat hypertension and explain the patient and drug factors that influence the choice of anti-hypertensive therapy,,Week 10 workshop hypertension,y,Pharmacology,Exam 2,Renal
+Understand strategies for hypertension management associated with comorbidities,,Week 10 workshop hypertension,y,Pharmacology,Exam 2,Renal
+Describe how changes in total body sodium and water affect the volumes and osmolarities of the different body fluid compartments,,Week 10 workshop renal physiology,y,Physiology,Exam 2,Renal
+Understand the mechanisms of sodium reabsorption in the various portions of the tubules,,Week 10 workshop renal physiology,y,Physiology,Exam 2,Renal
+Explain the physiological mechanisms that regulate glomerular filtration rate (GFR) in response to changes in arterial blood pressure.,,Week 10 workshop renal physiology,y,Physiology,Exam 2,Renal
+Understand the role of the Renin-Angiotensin-Aldosterone System (RAAS) in regulating total body sodium and water and thus mean arterial blood pressure.,,Week 10 workshop renal physiology,y,Physiology,Exam 2,Renal
+Explain how the respiratory and renal systems participate in buffering of the body’s [H+].,,Week 11 workshop physiology,y,Physiology,Exam 2,Renal
+Describe the four main types of acid-base disorders and explain what compensations occur in them.,,Week 11 workshop physiology,y,Physiology,Exam 2,Renal
+Interpret blood gas data to identify acid-base disorders,,Week 11 workshop physiology,y,Physiology,Exam 2,Renal
+Evaluate what compensations occur in acid-base disorders,,Week 11 workshop physiology,y,Physiology,Exam 2,Renal
+Distinguish acute from chronic acid-base disturbances,,Week 11 workshop physiology,y,Physiology,Exam 2,Renal
+Understand the importance of the anion gap,,Week 11 workshop physiology,y,Physiology,Exam 2,Renal
+Apply the Bedside (Boston) rules,,Week 11 workshop physiology,y,Physiology,Exam 2,Renal
+Concept and consolidation - renal,,Week 11 workshop renal consolidation,y,Clinical skills,Exam 2,Renal
+Concept and consolidation - renal,,Week 11 workshop renal consolidation,y,Clinical skills,Exam 2,Renal
+Concept and consolidation - renal,,Week 11 workshop renal consolidation,y,Clinical skills,Exam 2,Renal
+Concept and consolidation - renal,,Week 11 workshop renal consolidation,y,Clinical skills,Exam 2,Renal
+Concept and consolidation - endocrine,,Week 12 workshop endocrine consolidation,y,Clinical skills,Exam 2,Endocrine
+Concept and consolidation - endocrine,,Week 12 workshop endocrine consolidation,y,Clinical skills,Exam 2,Endocrine
+Concept and consolidation - endocrine,,Week 12 workshop endocrine consolidation,y,Clinical skills,Exam 2,Endocrine
+Concept and consolidation - endocrine,,Week 12 workshop endocrine consolidation,y,Clinical skills,Exam 2,Endocrine
+Concept and consolidation - thyroid,,Week 12 workshop thyroid,y,Clinical skills,Exam 2,Endocrine
+Concept and consolidation - thyroid,,Week 12 workshop thyroid,y,Clinical skills,Exam 2,Endocrine
+Concept and consolidation - thyroid,,Week 12 workshop thyroid,y,Clinical skills,Exam 2,Endocrine
+Concept and consolidation - thyroid,,Week 12 workshop thyroid,y,Clinical skills,Exam 2,Endocrine
+"Understand the histology of the pituitary, adrenal and thyroid glands and be able to identify their composite cells and structures",,Week 12 workshop endocrine histology,y,Anatomy,Exam 2,Endocrine
+"Understand how the histology of the pituitary, adrenal and thyroid glands relate to their function",,Week 12 workshop endocrine histology,y,Anatomy,Exam 2,Endocrine
+"Know the basic functional histology of the endocrine components of the testes, ovaries and pancreas",,Week 12 workshop endocrine histology,y,Anatomy,Exam 2,Endocrine
