@@ -967,14 +967,6 @@ def render_trainer_page():
                 # Safely convert keys to list and track indexing position mapping
                 choice_keys = list(options_dict.keys())
                 
-                # 1. Inject a style trick to completely hide this specific row of native radio selectors
-                st.markdown(f"""
-                    <style>
-                    div[data-testid="stRadio"] {{
-                        display: none !important;
-                    }}
-                    </style>
-                """, unsafe_allow_html=True)
 
                 # 2. Render an invisible radio button in the background to handle the variable state
                 selected_letter = st.radio(
