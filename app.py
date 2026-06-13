@@ -1158,7 +1158,7 @@ def render_trainer_page():
 
 def render_stats_page():
     def display_analytics_dashboard():
-        st.title("Performance Insights")
+        st.title("Stats")
         st.markdown("Dive deep into your historic learning diagnostics and systemic curriculum coverage.")
         
         # Check if any questions have been answered yet
@@ -1253,12 +1253,86 @@ def render_stats_page():
                 st.success("All subject tracks are performing above standard target parameters. Keep testing up to Level 50!")
     display_analytics_dashboard()
 
+def render_lecture_trainer_page():
+    st.title("📖 Lecture-Specific Trainer")
+    st.info("Pick a specific lecture to isolate and focus your question generation sprints.")
+    
+    # 1. Load data & let user choose the target lecture
+    try:
+        df_notes = pd.read_csv("lecture_notes.csv")
+        # Assuming JOIN_COLUMN is "lecture_id"
+        unique_lectures = sorted(df_notes["lecture_id"].dropna().unique().tolist())
+    except Exception as e:
+        st.error(f"Could not load lecture notes CSV file: {e}")
+        st.stop()
+        
+    selected_lecture = st.selectbox("Choose a Lecture:", unique_lectures)
+    
+    # Show settings inline to save space instead of rebuilding sidebar elements
+    st.markdown("---")
+    col1, col2 = st.columns(2)
+    with col1:
+        st.session_state.num_questions = st.slider("Questions to Generate", 1, 20, st.session_state.get("num_questions", 5), key="lec_num_q")
+    with col2:
+        st.session_state.current_level = st.slider("Target Difficulty Level", 1, 50, st.session_state.get("current_level", 1), key="lec_level")
+
+    # 2. Re-use your existing generation engine to handle the heavy lifting!
+    if st.button("Generate Exam for This Lecture", type="primary"):
+        # Reset state parameters cleanly just like the main trainer does
+        st.session_state.exam_submitted = False
+        st.session_state.user_selections = {}
+        st.session_state.last_user_answers_list = []
+        st.session_state.ai_feedback_clean = ""
+        
+        try:
+            df_main = pd.read_csv("learning_objectives_informative_reports.csv")
+            # Merge and strict isolate the chosen lecture id
+            df = pd.merge(df_main, df_notes, on="lecture_id", how="left")
+            df = df[df["lecture_id"] == selected_lecture]
+            
+            if df.empty:
+                st.error("No content objectives match this selected lecture.")
+                st.stop()
+                
+            # Filter active rows
+            if 'include' in df.columns:
+                df = df[df['include'].astype(str).str.lower().str.strip() == 'y']
+
+            n = st.session_state.num_questions
+            # Sample evenly from this isolated slice
+            st.session_state.samples_df = df.sample(min(n, len(df)))
+            samples_df = st.session_state.samples_df
+            st.session_state.current_categories = samples_df['category'].fillna('General').tolist() if 'category' in samples_df.columns else ['General'] * n
+            
+            # Form strings and execute API pipeline safely 
+            def combine_row_text(row):
+                return " ".join([str(row.get(f, '')).strip() for f in ['explanation', 'content', 'flashcards'] if str(row.get(f, ''))])
+            
+            samples = samples_df.apply(combine_row_text, axis=1).tolist()
+            
+            with st.spinner("Compiling high-yield medical board options..."):
+                raw_response = get_blind_exam(samples, st.session_state.current_level, n)
+                
+            if "[KEY:" in raw_response:
+                text, key_part = raw_response.split("[KEY:")
+                st.session_state.current_exam = text.strip()
+                st.session_state.current_key = re.findall(r'[A-D]', key_part)
+                st.rerun()
+            else:
+                st.error("Failed to map questions sequence. Try generating again.")
+        except Exception as e:
+            st.error(f"Runtime execution error: {e}")
+            
+    # 3. Use your existing question UI renderer block below to show the generated exam
+    if st.session_state.get("current_exam"):
+        st.success(f"Loaded Exam containing {len(st.session_state.get('current_key', []))} questions!")
+        # (Optional: call or duplicate your main layout quiz visualization loops here)
+
 # Create the navigation router
 pg = st.navigation([
-    st.Page(render_trainer_page, title="Exam Trainer", icon="📝"),
-    st.Page(render_stats_page, title="Performance Insights", icon="📊")
+    st.Page(render_trainer_page, title="Trainer", icon="📝"),
+    st.Page(render_lecture_trainer_page, title="Lecture Focus Mode", icon="📖"),  # <-- ADD THIS LINE
+    st.Page(render_stats_page, title="Stats", icon="📊")
 ])
 pg.run()
-
-
 
