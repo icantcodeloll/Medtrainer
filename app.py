@@ -247,6 +247,85 @@ def get_ai_grading(exam_text, user_answers, correct_key, score):
     # Using search during grading ensures explanations match current guidelines
     return call_gemini_with_rotation(prompt, GRADER_MODEL, use_search=st.session_state.use_search)
 
+def render_data_portability_interface():
+    """
+    Renders password-protected download/upload tools in the sidebar to 
+    safeguard user JSON progress profiles and tracking CSV matrices.
+    """
+
+    st.sidebar.subheader("Admin")
+    
+    # 1. ENFORCE SECURITY PASSWORD
+    # Change "YourSecurePassword123" to whatever admin password you prefer
+    ADMIN_PASSWORD = "123456789" 
+    
+    user_password = st.sidebar.text_input(
+        "Enter password", 
+        type="password", 
+        key="data_portability_pwd"
+    )
+
+    if not user_password:
+        st.sidebar.caption("Enter password")
+        return
+        
+    if user_password != ADMIN_PASSWORD:
+        st.sidebar.error("Incorrect")
+        return
+
+    # --- EVERYTHING BELOW IS UNLOCKED ONLY IF THE PASSWORD IS CORRECT ---
+    st.sidebar.success("Access Granted")
+    st.sidebar.caption("Download data profiles before changing code, and reupload them afterward.")
+
+    # 2. SCAN AND ARCHIVE ALL PROGRESS DATA
+    json_files = glob.glob("*_progress.json")
+    if json_files:
+        # Create an in-memory ZIP package
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+            for file_path in json_files:
+                if os.path.exists(file_path):
+                    zip_file.write(file_path, os.path.basename(file_path))
+        
+        zip_buffer.seek(0)
+        
+        timestamp_melb = datetime.datetime.now(ZoneInfo("Australia/Melbourne")).strftime('%Y%m%d_%H%M%S')
+        st.sidebar.download_button(
+            label="Download All User Data (.zip)",
+            data=zip_buffer,
+            file_name=f"backup_user_profiles_{timestamp_melb}.zip",
+            mime="application/zip",
+            key="download_all_data_zip"
+        )
+    else:
+        st.sidebar.info("No user tracking files found to back up yet.")
+
+    # 3. RESTORE AND UNPACK USER ARCHIVES
+    uploaded_zip = st.sidebar.file_uploader(
+        "Restore / Migrate Profiles (.zip)", 
+        type=["zip"], 
+        key="upload_migration_zip"
+    )
+
+    if uploaded_zip is not None:
+        if st.sidebar.button("💥 Confirm Overwrite & Extract Data"):
+            try:
+                with zipfile.ZipFile(uploaded_zip, "r") as zip_ref:
+                    file_list = zip_ref.namelist()
+                    valid_extensions = ('.json', '.bak')
+
+                    if not all(any(f.endswith(ext) for ext in valid_extensions) for f in file_list):
+                        st.sidebar.error("Invalid archive payload. Must contain only .json progress profiles.")
+
+                    # Unpack files into the execution root directory
+                    zip_ref.extractall(".")
+                
+                st.sidebar.success(f"Successfully restored {len(file_list)} database tracking asset(s)!")
+                st.sidebar.info("Please refresh or interact with the app to load profiles.")
+                st.balloons()
+            except Exception as e:
+                st.sidebar.error(f"Migration processing error: {str(e)}")
+
 # Define the view functions
 def render_trainer_page():
     # ==========================================
@@ -412,88 +491,6 @@ def render_trainer_page():
         os.unlink(tmp_path) # Clean up temp file
         return pdf_bytes
 
-
-    # =====================================================================
-    # PASSWORD-PROTECTED DATA PORTABILITY ENGINE
-    # =====================================================================
-    def render_data_portability_interface():
-        """
-        Renders password-protected download/upload tools in the sidebar to 
-        safeguard user JSON progress profiles and tracking CSV matrices.
-        """
-
-        st.sidebar.subheader("Admin")
-        
-        # 1. ENFORCE SECURITY PASSWORD
-        # Change "YourSecurePassword123" to whatever admin password you prefer
-        ADMIN_PASSWORD = "123456789" 
-        
-        user_password = st.sidebar.text_input(
-            "Enter password", 
-            type="password", 
-            key="data_portability_pwd"
-        )
-
-        if not user_password:
-            st.sidebar.caption("Enter password")
-            return
-            
-        if user_password != ADMIN_PASSWORD:
-            st.sidebar.error("Incorrect")
-            return
-
-        # --- EVERYTHING BELOW IS UNLOCKED ONLY IF THE PASSWORD IS CORRECT ---
-        st.sidebar.success("Access Granted")
-        st.sidebar.caption("Download data profiles before changing code, and reupload them afterward.")
-
-    # 2. SCAN AND ARCHIVE ALL PROGRESS DATA
-        json_files = glob.glob("*_progress.json")
-        if json_files:
-            # Create an in-memory ZIP package
-            zip_buffer = io.BytesIO()
-            with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
-                for file_path in json_files:
-                    if os.path.exists(file_path):
-                        zip_file.write(file_path, os.path.basename(file_path))
-            
-            zip_buffer.seek(0)
-            
-            timestamp_melb = datetime.datetime.now(ZoneInfo("Australia/Melbourne")).strftime('%Y%m%d_%H%M%S')
-            st.sidebar.download_button(
-                label="Download All User Data (.zip)",
-                data=zip_buffer,
-                file_name=f"backup_user_profiles_{timestamp_melb}.zip",
-                mime="application/zip",
-                key="download_all_data_zip"
-            )
-        else:
-            st.sidebar.info("No user tracking files found to back up yet.")
-
-        # 3. RESTORE AND UNPACK USER ARCHIVES
-        uploaded_zip = st.sidebar.file_uploader(
-            "Restore / Migrate Profiles (.zip)", 
-            type=["zip"], 
-            key="upload_migration_zip"
-        )
-
-        if uploaded_zip is not None:
-            if st.sidebar.button("💥 Confirm Overwrite & Extract Data"):
-                try:
-                    with zipfile.ZipFile(uploaded_zip, "r") as zip_ref:
-                        file_list = zip_ref.namelist()
-                        valid_extensions = ('.json', '.bak')
-
-                        if not all(any(f.endswith(ext) for ext in valid_extensions) for f in file_list):
-                            st.sidebar.error("Invalid archive payload. Must contain only .json progress profiles.")
-
-                        # Unpack files into the execution root directory
-                        zip_ref.extractall(".")
-                    
-                    st.sidebar.success(f"Successfully restored {len(file_list)} database tracking asset(s)!")
-                    st.sidebar.info("Please refresh or interact with the app to load profiles.")
-                    st.balloons()
-                except Exception as e:
-                    st.sidebar.error(f"Migration processing error: {str(e)}")
     # ==========================================
     # 3. WEB INTERFACE
     # ==========================================
@@ -821,51 +818,6 @@ def render_trainer_page():
             st.rerun()
     # ----------------------------------
 
-    # Settings button for sliders
-    if st.sidebar.button("Settings", use_container_width=True):
-        if 'show_settings' not in st.session_state:
-            st.session_state.show_settings = False
-        st.session_state.show_settings = not st.session_state.show_settings
-
-    # Show sliders only when settings is expanded
-    if st.session_state.get('show_settings', False):
-        st.session_state.current_level = st.sidebar.slider("Starting Level", 1, 50, st.session_state.current_level)
-        st.session_state.num_questions = st.sidebar.slider("Number of Questions", 1, 50, st.session_state.num_questions)
-        st.session_state.thinking_level = st.sidebar.selectbox(
-            "Gemini Thinking Level",
-            options=["MINIMAL", "LOW", "MEDIUM", "HIGH"],
-            index=["MINIMAL", "LOW", "MEDIUM", "HIGH"].index(st.session_state.thinking_level),
-            help="Control how deeply the model deliberates before generating questions or grading."
-        )
-
-        st.sidebar.markdown("---")
-        
-        # --- NEW: Double-Sided Model Switch ---
-        st.sidebar.markdown("**Speed:**")
-        model_choice = st.sidebar.radio(
-            label="Speed",
-            label_visibility="collapsed", # Hides the label so it just looks like a switch
-            options=["3.1 flash lite", "3.5 flash"],
-            index=1 if st.session_state.get('exam_model', 'gemini-3.5-flash') == 'gemini-3.5-flash' else 0,
-            horizontal=True, # This forces them side-by-side like a double switch!
-        )
-
-        # Update memory
-        st.session_state.exam_model = 'gemini-3.5-flash' if "Slow" in model_choice else 'gemini-3.1-flash-lite'
-
-        st.sidebar.markdown("---")
-        if st.sidebar.button("Reset Progress", help="Clear all saved progress and reset to defaults"):
-            user_specific_progress = f"{active_user}_progress.json"
-            if os.path.exists(user_specific_progress):
-                os.remove(user_specific_progress)
-                
-            # Re-initialize the setup back to default settings effortlessly
-            initialize_app(active_user, force_reset=True)
-            st.sidebar.success("Progress reset successfully!")
-            st.rerun()
-        
-        st.sidebar.markdown("---")
-        render_data_portability_interface()
 
 
     # Display the Exam
@@ -1306,65 +1258,65 @@ def render_stats_page():
 
 def render_settings_page():
     st.title("⚙️ Global Settings")
-    st.info("Configure your layout engines, difficulty models, and underlying system parameters below.")
+    st.markdown("Configure your underlying performance models, training sizes, and system states.")
+    st.write("---")
     
-    # 1. Main Sliders (Extracted from old sidebar toggle layout)
-    st.subheader("Difficulty & Sizing Configuration")
-    st.session_state.current_level = st.slider(
-        "Starting Level", 1, 50, st.session_state.current_level
-    )
-    st.session_state.num_questions = st.slider(
-        "Number of Questions", 1, 50, st.session_state.num_questions
-    )
+    if 'username' not in st.session_state:
+        st.session_state.username = "Default"
+    active_user = st.session_state.username
     
-    st.markdown("---")
+    # Run core parameter synchronization
+    initialize_app(active_user)
     
-    # 2. Reasoning Controls
-    st.subheader("AI Performance Model Adjustments")
+    # 1. Main Configuration Sliders
+    st.subheader("Layout & Sizing Tweaks")
+    st.session_state.current_level = st.slider("Starting Level", 1, 50, st.session_state.current_level)
+    st.session_state.num_questions = st.slider("Number of Questions", 1, 50, st.session_state.num_questions)
+    
     st.session_state.thinking_level = st.selectbox(
-        "Gemini Thinking Level", 
-        options=["MINIMAL", "LOW", "MEDIUM", "HIGH"], 
+        "Gemini Thinking Level",
+        options=["MINIMAL", "LOW", "MEDIUM", "HIGH"],
         index=["MINIMAL", "LOW", "MEDIUM", "HIGH"].index(st.session_state.thinking_level),
         help="Control how deeply the model deliberates before generating questions or grading."
     )
     
-    st.markdown("---")
+    st.write("---")
     
-    # 3. Model Switch Toggle
-    st.subheader("Inference Velocity Switch")
+    # 2. Speed Switch
+    st.subheader("Model Selection Strategy")
     model_choice = st.radio(
-        label="Speed Strategy",
+        label="Speed Selection",
         options=["Fast", "Slow & Smart"],
         index=1 if st.session_state.get('exam_model', 'gemini-3.5-flash') == 'gemini-3.5-flash' else 0,
         horizontal=True,
         help="Fast uses Flash-Lite. Slow & Smart uses Flash."
     )
-    # Sync memory state accurately
     st.session_state.exam_model = 'gemini-3.5-flash' if "Slow" in model_choice else 'gemini-3.1-flash-lite'
     
-    st.markdown("---")
+    st.write("---")
     
-    # 4. Global Structural System Resets
-    st.subheader("Data Profiles & Destructive Operations")
+    # 3. Structural Operational Actions
+    st.subheader("System Administration")
     col1, col2 = st.columns(2)
+    
     with col1:
-        if st.button("Reset All Local Progress", help="Clear all saved progress and reset to defaults", use_container_width=True):
-            active_user = st.session_state.get('username', 'Default')
+        if st.button("Reset All Session Progress", help="Clear all saved progress and reset to defaults", use_container_width=True):
             user_specific_progress = f"{active_user}_progress.json"
             if os.path.exists(user_specific_progress):
                 os.remove(user_specific_progress)
+                
             initialize_app(active_user, force_reset=True)
             st.success("Progress reset successfully!")
             st.rerun()
             
     with col2:
-        # Include data portability operations inside the central settings UI block safely
         render_data_portability_interface()
 
 # Create the navigation router
 pg = st.navigation([
     st.Page(render_trainer_page, title="Exam Trainer", icon="📝"),
     st.Page(render_stats_page, title="Stats", icon="📊")
+    st.Page(render_settings_page, title="Settings", icon="⚙️")
 ])
 pg.run()
 
