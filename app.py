@@ -495,8 +495,8 @@ def render_trainer_page():
     """
     <style>
     div.stButton > button[kind="primary"] {
-        padding-top: 15px !important;
-        padding-bottom: 15px !important;
+        padding-top: 35px !important;
+        padding-bottom: 35px !important;
         font-size: 18px !important;
         font-weight: bold !important;
     }
@@ -504,7 +504,7 @@ def render_trainer_page():
     """,
     unsafe_allow_html=True
     )
-    
+
     # This layout structure prevents the button from stretching awkwardly on wide screens
     gen_col1, gen_col2, gen_col3 = st.columns([1, 2, 1])
 
