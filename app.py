@@ -1133,13 +1133,12 @@ def render_trainer_page():
     if st.session_state.missed_questions:
         # 1. THE HEATMAP (Visual)
         st.write("---")
-        st.header("Weakness Heatmap")
+        st.sidebar.subheader("Weakness Heatmap")
         m_df = pd.DataFrame(st.session_state.missed_questions)
         if 'category' in m_df.columns:
             st.bar_chart(m_df['category'].value_counts(), color="#ff4b4b")
 
         # 2. YOUR ORIGINAL SIDEBAR EXPORT (Preserved)
-        st.sidebar.markdown("---")
         st.sidebar.subheader(f"Missed Questions ({len(st.session_state.missed_questions)})")
         # Prepare the missed questions text content dynamically in memory
         melbourne_mistakes_time = datetime.datetime.now(ZoneInfo("Australia/Melbourne")).strftime('%Y-%m-%d %H:%M')
