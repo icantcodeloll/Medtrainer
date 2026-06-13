@@ -504,11 +504,8 @@ def render_trainer_page():
 
     df_sidebar = pd.read_csv(CSV_FILE)
 
-    # --- TABBED SIDEBAR FILTER CONTROLS ---
-    st.sidebar.markdown("### Filter Content")
-
     # Create two tabs inside the sidebar
-    filter_tab1, filter_tab2 = st.sidebar.tabs(["Blueprint Filters", "Lecture Filters"])
+    filter_tab1, filter_tab2 = st.sidebar.tabs(["Exam Filter", "Lecture Filter"])
 
     # --- TAB 1: BLUEPRINT FILTERS (Original Logic) ---
     with filter_tab1:
@@ -548,7 +545,6 @@ def render_trainer_page():
 
     # --- TAB 2: LECTURE FILTERS (New Integrated Feature) ---
     with filter_tab2:
-        st.markdown("**Filter by Specific Lecture ID:**")
         
         # Identify your Join Column dynamically from the dataset
         if JOIN_COLUMN in df_sidebar.columns:
@@ -557,7 +553,7 @@ def render_trainer_page():
             
             # Use a multi-select box so users can select one or multiple lectures
             selected_lectures = st.multiselect(
-                "Select Lecture IDs:", 
+                "Select Lecture:", 
                 options=available_lectures,
                 default=[],
                 key="filter_by_lecture_ids"
@@ -1308,124 +1304,9 @@ def render_stats_page():
                 st.success("All subject tracks are performing above standard target parameters. Keep testing up to Level 50!")
     display_analytics_dashboard()
 
-def render_lecture_trainer_page():
-    # 1. Enforce profile active user state matching your main page
-    if 'username' not in st.session_state:
-        st.session_state.username = "Default"
-    active_user = st.session_state.username
-    
-    # 2. RUN THE CORE INITIALIZATION ENGINE TO DEPLOY DEFAULT KEYS
-    initialize_app(active_user)
-    
-    st.title("📖 Lecture Trainer")
-    # 1. Load data & let user choose the target lecture
-    try:
-        df_notes = pd.read_csv("lecture_notes.csv")
-        # Assuming JOIN_COLUMN is "lecture_id"
-        unique_lectures = sorted(df_notes["lecture_id"].dropna().unique().tolist())
-    except Exception as e:
-        st.error(f"Could not load lecture notes CSV file: {e}")
-        st.stop()
-        
-    selected_lecture = st.selectbox("Choose a Lecture:", unique_lectures)
-    
-    # Show settings inline to save space instead of rebuilding sidebar elements
-    st.markdown("---")
-    col1, col2 = st.columns(2)
-    with col1:
-        st.session_state.num_questions = st.slider("Questions to Generate", 1, 20, st.session_state.get("num_questions", 5), key="lec_num_q")
-    with col2:
-        st.session_state.current_level = st.slider("Target Difficulty Level", 1, 50, st.session_state.get("current_level", 1), key="lec_level")
-
-    # 2. Re-use your existing generation engine to handle the heavy lifting!
-    if st.button("Generate Exam for This Lecture", type="primary"):
-        # Reset state parameters cleanly just like the main trainer does
-        st.session_state.exam_submitted = False
-        st.session_state.user_selections = {}
-        st.session_state.last_user_answers_list = []
-        st.session_state.ai_feedback_clean = ""
-        
-        try:
-            df_main = pd.read_csv("learning_objectives_informative_reports.csv")
-            # Merge and strict isolate the chosen lecture id
-            df = pd.merge(df_main, df_notes, on="lecture_id", how="left")
-            df = df[df["lecture_id"] == selected_lecture]
-            
-            if df.empty:
-                st.error("No content objectives match this selected lecture.")
-                st.stop()
-                
-            # Filter active rows
-            if 'include' in df.columns:
-                df = df[df['include'].astype(str).str.lower().str.strip() == 'y']
-
-            n = st.session_state.num_questions
-            # Sample evenly from this isolated slice
-            st.session_state.samples_df = df.sample(min(n, len(df)))
-            samples_df = st.session_state.samples_df
-            st.session_state.current_categories = samples_df['category'].fillna('General').tolist() if 'category' in samples_df.columns else ['General'] * n
-            
-            # Form strings and execute API pipeline safely 
-            def combine_row_text(row):
-                return " ".join([str(row.get(f, '')).strip() for f in ['explanation', 'content', 'flashcards'] if str(row.get(f, ''))])
-            
-            samples = samples_df.apply(combine_row_text, axis=1).tolist()
-            
-            with st.spinner("Generating questions..."):
-                raw_response = get_blind_exam(samples, st.session_state.current_level, n)
-                
-            if "[KEY:" in raw_response:
-                text, key_part = raw_response.split("[KEY:")
-                # CHANGE THIS: Save directly to the core state variables that your renderer uses!
-                st.session_state.current_exam = text.strip()
-                st.session_state.current_key = re.findall(r'[A-D]', key_part)
-                
-                # NEW: Capture categories for the generated exam so the quiz loop doesn't break
-                st.session_state.current_categories = ['Lecture Study'] * n 
-                st.session_state.exam_submitted = False
-                st.session_state.user_selections = {}
-                st.session_state.last_user_answers_list = []
-                
-                st.rerun()
-            else:
-                st.error("Failed to map questions sequence. Try generating again.")
-        except Exception as e:
-            st.error(f"Runtime execution error: {e}")
-            
-    # 3. Use your existing question UI renderer block below to show the generated exam
-    # ADD THIS to the very bottom of your render_lecture_trainer_page() function:
-    
-    if st.session_state.get("current_exam"):
-        st.success(f"Loaded Exam containing {len(st.session_state.get('current_key', []))} questions!")
-        
-        # 1. Clean and split the exam text matching your core renderer engine
-        clean_text = st.session_state.current_exam.strip()
-        clean_text = re.sub(r"^(Here are|Based on|Sure|I have generated).*?\n", "", clean_text, flags=re.IGNORECASE)
-        raw_questions = re.split(r'\n(?=\d+\.\s)', clean_text)
-        individual_questions = [q.strip() for q in raw_questions if q.strip()]
-        
-        if 'user_selections' not in st.session_state:
-            st.session_state.user_selections = {}
-            
-        # 2. Render the questions layout
-        for i, q_text in enumerate(individual_questions):
-            st.subheader(f"Question {i+1}")
-            prompt_match = re.search(r"(\d+\s*\.\s*.*?)(?=A\s*\.\s*)", q_text, re.DOTALL)
-            q_prompt = prompt_match.group(1).strip() if prompt_match else q_text
-            st.markdown(q_prompt.replace("\n", "<br>"), unsafe_allow_html=True)
-            
-            # Options parsing logic
-            opt_A = re.search(r"(A\s*\.\s*.*?)(?=[B-D]\s*\.\s*|$)", q_text, re.DOTALL)
-            opt_B = re.search(r"(B\s*\.\s*.*?)(?=[A,C,D]\s*\.\s*|$)", q_text, re.DOTALL)
-            opt_C = re.search(r"(C\s*\.\s*.*?)(?=[A,B,D]\s*\.\s*|$)", q_text, re.DOTALL)
-            opt_D = re.search(r"(D\s*\.\s*.*?)(?=[A-C]\s*\.\s*|$)", q_text, re.DOTALL)
-            
-            # ... insert your existing left_constrained_column rendering loops / grading submission logic here
-
 # Create the navigation router
 pg = st.navigation([
     st.Page(render_trainer_page, title="Exam Trainer", icon="📝"),
-    st.Page(render_lecture_trainer_page, title="Lecture Trainer", icon="📖"),  # <-- ADD THIS LINE
     st.Page(render_stats_page, title="Stats", icon="📊")
 ])
 pg.run()
