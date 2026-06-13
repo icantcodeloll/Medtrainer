@@ -239,7 +239,6 @@ def get_ai_grading(exam_text, user_answers, correct_key, score):
     # Using search during grading ensures explanations match current guidelines
     return call_gemini_with_rotation(prompt, GRADER_MODEL, use_search=st.session_state.use_search)
 
-
 # Define the view functions
 def render_trainer_page():
     # ==========================================
@@ -1323,8 +1322,16 @@ def render_lecture_trainer_page():
                 
             if "[KEY:" in raw_response:
                 text, key_part = raw_response.split("[KEY:")
+                # CHANGE THIS: Save directly to the core state variables that your renderer uses!
                 st.session_state.current_exam = text.strip()
                 st.session_state.current_key = re.findall(r'[A-D]', key_part)
+                
+                # NEW: Capture categories for the generated exam so the quiz loop doesn't break
+                st.session_state.current_categories = ['Lecture Study'] * n 
+                st.session_state.exam_submitted = False
+                st.session_state.user_selections = {}
+                st.session_state.last_user_answers_list = []
+                
                 st.rerun()
             else:
                 st.error("Failed to map questions sequence. Try generating again.")
@@ -1332,9 +1339,34 @@ def render_lecture_trainer_page():
             st.error(f"Runtime execution error: {e}")
             
     # 3. Use your existing question UI renderer block below to show the generated exam
+    # ADD THIS to the very bottom of your render_lecture_trainer_page() function:
+    
     if st.session_state.get("current_exam"):
         st.success(f"Loaded Exam containing {len(st.session_state.get('current_key', []))} questions!")
-        # (Optional: call or duplicate your main layout quiz visualization loops here)
+        
+        # 1. Clean and split the exam text matching your core renderer engine
+        clean_text = st.session_state.current_exam.strip()
+        clean_text = re.sub(r"^(Here are|Based on|Sure|I have generated).*?\n", "", clean_text, flags=re.IGNORECASE)
+        raw_questions = re.split(r'\n(?=\d+\.\s)', clean_text)
+        individual_questions = [q.strip() for q in raw_questions if q.strip()]
+        
+        if 'user_selections' not in st.session_state:
+            st.session_state.user_selections = {}
+            
+        # 2. Render the questions layout
+        for i, q_text in enumerate(individual_questions):
+            st.subheader(f"Question {i+1}")
+            prompt_match = re.search(r"(\d+\s*\.\s*.*?)(?=A\s*\.\s*)", q_text, re.DOTALL)
+            q_prompt = prompt_match.group(1).strip() if prompt_match else q_text
+            st.markdown(q_prompt.replace("\n", "<br>"), unsafe_allow_html=True)
+            
+            # Options parsing logic
+            opt_A = re.search(r"(A\s*\.\s*.*?)(?=[B-D]\s*\.\s*|$)", q_text, re.DOTALL)
+            opt_B = re.search(r"(B\s*\.\s*.*?)(?=[A,C,D]\s*\.\s*|$)", q_text, re.DOTALL)
+            opt_C = re.search(r"(C\s*\.\s*.*?)(?=[A,B,D]\s*\.\s*|$)", q_text, re.DOTALL)
+            opt_D = re.search(r"(D\s*\.\s*.*?)(?=[A-C]\s*\.\s*|$)", q_text, re.DOTALL)
+            
+            # ... insert your existing left_constrained_column rendering loops / grading submission logic here
 
 # Create the navigation router
 pg = st.navigation([
