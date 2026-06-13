@@ -489,19 +489,29 @@ def render_trainer_page():
     # 3. WEB INTERFACE
     # ==========================================
     st.title("Trainer")
-    # =========================================================================
-    # NEW PLACEMENT: BIG, PROMINENT MAIN SECTION GENERATOR BUTTON
-    # =========================================================================
     st.write("---")
-    st.subheader("Ready to test your knowledge?")
 
+    st.markdown(
+    """
+    <style>
+    div.stButton > button[kind="primary"] {
+        padding-top: 15px !important;
+        padding-bottom: 15px !important;
+        font-size: 18px !important;
+        font-weight: bold !important;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+    )
+    
     # This layout structure prevents the button from stretching awkwardly on wide screens
     gen_col1, gen_col2, gen_col3 = st.columns([1, 2, 1])
 
     with gen_col2:
         # use_container_width fills the middle column layout; type="primary" makes it high-contrast
         generate_clicked = st.button(
-            "🚀 Generate New Exam", 
+            "Generate New Exam", 
             type="primary", 
             use_container_width=True,
             help="Click here to compile a fresh customized exam based on your filter selections."
