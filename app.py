@@ -14,6 +14,7 @@ import atexit
 from google import genai
 from google.genai import types
 from progress_manager import save_progress, load_progress
+from fpdf import FPDF
 
 st.set_page_config(page_title="Trainer", page_icon="🩺", layout="wide")
 
@@ -35,12 +36,6 @@ EXAM_WEIGHTS = {
 # Models
 EXAM_MODEL = 'gemini-3.1-flash-lite'
 GRADER_MODEL = 'gemini-3.1-flash-lite'
-
-try:
-    from fpdf import FPDF
-except ImportError:
-    FPDF = None
-
 
 
 # ==========================================
@@ -92,7 +87,6 @@ def initialize_app(active_user, force_reset=False):
             st.session_state.samples_df = pd.DataFrame(saved_samples)
         else:
             st.session_state.samples_df = pd.DataFrame()
-
 
 def get_client():
     return genai.Client(api_key=API_KEYS[st.session_state.key_index])
@@ -1076,13 +1070,6 @@ def render_trainer_page():
 
     # Missed Questions Bank in Sidebar
     if st.session_state.missed_questions:
-        # 1. THE HEATMAP (Visual)
-        st.write("---")
-        st.header("Weakness Heatmap")
-        m_df = pd.DataFrame(st.session_state.missed_questions)
-        if 'category' in m_df.columns:
-            st.bar_chart(m_df['category'].value_counts(), color="#ff4b4b")
-
         # 2. YOUR ORIGINAL SIDEBAR EXPORT (Preserved)
         st.sidebar.subheader(f"Missed Questions ({len(st.session_state.missed_questions)})")
         # Prepare the missed questions text content dynamically in memory
