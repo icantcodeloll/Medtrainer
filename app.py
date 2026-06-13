@@ -71,7 +71,8 @@ def initialize_app(active_user, force_reset=False):
         "last_score": 0,
         "user_selections": {},
         "last_user_answers_list": [],
-        "show_settings": False
+        "show_settings": False,
+        "current_page": "Exam Trainer"
     }
 
     # Bulk assign missing parameters into active memory layout
@@ -499,6 +500,19 @@ def render_trainer_page():
     st.title("Trainer")
     st.sidebar.header("Stats & Controls")
 
+    # Inside render_trainer_page(), right below st.sidebar.header("Stats & Controls")
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("Navigation")
+    
+    # Render global router buttons or radio options inside the sidebar cleanly
+    chosen_page = st.sidebar.radio(
+        "Go To:",
+        options=["Exam Trainer", "Settings Pages"],
+        index=0 if st.session_state.current_page == "Exam Trainer" else 1
+    )
+    st.session_state.current_page = chosen_page
+    st.sidebar.markdown("---")
+    
     # Move Active Level metric here
     st.sidebar.metric("Active Level", f"{st.session_state.current_level}/50")
 
@@ -819,53 +833,6 @@ def render_trainer_page():
                 
             st.rerun()
     # ----------------------------------
-
-    # Settings button for sliders
-    if st.sidebar.button("Settings", use_container_width=True):
-        if 'show_settings' not in st.session_state:
-            st.session_state.show_settings = False
-        st.session_state.show_settings = not st.session_state.show_settings
-
-    # Show sliders only when settings is expanded
-    if st.session_state.get('show_settings', False):
-        st.session_state.current_level = st.sidebar.slider("Starting Level", 1, 50, st.session_state.current_level)
-        st.session_state.num_questions = st.sidebar.slider("Number of Questions", 1, 50, st.session_state.num_questions)
-        st.session_state.thinking_level = st.sidebar.selectbox(
-            "Gemini Thinking Level",
-            options=["MINIMAL", "LOW", "MEDIUM", "HIGH"],
-            index=["MINIMAL", "LOW", "MEDIUM", "HIGH"].index(st.session_state.thinking_level),
-            help="Control how deeply the model deliberates before generating questions or grading."
-        )
-
-        st.sidebar.markdown("---")
-        
-        # --- NEW: Double-Sided Model Switch ---
-        st.sidebar.markdown("**Speed:**")
-        model_choice = st.sidebar.radio(
-            label="Speed",
-            label_visibility="collapsed", # Hides the label so it just looks like a switch
-            options=["Fast", "Slow & Smart"],
-            index=1 if st.session_state.get('exam_model', 'gemini-3.5-flash') == 'gemini-3.5-flash' else 0,
-            horizontal=True, # This forces them side-by-side like a double switch!
-            help="Fast uses Flash-Lite. Slow & Smart uses Flash."
-        )
-
-        # Update memory
-        st.session_state.exam_model = 'gemini-3.5-flash' if "Slow" in model_choice else 'gemini-3.1-flash-lite'
-
-        st.sidebar.markdown("---")
-        if st.sidebar.button("Reset Progress", help="Clear all saved progress and reset to defaults"):
-            user_specific_progress = f"{active_user}_progress.json"
-            if os.path.exists(user_specific_progress):
-                os.remove(user_specific_progress)
-                
-            # Re-initialize the setup back to default settings effortlessly
-            initialize_app(active_user, force_reset=True)
-            st.sidebar.success("Progress reset successfully!")
-            st.rerun()
-        
-        st.sidebar.markdown("---")
-        render_data_portability_interface()
 
 
     # Display the Exam
@@ -1303,6 +1270,64 @@ def render_stats_page():
             else:
                 st.success("All subject tracks are performing above standard target parameters. Keep testing up to Level 50!")
     display_analytics_dashboard()
+
+def render_settings_page():
+    st.title("⚙️ Global Settings")
+    st.info("Configure your layout engines, difficulty models, and underlying system parameters below.")
+    
+    # 1. Main Sliders (Extracted from old sidebar toggle layout)
+    st.subheader("Difficulty & Sizing Configuration")
+    st.session_state.current_level = st.slider(
+        "Starting Level", 1, 50, st.session_state.current_level
+    )
+    st.session_state.num_questions = st.slider(
+        "Number of Questions", 1, 50, st.session_state.num_questions
+    )
+    
+    st.markdown("---")
+    
+    # 2. Reasoning Controls
+    st.subheader("AI Performance Model Adjustments")
+    st.session_state.thinking_level = st.selectbox(
+        "Gemini Thinking Level", 
+        options=["MINIMAL", "LOW", "MEDIUM", "HIGH"], 
+        index=["MINIMAL", "LOW", "MEDIUM", "HIGH"].index(st.session_state.thinking_level),
+        help="Control how deeply the model deliberates before generating questions or grading."
+    )
+    
+    st.markdown("---")
+    
+    # 3. Model Switch Toggle
+    st.subheader("Inference Velocity Switch")
+    model_choice = st.radio(
+        label="Speed Strategy",
+        options=["Fast", "Slow & Smart"],
+        index=1 if st.session_state.get('exam_model', 'gemini-3.5-flash') == 'gemini-3.5-flash' else 0,
+        horizontal=True,
+        help="Fast uses Flash-Lite. Slow & Smart uses Flash."
+    )
+    # Sync memory state accurately
+    st.session_state.exam_model = 'gemini-3.5-flash' if "Slow" in model_choice else 'gemini-3.1-flash-lite'
+    
+    st.markdown("---")
+    
+    # 4. Global Structural System Resets
+    st.subheader("Data Profiles & Destructive Operations")
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("Reset All Local Progress", help="Clear all saved progress and reset to defaults", use_container_width=True):
+            active_user = st.session_state.get('username', 'Default')
+            user_specific_progress = f"{active_user}_progress.json"
+            if os.path.exists(user_specific_progress):
+                os.remove(user_specific_progress)
+            initialize_app(active_user, force_reset=True)
+            st.success("Progress reset successfully!")
+            st.rerun()
+            
+    with col2:
+        # Include data portability operations inside the central settings UI block safely
+        render_data_portability_interface()
+
 
 # Create the navigation router
 pg = st.navigation([
