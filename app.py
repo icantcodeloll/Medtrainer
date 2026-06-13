@@ -15,10 +15,73 @@ from google import genai
 from google.genai import types
 from progress_manager import save_progress, load_progress
 
+st.set_page_config(page_title="Trainer", page_icon="🩺", layout="wide")
+
+API_KEYS = [st.secrets["GENAI_KEY_1"]]#, st.secrets["GENAI_KEY_2"], st.secrets["GENAI_KEY_3"]] # (Keep your full list here)
+CSV_FILE = "learning_objectives_informative_reports.csv" 
+NOTES_FILE = "lecture_notes.csv"
+JOIN_COLUMN = "lecture_id"
+EXAM_WEIGHTS = {
+    "Anatomy": 42, 
+    "Physiology": 62,
+    "Pharmacology": 23,
+    "Nutrition": 6,
+    "Microbiology": 9,
+    "Immunology": 2,
+    "Clinical skills": 36,
+    "EBM": 14,
+    "Int Med": 6
+}
+
 # ==========================================
 # 0. MULTI-PAGE CONFIGURATION & NAVIGATION
 # ==========================================
-st.set_page_config(page_title="Trainer", page_icon="🩺", layout="wide")
+def initialize_app(active_user, force_reset=False):
+    """
+    Handles all initial state configurations, progress restoration, 
+    and systemic fallback settings in one central runtime hook.
+    """
+    # Load saved progress dynamically from local disk storage
+    if force_reset:
+        loaded_progress = {}
+    else:
+        loaded_progress = load_progress(active_user)
+
+    # Core parameters mapping dictionary 
+    defaults = {
+        "current_level": loaded_progress.get("current_level", 1),
+        "exam_model": loaded_progress.get("exam_model", 'gemini-3.1-flash-lite'),
+        "num_questions": loaded_progress.get("num_questions", 5),
+        "missed_questions": loaded_progress.get("missed_questions", []),
+        "current_exam": loaded_progress.get("current_exam", ""),
+        "current_key": loaded_progress.get("current_key", []),
+        "key_index": min(loaded_progress.get("key_index", 0), max(0, len(API_KEYS) - 1)) if len(API_KEYS) > 0 else 0,
+        "current_categories": loaded_progress.get("current_categories", []),
+        "previous_test_data": {},
+        "use_search": False,
+        "thinking_level": "MEDIUM",
+        "exam_submitted": False,
+        "last_score": 0,
+        "user_selections": {},
+        "last_user_answers_list": [],
+        "show_settings": False
+    }
+
+    # Bulk assign missing parameters into active memory layout
+    for key, value in defaults.items():
+        if key not in st.session_state or force_reset:
+            st.session_state[key] = value
+
+    # Specialized block handler for reconstructing structure representations (DataFrames)
+    if 'samples_df' not in st.session_state or force_reset:
+        saved_samples = loaded_progress.get("samples_df", None)
+        if isinstance(saved_samples, pd.DataFrame):
+            st.session_state.samples_df = saved_samples
+        elif isinstance(saved_samples, (dict, list)):
+            st.session_state.samples_df = pd.DataFrame(saved_samples)
+        else:
+            st.session_state.samples_df = pd.DataFrame()
+
 
 def get_client():
     return genai.Client(api_key=API_KEYS[st.session_state.key_index])
@@ -183,51 +246,6 @@ def render_trainer_page():
     # ==========================================
     # 0. INITIALIZATION ENGINE
     # ==========================================
-    def initialize_app(active_user, force_reset=False):
-        """
-        Handles all initial state configurations, progress restoration, 
-        and systemic fallback settings in one central runtime hook.
-        """
-        # Load saved progress dynamically from local disk storage
-        if force_reset:
-            loaded_progress = {}
-        else:
-            loaded_progress = load_progress(active_user)
-
-        # Core parameters mapping dictionary 
-        defaults = {
-            "current_level": loaded_progress.get("current_level", 1),
-            "exam_model": loaded_progress.get("exam_model", 'gemini-3.1-flash-lite'),
-            "num_questions": loaded_progress.get("num_questions", 5),
-            "missed_questions": loaded_progress.get("missed_questions", []),
-            "current_exam": loaded_progress.get("current_exam", ""),
-            "current_key": loaded_progress.get("current_key", []),
-            "key_index": min(loaded_progress.get("key_index", 0), max(0, len(API_KEYS) - 1)) if len(API_KEYS) > 0 else 0,
-            "current_categories": loaded_progress.get("current_categories", []),
-            "previous_test_data": {},
-            "use_search": False,
-            "thinking_level": "MEDIUM",
-            "exam_submitted": False,
-            "last_score": 0,
-            "user_selections": {},
-            "last_user_answers_list": [],
-            "show_settings": False
-        }
-
-        # Bulk assign missing parameters into active memory layout
-        for key, value in defaults.items():
-            if key not in st.session_state or force_reset:
-                st.session_state[key] = value
-
-        # Specialized block handler for reconstructing structure representations (DataFrames)
-        if 'samples_df' not in st.session_state or force_reset:
-            saved_samples = loaded_progress.get("samples_df", None)
-            if isinstance(saved_samples, pd.DataFrame):
-                st.session_state.samples_df = saved_samples
-            elif isinstance(saved_samples, (dict, list)):
-                st.session_state.samples_df = pd.DataFrame(saved_samples)
-            else:
-                st.session_state.samples_df = pd.DataFrame()
 
     def save_on_tab_close():
         """
@@ -275,9 +293,7 @@ def render_trainer_page():
     # ==========================================
     st.set_page_config(page_title="Trainer", page_icon="🩺", layout="wide")
 
-    API_KEYS = [st.secrets["GENAI_KEY_1"]]#, st.secrets["GENAI_KEY_2"], st.secrets["GENAI_KEY_3"]] # (Keep your full list here)
-    NOTES_FILE = "lecture_notes.csv"
-    JOIN_COLUMN = "lecture_id"
+
 
     # ==========================================
     # 1A. PROFILE MANAGEMENT
@@ -303,7 +319,7 @@ def render_trainer_page():
     # ==========================================
     # GLOBAL MASTER TEMPLATE CONFIGURATION
     # ==========================================
-    CSV_FILE = "learning_objectives_informative_reports.csv" 
+
 
     if not os.path.exists(CSV_FILE):
         st.error(f"Fatal Error: Master template file '{CSV_FILE}' not found!")
@@ -313,22 +329,6 @@ def render_trainer_page():
     EXAM_MODEL = 'gemini-3.1-flash-lite'
     GRADER_MODEL = 'gemini-3.1-flash-lite'
 
-
-    # ==========================================
-    # 1B. EXAM WEIGHTINGS (Percentages or Relative Ratios)
-    # ==========================================
-    # Adjust these numbers to match your actual blueprint (e.g., USMLE, Board exams)
-    EXAM_WEIGHTS = {
-        "Anatomy": 42, 
-        "Physiology": 62,
-        "Pharmacology": 23,
-        "Nutrition": 6,
-        "Microbiology": 9,
-        "Immunology": 2,
-        "Clinical skills": 36,
-        "EBM": 14,
-        "Int Med": 6
-    }
 
 
     # Load saved progress on startup
