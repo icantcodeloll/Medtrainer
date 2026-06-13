@@ -32,6 +32,13 @@ EXAM_WEIGHTS = {
     "EBM": 14,
     "Int Med": 6
 }
+# Models
+EXAM_MODEL = 'gemini-3.1-flash-lite'
+GRADER_MODEL = 'gemini-3.1-flash-lite'
+
+
+
+
 
 # ==========================================
 # 0. MULTI-PAGE CONFIGURATION & NAVIGATION
@@ -314,6 +321,8 @@ def render_trainer_page():
     st.sidebar.success(f"Logged in as: **{active_user}**")
     initialize_app(active_user)
 
+    # Load saved progress on startup
+    loaded_progress = load_progress(active_user)
     # ==========================================
     # GLOBAL MASTER TEMPLATE CONFIGURATION
     # ==========================================
@@ -322,15 +331,6 @@ def render_trainer_page():
     if not os.path.exists(CSV_FILE):
         st.error(f"Fatal Error: Master template file '{CSV_FILE}' not found!")
         st.stop()
-
-    # Models
-    EXAM_MODEL = 'gemini-3.1-flash-lite'
-    GRADER_MODEL = 'gemini-3.1-flash-lite'
-
-
-
-    # Load saved progress on startup
-    loaded_progress = load_progress(active_user)
 
 
     if st.sidebar.button("Save Progress", help="Manually save your current progress"):
