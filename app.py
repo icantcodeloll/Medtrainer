@@ -70,37 +70,37 @@ def call_gemini_with_rotation(prompt, model_to_use, use_search=False):
                 st.error(f"Error during generation: {e}")
                 return None
 
-    def get_blind_exam(topics_list, level, num_questions):
-        combined_content = "\n\n".join([f"Source {i+1}: {t}" for i, t in enumerate(topics_list)])
+def get_blind_exam(topics_list, level, num_questions):
+    combined_content = "\n\n".join([f"Source {i+1}: {t}" for i, t in enumerate(topics_list)])
 
-        # Difficulty calibration from intuitive basics to counterintuitive expert challenges
-        if level <= 5:
-            difficulty_desc = "intuitive basics - straightforward medical concepts that make logical sense"
-            complexity_guide = "focus on intuitive anatomy, obvious physiology, simple definitions, core principles that follow common sense"
-        elif level <= 15:
-            difficulty_desc = "logical progression - clinical applications that follow standard patterns"
-            complexity_guide = "include common diseases with predictable presentations, standard treatments, straightforward clinical reasoning"
-        elif level <= 25:
-            difficulty_desc = "complex but predictable - applied knowledge with some nuance"
-            complexity_guide = "complex clinical cases with clear patterns, differential diagnosis with logical elimination, treatment with expected responses"
-        elif level <= 35:
-            difficulty_desc = "challenging patterns - specialized knowledge requiring deeper analysis"
-            complexity_guide = "specialty-specific conditions with some counterintuitive elements, advanced therapeutics with unexpected side effects, presentations that deviate from textbook patterns"
-        elif level <= 45:
-            difficulty_desc = "counterintuitive expert - knowledge that defies common medical assumptions"
-            complexity_guide = "subspecialty expertise where textbook knowledge fails, paradoxical treatment responses, rare conditions that present opposite to expected patterns, cutting-edge research that contradicts established dogma"
-        else:  # 46-50
-            difficulty_desc = "supreme counterintuition - advanced mastery of medical paradoxes and exceptions"
-            complexity_guide = "multi-system integration where standard rules don't apply, latest research breakthroughs that overturn conventional wisdom, complex clinical reasoning requiring recognition of exceptions, niche subspecialty knowledge where intuitive answers are wrong, molecular-level pathophysiology that defies simple explanations, emerging treatment protocols with paradoxical mechanisms, rare disease patterns that mimic opposite conditions, advanced diagnostic challenges where the obvious answer is incorrect"
+    # Difficulty calibration from intuitive basics to counterintuitive expert challenges
+    if level <= 5:
+        difficulty_desc = "intuitive basics - straightforward medical concepts that make logical sense"
+        complexity_guide = "focus on intuitive anatomy, obvious physiology, simple definitions, core principles that follow common sense"
+    elif level <= 15:
+        difficulty_desc = "logical progression - clinical applications that follow standard patterns"
+        complexity_guide = "include common diseases with predictable presentations, standard treatments, straightforward clinical reasoning"
+    elif level <= 25:
+        difficulty_desc = "complex but predictable - applied knowledge with some nuance"
+        complexity_guide = "complex clinical cases with clear patterns, differential diagnosis with logical elimination, treatment with expected responses"
+    elif level <= 35:
+        difficulty_desc = "challenging patterns - specialized knowledge requiring deeper analysis"
+        complexity_guide = "specialty-specific conditions with some counterintuitive elements, advanced therapeutics with unexpected side effects, presentations that deviate from textbook patterns"
+    elif level <= 45:
+        difficulty_desc = "counterintuitive expert - knowledge that defies common medical assumptions"
+        complexity_guide = "subspecialty expertise where textbook knowledge fails, paradoxical treatment responses, rare conditions that present opposite to expected patterns, cutting-edge research that contradicts established dogma"
+    else:  # 46-50
+        difficulty_desc = "supreme counterintuition - advanced mastery of medical paradoxes and exceptions"
+        complexity_guide = "multi-system integration where standard rules don't apply, latest research breakthroughs that overturn conventional wisdom, complex clinical reasoning requiring recognition of exceptions, niche subspecialty knowledge where intuitive answers are wrong, molecular-level pathophysiology that defies simple explanations, emerging treatment protocols with paradoxical mechanisms, rare disease patterns that mimic opposite conditions, advanced diagnostic challenges where the obvious answer is incorrect"
 
-        # --- DYNAMIC RANDOM KEY GENERATION ---
-        # Create an even pool of options and randomly shuffle them for this specific exam run
-        options_pool = ['A', 'B', 'C', 'D'] * ((num_questions // 4) + 1)
-        dynamic_keys = random.sample(options_pool, num_questions)
-        formatted_key_string = ", ".join(dynamic_keys)
-        # -------------------------------------
+    # --- DYNAMIC RANDOM KEY GENERATION ---
+    # Create an even pool of options and randomly shuffle them for this specific exam run
+    options_pool = ['A', 'B', 'C', 'D'] * ((num_questions // 4) + 1)
+    dynamic_keys = random.sample(options_pool, num_questions)
+    formatted_key_string = ", ".join(dynamic_keys)
+    # -------------------------------------
 
-        prompt = f"""
+    prompt = f"""
     You are a medical board examiner.
     TASK: Generate EXACTLY {num_questions} Multiple Choice Questions (1 per snippet provided below).
     DIFFICULTY LEVEL: {level}/50.
@@ -141,11 +141,42 @@ def call_gemini_with_rotation(prompt, model_to_use, use_search=False):
     REMEMBER: You must maintain a strict difficulty level of {level}/50 for ALL {num_questions} questions. Do not drop the complexity or become more intuitive on the later questions. Start with '1. ' immediately. No introduction. Match your questions to the exact key sequence provided, and end with the [KEY: format]. Make the questions creative
     """
 
-        # Single call to the model using the TOGGLE'S value
-        exam_text = call_gemini_with_rotation(prompt, st.session_state.exam_model, use_search=st.session_state.use_search)
-        return exam_text
+    # Single call to the model using the TOGGLE'S value
+    exam_text = call_gemini_with_rotation(prompt, st.session_state.exam_model, use_search=st.session_state.use_search)
+    return exam_text
 
-        
+def get_ai_grading(exam_text, user_answers, correct_key, score):
+    prompt = f"""
+    Here is the input:
+    EXAM QUESTIONS: {exam_text}
+    SCORE: {score}
+    CORRECT KEY: {correct_key}
+    STUDENT ANSWERS: {user_answers}
+    
+
+    You are a medical instructor. Grade the student's performance.
+    
+    ### GRADING PROTOCOL:
+    1. Compare the student's answer for each question against the correct key.
+    2. Verify with current medical knowledge.
+    3. Focus ONLY on the questions the student got INCORRECT. 
+    
+    ### STRICT FORMATTING REQUIREMENTS:
+    You MUST output your response in clean Markdown. If the student got 100%, congratulate them and provide one high-yield clinical pearl.
+    Otherwise, for EVERY incorrect question, use this EXACT format:
+
+    ### Question [Insert Question Number]
+    **Your Answer:** [Letter] | **Correct Answer:** [Letter]
+    
+    * **Explanation:** [1-2 concise sentences explaining why the correct answer is right and the student's answer is wrong].
+    * **Clinical Pearl:** [A short, high-yield tip or memory hook for board exams].
+    ---
+    """
+    
+    # Using search during grading ensures explanations match current guidelines
+    return call_gemini_with_rotation(prompt, GRADER_MODEL, use_search=st.session_state.use_search)
+
+
 # Define the view functions
 def render_trainer_page():
 
@@ -381,39 +412,6 @@ def render_trainer_page():
 
         os.unlink(tmp_path) # Clean up temp file
         return pdf_bytes
-
-    def get_ai_grading(exam_text, user_answers, correct_key, score):
-        prompt = f"""
-        Here is the input:
-        EXAM QUESTIONS: {exam_text}
-        SCORE: {score}
-        CORRECT KEY: {correct_key}
-        STUDENT ANSWERS: {user_answers}
-        
-
-        You are a medical instructor. Grade the student's performance.
-        
-        ### GRADING PROTOCOL:
-        1. Compare the student's answer for each question against the correct key.
-        2. Verify with current medical knowledge.
-        3. Focus ONLY on the questions the student got INCORRECT. 
-        
-        ### STRICT FORMATTING REQUIREMENTS:
-        You MUST output your response in clean Markdown. If the student got 100%, congratulate them and provide one high-yield clinical pearl.
-        Otherwise, for EVERY incorrect question, use this EXACT format:
-
-        ### Question [Insert Question Number]
-        **Your Answer:** [Letter] | **Correct Answer:** [Letter]
-        
-        * **Explanation:** [1-2 concise sentences explaining why the correct answer is right and the student's answer is wrong].
-        * **Clinical Pearl:** [A short, high-yield tip or memory hook for board exams].
-        ---
-        """
-        
-        # Using search during grading ensures explanations match current guidelines
-        return call_gemini_with_rotation(prompt, GRADER_MODEL, use_search=st.session_state.use_search)
-
-
 
 
     # =====================================================================
