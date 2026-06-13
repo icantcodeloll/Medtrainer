@@ -496,7 +496,9 @@ def render_trainer_page():
     if not os.path.exists(CSV_FILE):
         st.error(f"Fatal Error: Master template file '{CSV_FILE}' not found!")
         st.stop()
-
+    subject_filter = []
+    exam_filter = []
+    system_filter = []
 
     if st.sidebar.button("Save Progress", help="Manually save your current progress"):
         try:
@@ -750,13 +752,6 @@ def render_trainer_page():
 
     df_sidebar = pd.read_csv(CSV_FILE)
     filter_tab1, filter_tab2 = st.sidebar.tabs(["Exam Filter", "Lecture Filter"])
-
-    # =========================================================================
-    # FIX: PRE-DEFINE FILTER ARRAYS TO PREVENT UNASSOCIATED LOCAL VARIABLE ERROR
-    # =========================================================================
-    subject_filter = []
-    exam_filter = []
-    system_filter = []
     # =========================================================================
     # --- TAB 1: BLUEPRINT FILTERS (Original Logic) ---
     with filter_tab1:
