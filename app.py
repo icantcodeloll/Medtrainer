@@ -242,14 +242,6 @@ def get_ai_grading(exam_text, user_answers, correct_key, score):
 
 # Define the view functions
 def render_trainer_page():
-    # 1. Enforce profile active user state matching your main page
-    if 'username' not in st.session_state:
-        st.session_state.username = "Default"
-    active_user = st.session_state.username
-    
-    # 2. RUN THE CORE INITIALIZATION ENGINE TO DEPLOY DEFAULT KEYS
-    initialize_app(active_user)
-
     # ==========================================
     # 0. INITIALIZATION ENGINE
     # ==========================================
@@ -1264,6 +1256,14 @@ def render_stats_page():
     display_analytics_dashboard()
 
 def render_lecture_trainer_page():
+    # 1. Enforce profile active user state matching your main page
+    if 'username' not in st.session_state:
+        st.session_state.username = "Default"
+    active_user = st.session_state.username
+    
+    # 2. RUN THE CORE INITIALIZATION ENGINE TO DEPLOY DEFAULT KEYS
+    initialize_app(active_user)
+    
     st.title("📖 Lecture Trainer")
     # 1. Load data & let user choose the target lecture
     try:
