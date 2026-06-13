@@ -242,6 +242,13 @@ def get_ai_grading(exam_text, user_answers, correct_key, score):
 
 # Define the view functions
 def render_trainer_page():
+    # 1. Enforce profile active user state matching your main page
+    if 'username' not in st.session_state:
+        st.session_state.username = "Default"
+    active_user = st.session_state.username
+    
+    # 2. RUN THE CORE INITIALIZATION ENGINE TO DEPLOY DEFAULT KEYS
+    initialize_app(active_user)
 
     # ==========================================
     # 0. INITIALIZATION ENGINE
@@ -1311,7 +1318,7 @@ def render_lecture_trainer_page():
             
             samples = samples_df.apply(combine_row_text, axis=1).tolist()
             
-            with st.spinner("Compiling high-yield medical board options..."):
+            with st.spinner("Generating questions..."):
                 raw_response = get_blind_exam(samples, st.session_state.current_level, n)
                 
             if "[KEY:" in raw_response:
