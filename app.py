@@ -822,62 +822,7 @@ def render_trainer_page():
 
     # Display the Exam
     if st.session_state.current_exam:
-        st.info("Select the best answer for each clinical scenario below.")
-        
-        # --- ADDED: PDF Download Button ---
-        if FPDF:
-            # Package the metadata dictionary dynamically
-            current_metadata = {
-                "level": st.session_state.current_level,
-                "subject": subject_filter if 'subject_filter' in locals() else "All Subjects",
-                "exam": exam_filter if 'exam_filter' in locals() else "All Exams",
-                "system": system_filter if 'system_filter' in locals() else "All Systems"
-            }
 
-            pdf_bytes = create_exam_pdf(
-                st.session_state.current_exam,
-                st.session_state.current_key,
-                metadata=current_metadata
-            )
-            if pdf_bytes:
-                st.download_button(
-                    label="  Download Exam as PDF",
-                    data=pdf_bytes,
-                    file_name="practice_exam.pdf",
-                    mime="application/pdf"
-                )
-
-        # --- NEW: TXT Download Button (Zero Blank Lines between Questions) ---
-        if st.session_state.current_exam:
-            # Compile clean plain text with regular expressions
-            raw_exam_text = st.session_state.current_exam.strip()
-            
-            # 1. Collapse multi-newlines between Option D and the following question number down to a single line break
-            # This matches Option D, grabs all trailing newlines/whitespace, and replaces them with a single \n
-            clean_exam_text = re.sub(r'(D\.\s.*?)\n+(?=\d+\.\s)', r'\1\n', raw_exam_text)
-            
-            # 2. Package the metadata dictionary dynamically
-            meta_subject = subject_filter if 'subject_filter' in locals() else "All Subjects"
-            meta_exam = exam_filter if 'exam_filter' in locals() else "All Exams"
-            meta_system = system_filter if 'system_filter' in locals() else "All Systems"
-            
-            melbourne_now = datetime.datetime.now(ZoneInfo("Australia/Melbourne")).strftime('%Y-%m-%d %H:%M:%S')
-            txt_content = (
-                f"Practice Exam (Level {st.session_state.current_level}/50)\n"
-                f"Filters - Subject: {meta_subject} | Exam: {meta_exam} | System: {meta_system}\n"
-                f"Generated on (Melbourne Time): {melbourne_now}\n"
-                f"----------------------------------------------------------------------\n\n"
-                f"{clean_exam_text}\n"
-            )
-            
-            st.download_button(
-                label="Download Exam as TXT",
-                data=txt_content,
-                file_name="practice_exam.txt",
-                mime="text/plain",
-                key="download_exam_txt_main"
-            )
-        # ----------------------------------
         # 1. CLEANING: Remove introductory fluff and trailing keys
         clean_text = st.session_state.current_exam.strip()
         # Remove common AI intros like "Here are your questions..."
@@ -1133,7 +1078,7 @@ def render_trainer_page():
     if st.session_state.missed_questions:
         # 1. THE HEATMAP (Visual)
         st.write("---")
-        st.sidebar.subheader("Weakness Heatmap")
+        st.header("Weakness Heatmap")
         m_df = pd.DataFrame(st.session_state.missed_questions)
         if 'category' in m_df.columns:
             st.bar_chart(m_df['category'].value_counts(), color="#ff4b4b")
@@ -1255,6 +1200,70 @@ def render_stats_page():
                 st.success("All subject tracks are performing above standard target parameters. Keep testing up to Level 50!")
     display_analytics_dashboard()
 
+def render_export_page():
+    st.title("Export Questions")
+    
+    if not st.session_state.get('current_exam'):
+        st.warning("No active exam found. Please generate an exam on the 'Exam Trainer' page first.")
+        st.stop()
+        
+    st.info("Download your currently active exam in your preferred format below.")
+    
+    # 1. PDF Export Section
+    try:
+        from fpdf import FPDF
+    except ImportError:
+        FPDF = None
+        
+    if FPDF:
+        # Recreate the metadata context
+        current_metadata = {
+            "level": st.session_state.get('current_level', 1),
+            "subject": "Active Exam Filter", 
+            "exam": "Active Exam Filter",
+            "system": "Active Exam Filter"
+        }
+        
+        pdf_bytes = create_exam_pdf(
+            st.session_state.current_exam, 
+            st.session_state.current_key, 
+            metadata=current_metadata
+        )
+        
+        if pdf_bytes:
+            st.subheader("PDF Format")
+            st.download_button(
+                label="Download Exam as PDF", 
+                data=pdf_bytes, 
+                file_name="practice_exam.pdf", 
+                mime="application/pdf",
+                key="download_exam_pdf_page"
+            )
+            
+    # 2. TXT Export Section
+    raw_exam_text = st.session_state.current_exam.strip()
+    clean_exam_text = re.sub(r'(D \. \s.*?) \n +(?=\d+ \. \s)', r'\1 \n ', raw_exam_text)
+    
+    from zoneinfo import ZoneInfo
+    melbourne_now = datetime.datetime.now(ZoneInfo("Australia/Melbourne")).strftime('%Y-%m-%d %H:%M:%S')
+    
+    txt_content = (
+        f"Practice Exam (Level {st.session_state.get('current_level', 1)}/50)\n"
+        f"Generated on (Melbourne Time): {melbourne_now}\n"
+        f"----------------------------------------------------------------------\n\n"
+        f"{clean_exam_text}\n"
+    )
+    
+    st.write("---")
+    st.subheader("Plain Text Format")
+    st.download_button(
+        label="Download Exam as TXT", 
+        data=txt_content, 
+        file_name="practice_exam.txt", 
+        mime="text/plain", 
+        key="download_exam_txt_page"
+    )
+
 def render_settings_page():
     st.title("⚙️ Global Settings")
     st.markdown("Configure your underlying performance models, training sizes, and system states.")
@@ -1315,6 +1324,7 @@ def render_settings_page():
 pg = st.navigation([
     st.Page(render_trainer_page, title="Exam Trainer", icon="📝"),
     st.Page(render_stats_page, title="Stats", icon="📊"),
+    st.Page(render_export_page, title="Export Questions", icon="📥"), 
     st.Page(render_settings_page, title="Settings", icon="⚙️")
 ])
 pg.run()
