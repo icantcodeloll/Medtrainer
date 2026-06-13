@@ -489,74 +489,24 @@ def render_trainer_page():
     # 3. WEB INTERFACE
     # ==========================================
     st.title("Trainer")
-    st.sidebar.header("Stats & Controls")
+    # =========================================================================
+    # NEW PLACEMENT: BIG, PROMINENT MAIN SECTION GENERATOR BUTTON
+    # =========================================================================
+    st.write("---")
+    st.subheader("Ready to test your knowledge?")
 
-    # Move Active Level metric here
-    st.sidebar.metric("Active Level", f"{st.session_state.current_level}/50")
+    # This layout structure prevents the button from stretching awkwardly on wide screens
+    gen_col1, gen_col2, gen_col3 = st.columns([1, 2, 1])
 
-    df_sidebar = pd.read_csv(CSV_FILE)
-
-    # Create two tabs inside the sidebar
-    filter_tab1, filter_tab2 = st.sidebar.tabs(["Exam Filter", "Lecture Filter"])
-
-    # --- TAB 1: BLUEPRINT FILTERS (Original Logic) ---
-    with filter_tab1:
-        # --- Subject filter Checkboxes ---
-        st.markdown("**Subjects:**")
-        categories = sorted(df_sidebar['category'].fillna("Uncategorized").astype(str).unique().tolist())
-        subject_filter = []
-        for cat in categories:
-            if st.checkbox(cat, value=True, key=f"focus_{cat}"):
-                subject_filter.append(cat)
-                
-        st.markdown("---")
-        
-        # --- Exam Filter Checkboxes ---
-        exam_filter = []
-        if 'exam' in df_sidebar.columns:
-            st.markdown("**Exam:**")
-            exams = sorted(df_sidebar['exam'].fillna("Uncategorized").astype(str).unique().tolist())
-            for ex in exams:
-                if st.checkbox(ex, value=True, key=f"exam_{ex}"):
-                    exam_filter.append(ex)
-        else:
-            exam_filter = []
-            
-        st.markdown("---")
-        
-        # --- Systems Filter Checkboxes ---
-        system_filter = []
-        if 'system' in df_sidebar.columns:
-            st.markdown("**Systems:**")
-            systems = sorted(df_sidebar['system'].fillna("Uncategorized").astype(str).unique().tolist())
-            for sys in systems:
-                if st.checkbox(sys, value=True, key=f"sys_{sys}"):
-                    system_filter.append(sys)
-        else:
-            system_filter = []
-
-    # --- TAB 2: LECTURE FILTERS (New Integrated Feature) ---
-    with filter_tab2:
-        
-        # Identify your Join Column dynamically from the dataset
-        if JOIN_COLUMN in df_sidebar.columns:
-            # Get all unique lecture IDs available
-            available_lectures = sorted(df_sidebar[JOIN_COLUMN].dropna().unique().tolist())
-            
-            # Use a multi-select box so users can select one or multiple lectures
-            selected_lectures = st.multiselect(
-                "Select Lecture:", 
-                options=available_lectures,
-                default=[],
-                key="filter_by_lecture_ids"
-            )
-        else:
-            st.warning(f"Join column '{JOIN_COLUMN}' not found in the dataset.")
-            selected_lectures = []
-
-
-
-    if st.sidebar.button("Generate New Exam"):
+    with gen_col2:
+        # use_container_width fills the middle column layout; type="primary" makes it high-contrast
+        generate_clicked = st.button(
+            "🚀 Generate New Exam", 
+            type="primary", 
+            use_container_width=True,
+            help="Click here to compile a fresh customized exam based on your filter selections."
+        )
+    if generate_clicked:
         # --- NEW: BACKUP THE CURRENT EXAM BEFORE OVERWRITING ---
         if st.session_state.get('current_exam'):
             st.session_state.previous_test_data = {
@@ -770,6 +720,88 @@ def render_trainer_page():
         except Exception as e:
             st.error(f"File Error: Ensure {CSV_FILE} and {NOTES_FILE} are in the folder. ({e})")
 
+    st.sidebar.header("Stats & Controls")
+
+    # Move Active Level metric here
+    st.sidebar.metric("Active Level", f"{st.session_state.current_level}/50")
+
+    df_sidebar = pd.read_csv(CSV_FILE)
+
+    # Create two tabs inside the sidebar
+    filter_tab1, filter_tab2 = st.sidebar.tabs(["Exam Filter", "Lecture Filter"])
+
+    # --- TAB 1: BLUEPRINT FILTERS (Original Logic) ---
+    with filter_tab1:
+        # --- Subject filter Checkboxes ---
+        st.markdown("**Subjects:**")
+        categories = sorted(df_sidebar['category'].fillna("Uncategorized").astype(str).unique().tolist())
+        subject_filter = []
+        for cat in categories:
+            if st.checkbox(cat, value=True, key=f"focus_{cat}"):
+                subject_filter.append(cat)
+                
+        st.markdown("---")
+        
+        # --- Exam Filter Checkboxes ---
+        exam_filter = []
+        if 'exam' in df_sidebar.columns:
+            st.markdown("**Exam:**")
+            exams = sorted(df_sidebar['exam'].fillna("Uncategorized").astype(str).unique().tolist())
+            for ex in exams:
+                if st.checkbox(ex, value=True, key=f"exam_{ex}"):
+                    exam_filter.append(ex)
+        else:
+            exam_filter = []
+            
+        st.markdown("---")
+        
+        # --- Systems Filter Checkboxes ---
+        system_filter = []
+        if 'system' in df_sidebar.columns:
+            st.markdown("**Systems:**")
+            systems = sorted(df_sidebar['system'].fillna("Uncategorized").astype(str).unique().tolist())
+            for sys in systems:
+                if st.checkbox(sys, value=True, key=f"sys_{sys}"):
+                    system_filter.append(sys)
+        else:
+            system_filter = []
+
+    # --- TAB 2: LECTURE FILTERS (New Integrated Feature) ---
+    with filter_tab2:
+        
+        # Identify your Join Column dynamically from the dataset
+        if JOIN_COLUMN in df_sidebar.columns:
+            # Get all unique lecture IDs available
+            available_lectures = sorted(df_sidebar[JOIN_COLUMN].dropna().unique().tolist())
+            
+            # Use a multi-select box so users can select one or multiple lectures
+            selected_lectures = st.multiselect(
+                "Select Lecture:", 
+                options=available_lectures,
+                default=[],
+                key="filter_by_lecture_ids"
+            )
+        else:
+            st.warning(f"Join column '{JOIN_COLUMN}' not found in the dataset.")
+            selected_lectures = []
+
+# =========================================================================
+# NEW PLACEMENT: BIG, PROMINENT MAIN SECTION GENERATOR BUTTON
+# =========================================================================
+st.write("---")
+st.subheader("Ready to test your knowledge?")
+
+# This layout structure prevents the button from stretching awkwardly on wide screens
+gen_col1, gen_col2, gen_col3 = st.columns([1, 2, 1])
+
+with gen_col2:
+    # use_container_width fills the middle column layout; type="primary" makes it high-contrast
+    generate_clicked = st.button(
+        "🚀 Generate New Exam", 
+        type="primary", 
+        use_container_width=True,
+        help="Click here to compile a fresh customized exam based on your filter selections."
+    )
     st.sidebar.markdown("---")
 
 
