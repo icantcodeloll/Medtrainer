@@ -500,19 +500,6 @@ def render_trainer_page():
     st.title("Trainer")
     st.sidebar.header("Stats & Controls")
 
-    # Inside render_trainer_page(), right below st.sidebar.header("Stats & Controls")
-    st.sidebar.markdown("---")
-    st.sidebar.subheader("Navigation")
-    
-    # Render global router buttons or radio options inside the sidebar cleanly
-    chosen_page = st.sidebar.radio(
-        "Go To:",
-        options=["Exam Trainer", "Settings Pages"],
-        index=0 if st.session_state.current_page == "Exam Trainer" else 1
-    )
-    st.session_state.current_page = chosen_page
-    st.sidebar.markdown("---")
-
     # Move Active Level metric here
     st.sidebar.metric("Active Level", f"{st.session_state.current_level}/50")
 
@@ -834,38 +821,82 @@ def render_trainer_page():
             st.rerun()
     # ----------------------------------
 
-    # Around the region where st.session_state.current_exam is displayed:
-    if st.session_state.current_page == "Settings Pages":
-        # Offload logic dynamically to the separate workspace function 
-        render_settings_page()
-    else:
-        # Display the Exam
-        if st.session_state.current_exam:
-            st.info("Select the best answer for each clinical scenario below.")
-            
-            # --- ADDED: PDF Download Button ---
-            if FPDF:
-                # Package the metadata dictionary dynamically
-                current_metadata = {
-                    "level": st.session_state.current_level,
-                    "subject": subject_filter if 'subject_filter' in locals() else "All Subjects",
-                    "exam": exam_filter if 'exam_filter' in locals() else "All Exams",
-                    "system": system_filter if 'system_filter' in locals() else "All Systems"
-                }
+    # Settings button for sliders
+    if st.sidebar.button("Settings", use_container_width=True):
+        if 'show_settings' not in st.session_state:
+            st.session_state.show_settings = False
+        st.session_state.show_settings = not st.session_state.show_settings
 
-                pdf_bytes = create_exam_pdf(
-                    st.session_state.current_exam,
-                    st.session_state.current_key,
-                    metadata=current_metadata
+    # Show sliders only when settings is expanded
+    if st.session_state.get('show_settings', False):
+        st.session_state.current_level = st.sidebar.slider("Starting Level", 1, 50, st.session_state.current_level)
+        st.session_state.num_questions = st.sidebar.slider("Number of Questions", 1, 50, st.session_state.num_questions)
+        st.session_state.thinking_level = st.sidebar.selectbox(
+            "Gemini Thinking Level",
+            options=["MINIMAL", "LOW", "MEDIUM", "HIGH"],
+            index=["MINIMAL", "LOW", "MEDIUM", "HIGH"].index(st.session_state.thinking_level),
+            help="Control how deeply the model deliberates before generating questions or grading."
+        )
+
+        st.sidebar.markdown("---")
+        
+        # --- NEW: Double-Sided Model Switch ---
+        st.sidebar.markdown("**Speed:**")
+        model_choice = st.sidebar.radio(
+            label="Speed",
+            label_visibility="collapsed", # Hides the label so it just looks like a switch
+            options=["3.1 flash lite", "3.5 flash"],
+            index=1 if st.session_state.get('exam_model', 'gemini-3.5-flash') == 'gemini-3.5-flash' else 0,
+            horizontal=True, # This forces them side-by-side like a double switch!
+        )
+
+        # Update memory
+        st.session_state.exam_model = 'gemini-3.5-flash' if "Slow" in model_choice else 'gemini-3.1-flash-lite'
+
+        st.sidebar.markdown("---")
+        if st.sidebar.button("Reset Progress", help="Clear all saved progress and reset to defaults"):
+            user_specific_progress = f"{active_user}_progress.json"
+            if os.path.exists(user_specific_progress):
+                os.remove(user_specific_progress)
+                
+            # Re-initialize the setup back to default settings effortlessly
+            initialize_app(active_user, force_reset=True)
+            st.sidebar.success("Progress reset successfully!")
+            st.rerun()
+        
+        st.sidebar.markdown("---")
+        render_data_portability_interface()
+
+
+    # Display the Exam
+    if st.session_state.current_exam:
+        st.info("Select the best answer for each clinical scenario below.")
+        
+        # --- ADDED: PDF Download Button ---
+        if FPDF:
+            # Package the metadata dictionary dynamically
+            current_metadata = {
+                "level": st.session_state.current_level,
+                "subject": subject_filter if 'subject_filter' in locals() else "All Subjects",
+                "exam": exam_filter if 'exam_filter' in locals() else "All Exams",
+                "system": system_filter if 'system_filter' in locals() else "All Systems"
+            }
+
+            pdf_bytes = create_exam_pdf(
+                st.session_state.current_exam,
+                st.session_state.current_key,
+                metadata=current_metadata
+            )
+            if pdf_bytes:
+                st.download_button(
+                    label="  Download Exam as PDF",
+                    data=pdf_bytes,
+                    file_name="practice_exam.pdf",
+                    mime="application/pdf"
                 )
-                if pdf_bytes:
-                    st.download_button(
-                        label="  Download Exam as PDF",
-                        data=pdf_bytes,
-                        file_name="practice_exam.pdf",
-                        mime="application/pdf"
-                    )
 
+        # --- NEW: TXT Download Button (Zero Blank Lines between Questions) ---
+        if st.session_state.current_exam:
             # Compile clean plain text with regular expressions
             raw_exam_text = st.session_state.current_exam.strip()
             
@@ -894,257 +925,256 @@ def render_trainer_page():
                 mime="text/plain",
                 key="download_exam_txt_main"
             )
-            # ----------------------------------
+        # ----------------------------------
+        # 1. CLEANING: Remove introductory fluff and trailing keys
+        clean_text = st.session_state.current_exam.strip()
+        # Remove common AI intros like "Here are your questions..."
+        clean_text = re.sub(r"^(Here are|Based on|Sure|I have generated).*?\n", "", clean_text, flags=re.IGNORECASE)
+
+        # 2. SPLITTING: Look for "1. ", "2. ", etc. at the START of a line only
+        # This prevents it from splitting on "1." inside a sentence
+        raw_questions = re.split(r'\n(?=\d+\.\s)', clean_text)
+        
+        # Remove any empty strings resulting from the split
+        individual_questions = [q.strip() for q in raw_questions if q.strip()]
+
+        if 'user_selections' not in st.session_state:
+            st.session_state.user_selections = {}
+
+        # --- 1. INJECT ISOLATED OPTION STYLE MATRIX ONLY ---
+        st.markdown("""
+            <style>
+            /* Target ONLY your quiz options, leaving all other site buttons untouched */
+            .quiz-option-box {
+                display: block;
+                width: 100%;
+                padding: 14px 20px;
+                margin: 8px 0;
+                border-radius: 8px;
+                font-size: 15px;
+                text-align: left;
+                background-color: transparent;
+                border: 2px solid #e0e0e0;
+                color: #333333;
+                transition: all 0.2s ease-in-out;
+            }
             
-            # 1. CLEANING: Remove introductory fluff and trailing keys
-            clean_text = st.session_state.current_exam.strip()
-            # Remove common AI intros like "Here are your questions..."
-            clean_text = re.sub(r"^(Here are|Based on|Sure|I have generated).*?\n", "", clean_text, flags=re.IGNORECASE)
-
-            # 2. SPLITTING: Look for "1. ", "2. ", etc. at the START of a line only
-            # This prevents it from splitting on "1." inside a sentence
-            raw_questions = re.split(r'\n(?=\d+\.\s)', clean_text)
+            /* Elegant hover state strictly localized to quiz options */
+            .quiz-option-box:hover {
+                border-color: #4b6cb7;
+                background-color: #f4f7fc;
+                color: #4b6cb7;
+            }
             
-            # Remove any empty strings resulting from the split
-            individual_questions = [q.strip() for q in raw_questions if q.strip()]
+            /* Selected state has exact same structural dimensions to prevent shifting */
+            .quiz-option-box-selected {
+                display: block;
+                width: 100%;
+                padding: 14px 20px;
+                margin: 8px 0;
+                border-radius: 8px;
+                font-size: 15px;
+                text-align: left;
+                border: 2px solid #4b6cb7;
+                background-color: #eef2fa;
+                color: #4b6cb7;
+                font-weight: bold;
+            }
+            </style>
+        """, unsafe_allow_html=True)
 
-            if 'user_selections' not in st.session_state:
-                st.session_state.user_selections = {}
+        # --- 2. RENDER THE QUESTIONS DYNAMICALLY (OUTSIDE st.form CONSTRAINTS FOR FAST RERUNS) ---
+        for i, q_text in enumerate(individual_questions):
+            st.subheader(f"Question {i+1}")
+            
+            # Extract clinical question text body before the option choices begin
+            prompt_match = re.search(r"(\d+\s*\.\s*.*?)(?=A\s*\.\s*)", q_text, re.DOTALL)
+            q_prompt = prompt_match.group(1).strip() if prompt_match else q_text
+            
+            # Keep the question at its native, original markdown text size
+            st.markdown(q_prompt.replace("\n", "<br>"), unsafe_allow_html=True)
+            st.write("") 
 
-            # --- 1. INJECT ISOLATED OPTION STYLE MATRIX ONLY ---
-            st.markdown("""
-                <style>
-                /* Target ONLY your quiz options, leaving all other site buttons untouched */
-                .quiz-option-box {
-                    display: block;
-                    width: 100%;
-                    padding: 14px 20px;
-                    margin: 8px 0;
-                    border-radius: 8px;
-                    font-size: 15px;
-                    text-align: left;
-                    background-color: transparent;
-                    border: 2px solid #e0e0e0;
-                    color: #333333;
-                    transition: all 0.2s ease-in-out;
-                }
+            # Clean option boundaries handling spacing nuances from API outputs
+            opt_A = re.search(r"(A\s*\.\s*.*?)(?=[B-D]\s*\.\s*|$)", q_text, re.DOTALL)
+            opt_B = re.search(r"(B\s*\.\s*.*?)(?=[A,C,D]\s*\.\s*|$)", q_text, re.DOTALL)
+            opt_C = re.search(r"(C\s*\.\s*.*?)(?=[A,B,D]\s*\.\s*|$)", q_text, re.DOTALL)
+            opt_D = re.search(r"(D\s*\.\s*.*?)(?=[A-C]\s*\.\s*|$)", q_text, re.DOTALL)
+
+            options_dict = {
+                "A": opt_A.group(1).strip() if opt_A else "A. Option A",
+                "B": opt_B.group(1).strip() if opt_B else "B. Option B",
+                "C": opt_C.group(1).strip() if opt_C else "C. Option C",
+                "D": opt_D.group(1).strip() if opt_D else "D. Option D"
+            }
+
+            # Restrict options to a narrower column layout so they aren't overly large or wide
+            left_constrained_column, empty_right_space = st.columns([3, 2])
+            
+            with left_constrained_column:
+                current_selection = st.session_state.user_selections.get(i, None)
                 
-                /* Elegant hover state strictly localized to quiz options */
-                .quiz-option-box:hover {
-                    border-color: #4b6cb7;
-                    background-color: #f4f7fc;
-                    color: #4b6cb7;
-                }
+                # Safely convert keys to list and track indexing position mapping
+                choice_keys = list(options_dict.keys())
                 
-                /* Selected state has exact same structural dimensions to prevent shifting */
-                .quiz-option-box-selected {
-                    display: block;
-                    width: 100%;
-                    padding: 14px 20px;
-                    margin: 8px 0;
-                    border-radius: 8px;
-                    font-size: 15px;
-                    text-align: left;
-                    border: 2px solid #4b6cb7;
-                    background-color: #eef2fa;
-                    color: #4b6cb7;
-                    font-weight: bold;
-                }
-                </style>
-            """, unsafe_allow_html=True)
+                # 1. Inject a style trick to completely hide this specific row of native radio selectors
+                st.markdown(f"""
+                    <style>
+                    div[data-testid="stRadio"] {{
+                        display: none !important;
+                    }}
+                    </style>
+                """, unsafe_allow_html=True)
 
-            # --- 2. RENDER THE QUESTIONS DYNAMICALLY (OUTSIDE st.form CONSTRAINTS FOR FAST RERUNS) ---
-            for i, q_text in enumerate(individual_questions):
-                st.subheader(f"Question {i+1}")
-                
-                # Extract clinical question text body before the option choices begin
-                prompt_match = re.search(r"(\d+\s*\.\s*.*?)(?=A\s*\.\s*)", q_text, re.DOTALL)
-                q_prompt = prompt_match.group(1).strip() if prompt_match else q_text
-                
-                # Keep the question at its native, original markdown text size
-                st.markdown(q_prompt.replace("\n", "<br>"), unsafe_allow_html=True)
-                st.write("") 
-
-                # Clean option boundaries handling spacing nuances from API outputs
-                opt_A = re.search(r"(A\s*\.\s*.*?)(?=[B-D]\s*\.\s*|$)", q_text, re.DOTALL)
-                opt_B = re.search(r"(B\s*\.\s*.*?)(?=[A,C,D]\s*\.\s*|$)", q_text, re.DOTALL)
-                opt_C = re.search(r"(C\s*\.\s*.*?)(?=[A,B,D]\s*\.\s*|$)", q_text, re.DOTALL)
-                opt_D = re.search(r"(D\s*\.\s*.*?)(?=[A-C]\s*\.\s*|$)", q_text, re.DOTALL)
-
-                options_dict = {
-                    "A": opt_A.group(1).strip() if opt_A else "A. Option A",
-                    "B": opt_B.group(1).strip() if opt_B else "B. Option B",
-                    "C": opt_C.group(1).strip() if opt_C else "C. Option C",
-                    "D": opt_D.group(1).strip() if opt_D else "D. Option D"
-                }
-
-                # Restrict options to a narrower column layout so they aren't overly large or wide
-                left_constrained_column, empty_right_space = st.columns([3, 2])
-                
-                with left_constrained_column:
-                    current_selection = st.session_state.user_selections.get(i, None)
-                    
-                    # Safely convert keys to list and track indexing position mapping
-                    choice_keys = list(options_dict.keys())
-                    
-                    # 1. Inject a style trick to completely hide this specific row of native radio selectors
-                    st.markdown(f"""
-                        <style>
-                        div[data-testid="stRadio"] {{
-                            display: none !important;
-                        }}
-                        </style>
-                    """, unsafe_allow_html=True)
-
-                    # 2. Render an invisible radio button in the background to handle the variable state
-                    selected_letter = st.radio(
-                        label=f"Radio Select Q{i}",
-                        options=choice_keys,
-                        index=choice_keys.index(current_selection) if current_selection in choice_keys else None,
-                        key=f"native_radio_q_{i}",
-                        label_visibility="collapsed"
-                    )
-
-                    # 3. Render your custom styled choices as large, full-width clickable buttons
-                    for choice_letter, full_sentence_text in options_dict.items():
-                        is_selected = (current_selection == choice_letter)
-                        btn_type = "primary" if is_selected else "secondary"
-                        prefix = "➔   " if is_selected else "      "
-                        
-                        # Use use_container_width=True to make the buttons big and fill the space
-                        # Disable buttons after submission so users can't change answers while viewing feedback
-                        if st.button(f"{prefix}{full_sentence_text}", key=f"btn_q_{i}_{choice_letter}", use_container_width=True, type=btn_type, disabled=st.session_state.get('exam_submitted', False)):
-                            st.session_state.user_selections[i] = choice_letter
-                            st.rerun()
-
-                    # --- NEW: INJECT PER-QUESTION AI FEEDBACK RIGHT HERE ---
-                    if st.session_state.get('exam_submitted') and st.session_state.get('ai_feedback_clean'):
-                        # Look for the section matching "### Question X" or "### Question [X]"
-                        feedback_str = st.session_state.ai_feedback_clean
-                        pattern = rf"### Question \s*\[?{i+1}\]?.*?(?=### Question \s*\[?{i+2}\]?|---|$)"
-                        match = re.search(pattern, feedback_str, re.DOTALL | re.IGNORECASE)
-                        
-                        if match:
-                            st.info("💡 **AI Grading Feedback:**")
-                            st.markdown(match.group(0).strip())
-                        else:
-                            # If no specific incorrect feedback is found, the question might be correct
-                            correct_ans = st.session_state.current_key[i]
-                            user_ans = st.session_state.user_selections.get(i, "No Answer")
-                            if user_ans == correct_ans:
-                                st.success(f"Correct! You answered `{user_ans}`.")
-
-                    st.write("---")
-
-            # Standalone execution grading submission action button
-            # --- NEW: SCORE & LEVELING FEEDBACK HIGHLIGHT ---
-            if st.session_state.get('exam_submitted'):
-                num_actual_questions = len(individual_questions)
-                
-                # Display score and leveling notification in callout boxes
-                st.metric(
-                    label="Exam Performance", 
-                    value=f"{st.session_state.last_score} / {num_actual_questions}",
-                    delta=f"{(st.session_state.last_score / num_actual_questions * 100):.1f}% Correct",
-                    delta_color="normal" if st.session_state.last_score / num_actual_questions >= 0.7 else "inverse"
+                # 2. Render an invisible radio button in the background to handle the variable state
+                selected_letter = st.radio(
+                    label=f"Radio Select Q{i}",
+                    options=choice_keys,
+                    index=choice_keys.index(current_selection) if current_selection in choice_keys else None,
+                    key=f"native_radio_q_{i}",
+                    label_visibility="collapsed"
                 )
-                
-                if st.session_state.get('level_message'):
-                    st.info(st.session_state.level_message)
-                st.write("")
 
-            # Standalone execution grading submission action button (normalized look)
-            submitted = st.button("Submit for Grading", type="primary")
-
-            if submitted:
-                num_actual_questions = len(individual_questions)
-                user_answers = [st.session_state.user_selections.get(idx, None) for idx in range(num_actual_questions)]
-                user_input = "\n".join([f"Q{idx+1}: {ans if ans else 'No Answer'}" for idx, ans in enumerate(user_answers)])
-                
-                correct_key = st.session_state.current_key[:num_actual_questions]
-                correct_key_formatted = "\n".join([f"Q{idx+1}: {ans}" for idx, ans in enumerate(correct_key)])
-                
-                st.session_state.last_user_input = user_input
-                st.session_state.last_correct_key = correct_key_formatted
-                st.session_state.last_user_answers_list = user_answers
-                
-                if len(user_answers) != len(correct_key):
-                    st.error(f"Mismatch: The exam has {len(correct_key)} questions, but you entered {len(user_answers)} answers.")
-                    st.stop()
+                # 3. Render your custom styled choices as large, full-width clickable buttons
+                for choice_letter, full_sentence_text in options_dict.items():
+                    is_selected = (current_selection == choice_letter)
+                    btn_type = "primary" if is_selected else "secondary"
+                    prefix = "➔   " if is_selected else "      "
                     
-                score = 0
-                incorrect_summary_markdown = ""
+                    # Use use_container_width=True to make the buttons big and fill the space
+                    # Disable buttons after submission so users can't change answers while viewing feedback
+                    if st.button(f"{prefix}{full_sentence_text}", key=f"btn_q_{i}_{choice_letter}", use_container_width=True, type=btn_type, disabled=st.session_state.get('exam_submitted', False)):
+                        st.session_state.user_selections[i] = choice_letter
+                        st.rerun()
 
-                for i, q_text in enumerate(individual_questions):
-                    if i >= len(user_answers):
-                        break
-                    u_ans = user_answers[i] if user_answers[i] else "No Answer"
-                    correct = correct_key[i] if i < len(correct_key) else None
-
-                    if u_ans == correct:
-                        score += 1
+                # --- NEW: INJECT PER-QUESTION AI FEEDBACK RIGHT HERE ---
+                if st.session_state.get('exam_submitted') and st.session_state.get('ai_feedback_clean'):
+                    # Look for the section matching "### Question X" or "### Question [X]"
+                    feedback_str = st.session_state.ai_feedback_clean
+                    pattern = rf"### Question \s*\[?{i+1}\]?.*?(?=### Question \s*\[?{i+2}\]?|---|$)"
+                    match = re.search(pattern, feedback_str, re.DOTALL | re.IGNORECASE)
+                    
+                    if match:
+                        st.info("💡 **AI Grading Feedback:**")
+                        st.markdown(match.group(0).strip())
                     else:
-                        clean_q_snippet = re.sub(r'<br\s*/?>', ' ', individual_questions[i].split('\n')[0][:120])
-                        incorrect_summary_markdown += f"**Question {i+1}:** *{clean_q_snippet}...*\n"
-                        incorrect_summary_markdown += f"&nbsp;&nbsp;&nbsp;&nbsp;• **Your Answer:** `{u_ans}` | **Correct Answer:** `{correct}`\n\n"
+                        # If no specific incorrect feedback is found, the question might be correct
+                        correct_ans = st.session_state.current_key[i]
+                        user_ans = st.session_state.user_selections.get(i, "No Answer")
+                        if user_ans == correct_ans:
+                            st.success(f"Correct! You answered `{user_ans}`.")
 
-                    st.session_state.missed_questions.append({
-                        "question": individual_questions[i].strip(),
-                        "correct": correct,
-                        "yours": u_ans,
-                        "category": st.session_state.current_categories[i] if i < len(st.session_state.current_categories) else "General",
-                    })
+                st.write("---")
 
-                st.session_state.exam_submitted = True
-                st.session_state.last_score = score
-                st.session_state.immediate_wrong_breakdown = incorrect_summary_markdown if incorrect_summary_markdown else "  🎉   **Perfect score! You got every question right!**"
+        # Standalone execution grading submission action button
+        # --- NEW: SCORE & LEVELING FEEDBACK HIGHLIGHT ---
+        if st.session_state.get('exam_submitted'):
+            num_actual_questions = len(individual_questions)
+            
+            # Display score and leveling notification in callout boxes
+            st.metric(
+                label="Exam Performance", 
+                value=f"{st.session_state.last_score} / {num_actual_questions}",
+                delta=f"{(st.session_state.last_score / num_actual_questions * 100):.1f}% Correct",
+                delta_color="normal" if st.session_state.last_score / num_actual_questions >= 0.7 else "inverse"
+            )
+            
+            if st.session_state.get('level_message'):
+                st.info(st.session_state.level_message)
+            st.write("")
 
-                # --- NEW: FETCH FEEDBACK BEFORE RERUN SO IT DISPLAYS UNDER QUESTIONS ---
-                with st.spinner("Analyzing answers..."):
-                    try:
-                        feedback = get_ai_grading(
-                            st.session_state.current_exam,
-                            user_input,
-                            correct_key_formatted,
-                            score
-                        )
-                        st.session_state.ai_feedback_clean = feedback
-                    except Exception as e:
-                        st.session_state.ai_feedback_clean = f"Error generating explanation: {e}"
+        # Standalone execution grading submission action button (normalized look)
+        submitted = st.button("Submit for Grading", type="primary")
 
-                percentage_correct = (score / num_actual_questions) * 100
-                if (num_actual_questions - score) <= 1 or percentage_correct >= 90:
-                    next_level = min(50, st.session_state.current_level + 1)
-                    if next_level > st.session_state.current_level:
-                        st.session_state.level_message = f"**Excellent performance ({percentage_correct:.0f}%)! You have leveled up to Level {next_level}!**"
-                    else:
-                        st.session_state.level_message = f"**Fantastic score ({percentage_correct:.0f}%)! You are at the maximum mastery level (Level 50)!**"
-                    st.session_state.current_level = next_level
-                elif percentage_correct <= 60:
-                    next_level = max(1, st.session_state.current_level - 1)
-                    if next_level < st.session_state.current_level:
-                        st.session_state.level_message = f"**Score was {percentage_correct:.0f}%. The system adjusted your difficulty down to Level {next_level} to rebuild foundations.**"
-                    else:
-                        st.session_state.level_message = f"**Score was {percentage_correct:.0f}%. You are at Level 1. Keep practicing to build confidence!**"
-                    st.session_state.current_level = next_level
+        if submitted:
+            num_actual_questions = len(individual_questions)
+            user_answers = [st.session_state.user_selections.get(idx, None) for idx in range(num_actual_questions)]
+            user_input = "\n".join([f"Q{idx+1}: {ans if ans else 'No Answer'}" for idx, ans in enumerate(user_answers)])
+            
+            correct_key = st.session_state.current_key[:num_actual_questions]
+            correct_key_formatted = "\n".join([f"Q{idx+1}: {ans}" for idx, ans in enumerate(correct_key)])
+            
+            st.session_state.last_user_input = user_input
+            st.session_state.last_correct_key = correct_key_formatted
+            st.session_state.last_user_answers_list = user_answers
+            
+            if len(user_answers) != len(correct_key):
+                st.error(f"Mismatch: The exam has {len(correct_key)} questions, but you entered {len(user_answers)} answers.")
+                st.stop()
+                
+            score = 0
+            incorrect_summary_markdown = ""
+
+            for i, q_text in enumerate(individual_questions):
+                if i >= len(user_answers):
+                    break
+                u_ans = user_answers[i] if user_answers[i] else "No Answer"
+                correct = correct_key[i] if i < len(correct_key) else None
+
+                if u_ans == correct:
+                    score += 1
                 else:
-                    st.session_state.level_message = f"**Solid effort ({percentage_correct:.0f}%)! Remaining at Level {st.session_state.current_level} to lock in consistency.**"
-                    
-                st.rerun()
+                    clean_q_snippet = re.sub(r'<br\s*/?>', ' ', individual_questions[i].split('\n')[0][:120])
+                    incorrect_summary_markdown += f"**Question {i+1}:** *{clean_q_snippet}...*\n"
+                    incorrect_summary_markdown += f"&nbsp;&nbsp;&nbsp;&nbsp;• **Your Answer:** `{u_ans}` | **Correct Answer:** `{correct}`\n\n"
 
-                # --- 2. THE FEEDBACK (Fully outside the st.form block) ---
-                # Locate this section at the very end of render_trainer_page()
-                if st.session_state.get('exam_submitted'):
-                    if st.session_state.get('level_message'):
-                        st.markdown(st.session_state.level_message)
-                        
-                    # --- REMOVE OR COMMENT OUT THE OLD BREAKDOWN LINES HERE ---
-                    if st.session_state.get('immediate_wrong_breakdown'):
-                        st.markdown("### Immediate Answer Breakdown")
-                        st.markdown(st.session_state.immediate_wrong_breakdown)
-                    
+                st.session_state.missed_questions.append({
+                    "question": individual_questions[i].strip(),
+                    "correct": correct,
+                    "yours": u_ans,
+                    "category": st.session_state.current_categories[i] if i < len(st.session_state.current_categories) else "General",
+                })
+
+            st.session_state.exam_submitted = True
+            st.session_state.last_score = score
+            st.session_state.immediate_wrong_breakdown = incorrect_summary_markdown if incorrect_summary_markdown else "  🎉   **Perfect score! You got every question right!**"
+
+            # --- NEW: FETCH FEEDBACK BEFORE RERUN SO IT DISPLAYS UNDER QUESTIONS ---
+            with st.spinner("Analyzing answers..."):
+                try:
+                    feedback = get_ai_grading(
+                        st.session_state.current_exam,
+                        user_input,
+                        correct_key_formatted,
+                        score
+                    )
+                    st.session_state.ai_feedback_clean = feedback
+                except Exception as e:
+                    st.session_state.ai_feedback_clean = f"Error generating explanation: {e}"
+
+            percentage_correct = (score / num_actual_questions) * 100
+            if (num_actual_questions - score) <= 1 or percentage_correct >= 90:
+                next_level = min(50, st.session_state.current_level + 1)
+                if next_level > st.session_state.current_level:
+                    st.session_state.level_message = f"**Excellent performance ({percentage_correct:.0f}%)! You have leveled up to Level {next_level}!**"
+                else:
+                    st.session_state.level_message = f"**Fantastic score ({percentage_correct:.0f}%)! You are at the maximum mastery level (Level 50)!**"
+                st.session_state.current_level = next_level
+            elif percentage_correct <= 60:
+                next_level = max(1, st.session_state.current_level - 1)
+                if next_level < st.session_state.current_level:
+                    st.session_state.level_message = f"**Score was {percentage_correct:.0f}%. The system adjusted your difficulty down to Level {next_level} to rebuild foundations.**"
+                else:
+                    st.session_state.level_message = f"**Score was {percentage_correct:.0f}%. You are at Level 1. Keep practicing to build confidence!**"
+                st.session_state.current_level = next_level
+            else:
+                st.session_state.level_message = f"**Solid effort ({percentage_correct:.0f}%)! Remaining at Level {st.session_state.current_level} to lock in consistency.**"
                 
-                    st.write("---")
+            st.rerun()
+
+            # --- 2. THE FEEDBACK (Fully outside the st.form block) ---
+            # Locate this section at the very end of render_trainer_page()
+            if st.session_state.get('exam_submitted'):
+                if st.session_state.get('level_message'):
+                    st.markdown(st.session_state.level_message)
+                    
+                # --- REMOVE OR COMMENT OUT THE OLD BREAKDOWN LINES HERE ---
+                if st.session_state.get('immediate_wrong_breakdown'):
+                    st.markdown("### Immediate Answer Breakdown")
+                    st.markdown(st.session_state.immediate_wrong_breakdown)
+                
+            
+                st.write("---")
             
 
     # Missed Questions Bank in Sidebar
@@ -1330,7 +1360,6 @@ def render_settings_page():
     with col2:
         # Include data portability operations inside the central settings UI block safely
         render_data_portability_interface()
-
 
 # Create the navigation router
 pg = st.navigation([
