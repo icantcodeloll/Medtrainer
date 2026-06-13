@@ -20,6 +20,132 @@ from progress_manager import save_progress, load_progress
 # ==========================================
 st.set_page_config(page_title="Trainer", page_icon="🩺", layout="wide")
 
+def get_client():
+    return genai.Client(api_key=API_KEYS[st.session_state.key_index])
+
+def call_gemini_with_rotation(prompt, model_to_use, use_search=False):
+    keys_tried = 0
+    
+    # 1. Establish tool rules: Google Search ONLY applies to Gemini 2.5 Flash
+    tools = []
+    if use_search and "3.5-flash" in model_to_use.lower():
+        tools = [types.Tool(google_search=types.GoogleSearch())]
+    
+    # 2. Build configuration arguments dynamically
+    config_args = {}
+    
+    if tools:
+        config_args["tools"] = tools
+        
+    
+    if "3.1-flash-lite" in model_to_use.lower() or "3.5-flash" in model_to_use.lower():
+        # Safeguard default state if UI component hasn't rendered yet
+        current_level = st.session_state.get("thinking_level", "MEDIUM")
+        config_args["thinking_config"] = types.ThinkingConfig(thinking_level=current_level)
+
+    # Pack arguments into the structural API configuration object
+    generation_config = types.GenerateContentConfig(**config_args)
+
+    # --- REST OF YOUR CONTINUOUS API LOOP ---
+    while keys_tried < len(API_KEYS):
+        try:
+            client = get_client()
+            response = client.models.generate_content(
+                model=model_to_use,
+                contents=prompt,
+                config=generation_config
+            )
+            return response.text
+        except Exception as e:
+            if "429" in str(e):
+                keys_tried += 1
+                if keys_tried >= len(API_KEYS):
+                    st.error("Reduce the question count.")
+                    return None
+                st.session_state.key_index = (st.session_state.key_index + 1) % len(API_KEYS)
+                time.sleep(1)
+            elif "503" in str(e):
+                time.sleep(5)
+            else:
+                st.error(f"Error during generation: {e}")
+                return None
+
+    def get_blind_exam(topics_list, level, num_questions):
+        combined_content = "\n\n".join([f"Source {i+1}: {t}" for i, t in enumerate(topics_list)])
+
+        # Difficulty calibration from intuitive basics to counterintuitive expert challenges
+        if level <= 5:
+            difficulty_desc = "intuitive basics - straightforward medical concepts that make logical sense"
+            complexity_guide = "focus on intuitive anatomy, obvious physiology, simple definitions, core principles that follow common sense"
+        elif level <= 15:
+            difficulty_desc = "logical progression - clinical applications that follow standard patterns"
+            complexity_guide = "include common diseases with predictable presentations, standard treatments, straightforward clinical reasoning"
+        elif level <= 25:
+            difficulty_desc = "complex but predictable - applied knowledge with some nuance"
+            complexity_guide = "complex clinical cases with clear patterns, differential diagnosis with logical elimination, treatment with expected responses"
+        elif level <= 35:
+            difficulty_desc = "challenging patterns - specialized knowledge requiring deeper analysis"
+            complexity_guide = "specialty-specific conditions with some counterintuitive elements, advanced therapeutics with unexpected side effects, presentations that deviate from textbook patterns"
+        elif level <= 45:
+            difficulty_desc = "counterintuitive expert - knowledge that defies common medical assumptions"
+            complexity_guide = "subspecialty expertise where textbook knowledge fails, paradoxical treatment responses, rare conditions that present opposite to expected patterns, cutting-edge research that contradicts established dogma"
+        else:  # 46-50
+            difficulty_desc = "supreme counterintuition - advanced mastery of medical paradoxes and exceptions"
+            complexity_guide = "multi-system integration where standard rules don't apply, latest research breakthroughs that overturn conventional wisdom, complex clinical reasoning requiring recognition of exceptions, niche subspecialty knowledge where intuitive answers are wrong, molecular-level pathophysiology that defies simple explanations, emerging treatment protocols with paradoxical mechanisms, rare disease patterns that mimic opposite conditions, advanced diagnostic challenges where the obvious answer is incorrect"
+
+        # --- DYNAMIC RANDOM KEY GENERATION ---
+        # Create an even pool of options and randomly shuffle them for this specific exam run
+        options_pool = ['A', 'B', 'C', 'D'] * ((num_questions // 4) + 1)
+        dynamic_keys = random.sample(options_pool, num_questions)
+        formatted_key_string = ", ".join(dynamic_keys)
+        # -------------------------------------
+
+        prompt = f"""
+    You are a medical board examiner.
+    TASK: Generate EXACTLY {num_questions} Multiple Choice Questions (1 per snippet provided below).
+    DIFFICULTY LEVEL: {level}/50.
+    DIFFICULTY DESCRIPTION: {difficulty_desc}.
+    COMPLEXITY GUIDANCE: {complexity_guide}.
+
+    CRITICAL BIAS PREVENTION:
+    1. AVOID confirmation bias - Ensure each option could plausibly be correct
+    2. NO obvious "red herrings" - All distractors must be medically plausible
+    3. BALANCED difficulty - Correct answer should not be obviously easier/harder than others
+    4. MEDICAL ACCURACY - Verify all information with current medical guidelines
+    5. CLARITY over trickery - Questions should test knowledge, not reading comprehension
+
+    CRITICAL FORMATTING REQUIREMENTS:
+    1. START IMMEDIATELY with '1. ' followed by the question text. NO preamble.
+    2. ABSOLUTELY NO introductory text, explanations, or meta-commentary.
+    3. Each question MUST follow this EXACT format:
+    "X. [Question text]
+    A. [Option A]
+    B. [Option B]
+    C. [Option C]
+    D. [Option D]"
+    4. Every question MUST start with its number and period (e.g., '1.', '2.', '3.').
+    5. NO extra text, warnings, or formatting notes anywhere in the response.
+
+    CRITICAL ANSWER ASSIGNMENT:
+    6. You MUST design the questions so that the correct answer for each question follows this exact sequence: [KEY: {formatted_key_string}]
+    7. Arrange your option texts (A, B, C, D) manually so that the real, factual medical answer aligns perfectly with the matching letter in that designated sequence.
+    8. The VERY LAST line of your response must be exactly: [KEY: {formatted_key_string}]
+
+    CONTENT REQUIREMENTS:
+    7. Use the STUDY MATERIAL provided below as the base.
+    8. Ensure questions match difficulty level {level}/50
+
+    STUDY MATERIAL:
+    {combined_content}
+
+    REMEMBER: You must maintain a strict difficulty level of {level}/50 for ALL {num_questions} questions. Do not drop the complexity or become more intuitive on the later questions. Start with '1. ' immediately. No introduction. Match your questions to the exact key sequence provided, and end with the [KEY: format]. Make the questions creative
+    """
+
+        # Single call to the model using the TOGGLE'S value
+        exam_text = call_gemini_with_rotation(prompt, st.session_state.exam_model, use_search=st.session_state.use_search)
+        return exam_text
+
+        
 # Define the view functions
 def render_trainer_page():
 
@@ -187,55 +313,7 @@ def render_trainer_page():
         except Exception as e:
             st.sidebar.error(f"Serialization Error: Could not save progress yet. ({e})")
 
-    def get_client():
-        return genai.Client(api_key=API_KEYS[st.session_state.key_index])
 
-    def call_gemini_with_rotation(prompt, model_to_use, use_search=False):
-        keys_tried = 0
-        
-        # 1. Establish tool rules: Google Search ONLY applies to Gemini 2.5 Flash
-        tools = []
-        if use_search and "3.5-flash" in model_to_use.lower():
-            tools = [types.Tool(google_search=types.GoogleSearch())]
-        
-        # 2. Build configuration arguments dynamically
-        config_args = {}
-        
-        if tools:
-            config_args["tools"] = tools
-            
-        
-        if "3.1-flash-lite" in model_to_use.lower() or "3.5-flash" in model_to_use.lower():
-            # Safeguard default state if UI component hasn't rendered yet
-            current_level = st.session_state.get("thinking_level", "MEDIUM")
-            config_args["thinking_config"] = types.ThinkingConfig(thinking_level=current_level)
-
-        # Pack arguments into the structural API configuration object
-        generation_config = types.GenerateContentConfig(**config_args)
-
-        # --- REST OF YOUR CONTINUOUS API LOOP ---
-        while keys_tried < len(API_KEYS):
-            try:
-                client = get_client()
-                response = client.models.generate_content(
-                    model=model_to_use,
-                    contents=prompt,
-                    config=generation_config
-                )
-                return response.text
-            except Exception as e:
-                if "429" in str(e):
-                    keys_tried += 1
-                    if keys_tried >= len(API_KEYS):
-                        st.error("Reduce the question count.")
-                        return None
-                    st.session_state.key_index = (st.session_state.key_index + 1) % len(API_KEYS)
-                    time.sleep(1)
-                elif "503" in str(e):
-                    time.sleep(5)
-                else:
-                    st.error(f"Error during generation: {e}")
-                    return None
     # ==========================================
     # 2. CORE LOGIC FUNCTIONS
     # ==========================================
@@ -336,80 +414,7 @@ def render_trainer_page():
         return call_gemini_with_rotation(prompt, GRADER_MODEL, use_search=st.session_state.use_search)
 
 
-    def get_blind_exam(topics_list, level, num_questions):
-        combined_content = "\n\n".join([f"Source {i+1}: {t}" for i, t in enumerate(topics_list)])
 
-        # Difficulty calibration from intuitive basics to counterintuitive expert challenges
-        if level <= 5:
-            difficulty_desc = "intuitive basics - straightforward medical concepts that make logical sense"
-            complexity_guide = "focus on intuitive anatomy, obvious physiology, simple definitions, core principles that follow common sense"
-        elif level <= 15:
-            difficulty_desc = "logical progression - clinical applications that follow standard patterns"
-            complexity_guide = "include common diseases with predictable presentations, standard treatments, straightforward clinical reasoning"
-        elif level <= 25:
-            difficulty_desc = "complex but predictable - applied knowledge with some nuance"
-            complexity_guide = "complex clinical cases with clear patterns, differential diagnosis with logical elimination, treatment with expected responses"
-        elif level <= 35:
-            difficulty_desc = "challenging patterns - specialized knowledge requiring deeper analysis"
-            complexity_guide = "specialty-specific conditions with some counterintuitive elements, advanced therapeutics with unexpected side effects, presentations that deviate from textbook patterns"
-        elif level <= 45:
-            difficulty_desc = "counterintuitive expert - knowledge that defies common medical assumptions"
-            complexity_guide = "subspecialty expertise where textbook knowledge fails, paradoxical treatment responses, rare conditions that present opposite to expected patterns, cutting-edge research that contradicts established dogma"
-        else:  # 46-50
-            difficulty_desc = "supreme counterintuition - advanced mastery of medical paradoxes and exceptions"
-            complexity_guide = "multi-system integration where standard rules don't apply, latest research breakthroughs that overturn conventional wisdom, complex clinical reasoning requiring recognition of exceptions, niche subspecialty knowledge where intuitive answers are wrong, molecular-level pathophysiology that defies simple explanations, emerging treatment protocols with paradoxical mechanisms, rare disease patterns that mimic opposite conditions, advanced diagnostic challenges where the obvious answer is incorrect"
-
-        # --- DYNAMIC RANDOM KEY GENERATION ---
-        # Create an even pool of options and randomly shuffle them for this specific exam run
-        options_pool = ['A', 'B', 'C', 'D'] * ((num_questions // 4) + 1)
-        dynamic_keys = random.sample(options_pool, num_questions)
-        formatted_key_string = ", ".join(dynamic_keys)
-        # -------------------------------------
-
-        prompt = f"""
-    You are a medical board examiner.
-    TASK: Generate EXACTLY {num_questions} Multiple Choice Questions (1 per snippet provided below).
-    DIFFICULTY LEVEL: {level}/50.
-    DIFFICULTY DESCRIPTION: {difficulty_desc}.
-    COMPLEXITY GUIDANCE: {complexity_guide}.
-
-    CRITICAL BIAS PREVENTION:
-    1. AVOID confirmation bias - Ensure each option could plausibly be correct
-    2. NO obvious "red herrings" - All distractors must be medically plausible
-    3. BALANCED difficulty - Correct answer should not be obviously easier/harder than others
-    4. MEDICAL ACCURACY - Verify all information with current medical guidelines
-    5. CLARITY over trickery - Questions should test knowledge, not reading comprehension
-
-    CRITICAL FORMATTING REQUIREMENTS:
-    1. START IMMEDIATELY with '1. ' followed by the question text. NO preamble.
-    2. ABSOLUTELY NO introductory text, explanations, or meta-commentary.
-    3. Each question MUST follow this EXACT format:
-    "X. [Question text]
-    A. [Option A]
-    B. [Option B]
-    C. [Option C]
-    D. [Option D]"
-    4. Every question MUST start with its number and period (e.g., '1.', '2.', '3.').
-    5. NO extra text, warnings, or formatting notes anywhere in the response.
-
-    CRITICAL ANSWER ASSIGNMENT:
-    6. You MUST design the questions so that the correct answer for each question follows this exact sequence: [KEY: {formatted_key_string}]
-    7. Arrange your option texts (A, B, C, D) manually so that the real, factual medical answer aligns perfectly with the matching letter in that designated sequence.
-    8. The VERY LAST line of your response must be exactly: [KEY: {formatted_key_string}]
-
-    CONTENT REQUIREMENTS:
-    7. Use the STUDY MATERIAL provided below as the base.
-    8. Ensure questions match difficulty level {level}/50
-
-    STUDY MATERIAL:
-    {combined_content}
-
-    REMEMBER: You must maintain a strict difficulty level of {level}/50 for ALL {num_questions} questions. Do not drop the complexity or become more intuitive on the later questions. Start with '1. ' immediately. No introduction. Match your questions to the exact key sequence provided, and end with the [KEY: format]. Make the questions creative
-    """
-
-        # Single call to the model using the TOGGLE'S value
-        exam_text = call_gemini_with_rotation(prompt, st.session_state.exam_model, use_search=st.session_state.use_search)
-        return exam_text
 
     # =====================================================================
     # PASSWORD-PROTECTED DATA PORTABILITY ENGINE
@@ -1255,8 +1260,6 @@ def render_stats_page():
 
 def render_lecture_trainer_page():
     st.title("📖 Lecture Trainer")
-    st.info("Pick a specific lecture to isolate and focus your question generation sprints.")
-    
     # 1. Load data & let user choose the target lecture
     try:
         df_notes = pd.read_csv("lecture_notes.csv")
