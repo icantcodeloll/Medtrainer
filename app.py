@@ -967,6 +967,14 @@ def render_trainer_page():
                 # Safely convert keys to list and track indexing position mapping
                 choice_keys = list(options_dict.keys())
                 
+                # 1. Inject a style trick to completely hide this specific row of native radio selectors
+                st.markdown(f"""
+                    <style>
+                    div[data-testid="stRadio"] {{
+                        display: none !important;
+                    }}
+                    </style>
+                """, unsafe_allow_html=True)
 
                 # 2. Render an invisible radio button in the background to handle the variable state
                 selected_letter = st.radio(
@@ -1358,7 +1366,40 @@ def render_lecture_trainer_page():
             opt_C = re.search(r"(C\s*\.\s*.*?)(?=[A,B,D]\s*\.\s*|$)", q_text, re.DOTALL)
             opt_D = re.search(r"(D\s*\.\s*.*?)(?=[A-C]\s*\.\s*|$)", q_text, re.DOTALL)
             
-            # ... insert your existing left_constrained_column rendering loops / grading submission logic here
+            # Restrict options to a narrower column layout so they aren't overly large or wide
+            left_constrained_column, empty_right_space = st.columns([3, 2])
+            with left_constrained_column:
+                current_selection = st.session_state.user_selections.get(i, None)
+                choice_keys = list(options_dict.keys())
+                
+                # 1. Hide this specific row of native radio selectors
+                st.markdown(f"""
+                    <style>
+                    div[data-testid="stRadio"] {{ display: none !important; }}
+                    </style>
+                """, unsafe_allow_html=True)
+                
+                # 2. Render an invisible radio button in the background to handle variable state safely
+                default_index = choice_keys.index(current_selection) if current_selection in choice_keys else 0
+                selected_letter = st.radio(
+                    label=f"Radio Select Q{i}",
+                    options=choice_keys,
+                    index=default_index,
+                    key=f"hidden_radio_{i}"
+                )
+                
+                # 3. Loop through your choices and draw your custom clickable CSS option boxes
+                for letter, option_text in options_dict.items():
+                    is_selected = (current_selection == letter)
+                    box_class = "quiz-option-box-selected" if is_selected else "quiz-option-box"
+                    
+                    # Render your custom HTML container style block
+                    st.markdown(f'<div class="{box_class}">{option_text}</div>', unsafe_allow_html=True)
+                    
+                    # Provide an interactive fallback or button overlay to trigger the state selection change
+                    if st.button(f"Select {letter}", key=f"btn_{i}_{letter}", use_container_width=True):
+                        st.session_state.user_selections[i] = letter
+                        st.rerun()
 
 # Create the navigation router
 pg = st.navigation([
