@@ -749,16 +749,20 @@ def render_trainer_page():
     st.sidebar.metric("Active Level", f"{st.session_state.current_level}/50")
 
     df_sidebar = pd.read_csv(CSV_FILE)
-
-    # Create two tabs inside the sidebar
     filter_tab1, filter_tab2 = st.sidebar.tabs(["Exam Filter", "Lecture Filter"])
 
+    # =========================================================================
+    # FIX: PRE-DEFINE FILTER ARRAYS TO PREVENT UNASSOCIATED LOCAL VARIABLE ERROR
+    # =========================================================================
+    subject_filter = []
+    exam_filter = []
+    system_filter = []
+    # =========================================================================
     # --- TAB 1: BLUEPRINT FILTERS (Original Logic) ---
     with filter_tab1:
         # --- Subject filter Checkboxes ---
         st.markdown("**Subjects:**")
         categories = sorted(df_sidebar['category'].fillna("Uncategorized").astype(str).unique().tolist())
-        subject_filter = []
         for cat in categories:
             if st.checkbox(cat, value=True, key=f"focus_{cat}"):
                 subject_filter.append(cat)
