@@ -50,7 +50,34 @@ def initialize_app(active_user, force_reset=False):
     if force_reset:
         loaded_progress = {}
     else:
-        loaded_progress = load_progress(active_user)
+        loaded_progress = load_progress(active_user) # Existing Line 4595
+        
+        # =========================================================================
+        # NEW HISTORICAL STATS FILTER: ONLY PROCESS ENTRY DATA FROM JUNE 14, 2026
+        # =========================================================================
+        target_cutoff = pd.to_datetime('2026-06-14')
+        
+        # 1. Filter out historical missed questions by date if timestamp metadata exists
+        if "missed_questions" in loaded_progress and isinstance(loaded_progress["missed_questions"], list):
+            filtered_missed = []
+            for item in loaded_progress["missed_questions"]:
+                if isinstance(item, dict) and "date" in item:
+                    item_date = pd.to_datetime(item["date"], errors='coerce')
+                    if pd.notnull(item_date) and item_date >= target_cutoff:
+                        filtered_missed.append(item)
+                else:
+                    # Keep legacy/un-timestamped items, or omit by removing this else block
+                    filtered_missed.append(item)
+            loaded_progress["missed_questions"] = filtered_missed
+
+        # 2. Filter historical testing dataframes (samples_df) logs
+        if "samples_df" in loaded_progress and isinstance(loaded_progress["samples_df"], list):
+            df_history = pd.DataFrame(loaded_progress["samples_df"])
+            if "date" in df_history.columns:
+                df_history['date'] = pd.to_datetime(df_history['date'], errors='coerce')
+                df_filtered = df_history[df_history['date'] >= target_cutoff]
+                loaded_progress["samples_df"] = df_filtered.to_dict(orient="records")
+        # =========================================================================
 
     # Core parameters mapping dictionary 
     defaults = {
@@ -490,21 +517,6 @@ def render_trainer_page():
     # ==========================================
     st.title("Trainer")
     st.write("---")
-
-    st.markdown(
-    """
-    <style>
-    div.stButton > button[kind="primary"] {
-        padding-top: 35px !important;
-        padding-bottom: 35px !important;
-        font-size: 18px !important;
-        font-weight: bold !important;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-    )
-
     # This layout structure prevents the button from stretching awkwardly on wide screens
     gen_col1, gen_col2, gen_col3 = st.columns([1, 2, 1])
 
