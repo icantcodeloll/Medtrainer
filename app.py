@@ -529,13 +529,6 @@ def render_trainer_page():
         )
     
     if generate_clicked:
-        # =========================================================================
-        # DYNAMIC FILTER INITIALIZATION ON-CLICK (PREVENTS CRASH & PRESERVES UI)
-        # =========================================================================
-        subject_filter = []
-        exam_filter = []
-        system_filter = []
-        
         try:
             df_sidebar = pd.read_csv(CSV_FILE)
             
