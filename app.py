@@ -36,7 +36,10 @@ EXAM_WEIGHTS = {
 EXAM_MODEL = 'gemini-3.1-flash-lite'
 GRADER_MODEL = 'gemini-3.1-flash-lite'
 
-
+try:
+    from fpdf import FPDF
+except ImportError:
+    FPDF = None
 
 
 
@@ -433,11 +436,6 @@ def render_trainer_page():
 
     # Register the background cleanup hook with the Python runtime engine
     atexit.register(save_on_tab_close)
-
-    try:
-        from fpdf import FPDF
-    except ImportError:
-        FPDF = None
 
     # ==========================================
     # 1. SETUP & CONFIGURATION
