@@ -1254,7 +1254,7 @@ def render_stats_page():
     display_analytics_dashboard()
 
 def render_lecture_trainer_page():
-    st.title("📖 Lecture-Specific Trainer")
+    st.title("📖 Lecture Trainer")
     st.info("Pick a specific lecture to isolate and focus your question generation sprints.")
     
     # 1. Load data & let user choose the target lecture
@@ -1330,8 +1330,8 @@ def render_lecture_trainer_page():
 
 # Create the navigation router
 pg = st.navigation([
-    st.Page(render_trainer_page, title="Trainer", icon="📝"),
-    st.Page(render_lecture_trainer_page, title="Lecture Focus Mode", icon="📖"),  # <-- ADD THIS LINE
+    st.Page(render_trainer_page, title="Exam Trainer", icon="📝"),
+    st.Page(render_lecture_trainer_page, title="Lecture Trainer", icon="📖"),  # <-- ADD THIS LINE
     st.Page(render_stats_page, title="Stats", icon="📊")
 ])
 pg.run()
