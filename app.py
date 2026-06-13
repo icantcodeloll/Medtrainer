@@ -497,6 +497,7 @@ def render_trainer_page():
         st.error(f"Fatal Error: Master template file '{CSV_FILE}' not found!")
         st.stop()
 
+
     if st.sidebar.button("Save Progress", help="Manually save your current progress"):
         try:
             if save_progress(st.session_state, active_user):
@@ -529,30 +530,6 @@ def render_trainer_page():
         )
     
     if generate_clicked:
-        try:
-            df_sidebar = pd.read_csv(CSV_FILE)
-            
-            # Reconstruct filters from the session state keys used by your checkboxes below
-            categories = sorted(df_sidebar['category'].fillna("Uncategorized").astype(str).unique().tolist())
-            for cat in categories:
-                if st.session_state.get(f"focus_{cat}", True):
-                    subject_filter.append(cat)
-                    
-            if 'exam' in df_sidebar.columns:
-                exams = sorted(df_sidebar['exam'].fillna("Uncategorized").astype(str).unique().tolist())
-                for ex in exams:
-                    if st.session_state.get(f"exam_{ex}", True):
-                        exam_filter.append(ex)
-                        
-            if 'system' in df_sidebar.columns:
-                systems = sorted(df_sidebar['system'].fillna("Uncategorized").astype(str).unique().tolist())
-                for sys in systems:
-                    if st.session_state.get(f"sys_{sys}", True):
-                        system_filter.append(sys)
-        except Exception:
-            pass
-        # =========================================================================
-
         # --- NEW: BACKUP THE CURRENT EXAM BEFORE OVERWRITING ---
         if st.session_state.get('current_exam'):
             st.session_state.previous_test_data = {
@@ -772,13 +749,16 @@ def render_trainer_page():
     st.sidebar.metric("Active Level", f"{st.session_state.current_level}/50")
 
     df_sidebar = pd.read_csv(CSV_FILE)
+
+    # Create two tabs inside the sidebar
     filter_tab1, filter_tab2 = st.sidebar.tabs(["Exam Filter", "Lecture Filter"])
-    # =========================================================================
+
     # --- TAB 1: BLUEPRINT FILTERS (Original Logic) ---
     with filter_tab1:
         # --- Subject filter Checkboxes ---
         st.markdown("**Subjects:**")
         categories = sorted(df_sidebar['category'].fillna("Uncategorized").astype(str).unique().tolist())
+        subject_filter = []
         for cat in categories:
             if st.checkbox(cat, value=True, key=f"focus_{cat}"):
                 subject_filter.append(cat)
