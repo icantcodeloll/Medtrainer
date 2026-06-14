@@ -1149,7 +1149,6 @@ def render_trainer_page():
 def render_stats_page():
     def display_analytics_dashboard():
         st.title("Stats")
-        st.markdown("Dive deep into your historic learning diagnostics and systemic curriculum coverage.")
         # ────────── CHANGE THIS DATA SELECTION LOGIC ──────────
         # Pull directly from the dynamically filtered session state memory space
         missed_bank = st.session_state.get("missed_questions", [])
