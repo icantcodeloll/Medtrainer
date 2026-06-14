@@ -1310,7 +1310,6 @@ def render_export_page():
 
 def render_settings_page():
     st.title("⚙️ Global Settings")
-    st.markdown("Configure your underlying performance models, training sizes, and system states.")
     st.write("---")
     
     if 'username' not in st.session_state:
@@ -1321,7 +1320,7 @@ def render_settings_page():
     initialize_app(active_user)
     
     # 1. Main Configuration Sliders
-    st.subheader("Layout & Sizing Tweaks")
+    st.subheader("Manually adjust")
     st.session_state.current_level = st.slider("Starting Level", 1, 50, st.session_state.current_level)
     st.session_state.num_questions = st.slider("Number of Questions", 1, 50, st.session_state.num_questions)
     
@@ -1335,10 +1334,10 @@ def render_settings_page():
     st.write("---")
     
     # 2. Speed Switch
-    st.subheader("Model Selection Strategy")
+    st.subheader("Model Selection")
     model_choice = st.radio(
         label="Speed Selection",
-        options=["Fast", "Slow & Smart"],
+        options=["3.1 flash lite", "3.5 flash"],
         index=1 if st.session_state.get('exam_model', 'gemini-3.5-flash') == 'gemini-3.5-flash' else 0,
         horizontal=True,
         help="Fast uses Flash-Lite. Slow & Smart uses Flash."
@@ -1348,7 +1347,7 @@ def render_settings_page():
     st.write("---")
     
     # 3. Structural Operational Actions
-    st.subheader("System Administration")
+    st.subheader("Danger!!")
     col1, col2 = st.columns(2)
     
     with col1:
