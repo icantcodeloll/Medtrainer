@@ -667,7 +667,7 @@ def render_trainer_page():
             try:
                 # We use replace=False so we don't duplicate questions in the same exam
                 st.session_state.samples_df = df.sample(min(n, len(df)), weights='sampling_weight', replace=False)
-                st.sidebar.info("All content has been uploaded")
+                st.sidebar.info("Y2S1 complete...")
             except ValueError:
                 # Fallback if weights math fails (e.g., all weights are zero)
                 st.session_state.samples_df = df.sample(min(n, len(df)))
