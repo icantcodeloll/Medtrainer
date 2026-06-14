@@ -1170,7 +1170,7 @@ def render_stats_page():
         # ──────────────────────────────────────────────────────
         
         if not filtered_bank:
-            st.info("No exam submissions recorded for this profile since June 14, 2026. Generate and grade an exam to unlock data insights!")
+            st.info("No exam submissions recorded for this profile. Generate and grade an exam to unlock data insights!")
             return
             
         # Convert the newly filtered timeline session matrix to a pandas DataFrame for processing
