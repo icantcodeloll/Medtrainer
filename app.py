@@ -1235,7 +1235,7 @@ def render_stats_page():
             weakest_subject = subject_stats.iloc[-1]
             if weakest_subject['Accuracy (%)'] < 70:
                 st.warning(
-                    f"Your performance metrics show a structural vulnerability in **{weakest_subject['category']}** "
+                    f"Your performance metrics show a weakness in **{weakest_subject['category']}** "
                     f"({weakest_subject['Accuracy (%)']:.1f}% accuracy). Consider isolating this subject in your filter settings "
                     f"on the main menu."
                 )
