@@ -51,33 +51,6 @@ def initialize_app(active_user, force_reset=False):
         loaded_progress = {}
     else:
         loaded_progress = load_progress(active_user) # Existing Line 4595
-        
-        # =========================================================================
-        # NEW HISTORICAL STATS FILTER: ONLY PROCESS ENTRY DATA FROM JUNE 14, 2026
-        # =========================================================================
-        target_cutoff = pd.to_datetime('2026-06-13')
-        
-        # 1. Filter out historical missed questions by date if timestamp metadata exists
-        if "missed_questions" in loaded_progress and isinstance(loaded_progress["missed_questions"], list):
-            filtered_missed = []
-            for item in loaded_progress["missed_questions"]:
-                if isinstance(item, dict) and "date" in item:
-                    item_date = pd.to_datetime(item["date"], errors='coerce')
-                    if pd.notnull(item_date) and item_date >= target_cutoff:
-                        filtered_missed.append(item)
-                else:
-                    # Keep legacy/un-timestamped items, or omit by removing this else block
-                    filtered_missed.append(item)
-            loaded_progress["missed_questions"] = filtered_missed
-
-        # 2. Filter historical testing dataframes (samples_df) logs
-        if "samples_df" in loaded_progress and isinstance(loaded_progress["samples_df"], list):
-            df_history = pd.DataFrame(loaded_progress["samples_df"])
-            if "date" in df_history.columns:
-                df_history['date'] = pd.to_datetime(df_history['date'], errors='coerce')
-                df_filtered = df_history[df_history['date'] >= target_cutoff]
-                loaded_progress["samples_df"] = df_filtered.to_dict(orient="records")
-        # =========================================================================
 
     # Core parameters mapping dictionary 
     defaults = {
@@ -1151,29 +1124,13 @@ def render_stats_page():
         st.title("Stats")
         # ────────── CHANGE THIS DATA SELECTION LOGIC ──────────
         # Pull directly from the dynamically filtered session state memory space
-        missed_bank = st.session_state.get("missed_questions", [])
-        
-        # Double check that we exclude legacy entries if any un-timestamped ones snuck through
-        target_cutoff = pd.to_datetime('2026-06-14')
-        filtered_bank = []
-        for item in missed_bank:
-            if isinstance(item, dict) and "date" in item:
-                item_date = pd.to_datetime(item["date"], errors='coerce')
-                if pd.notnull(item_date) and item_date >= target_cutoff:
-                    filtered_bank.append(item)
-            else:
-                # If you explicitly want to exclude legacy entries that lack a date field:
-                # skip them by leaving this block empty.
-                pass
-                
-        # ──────────────────────────────────────────────────────
-        
-        if not filtered_bank:
+        missed_bank = st.session_state.get("missed_questions", [])        
+        if not missed_bank:
             st.info("No exam submissions recorded for this profile. Generate and grade an exam to unlock data insights!")
             return
             
         # Convert the newly filtered timeline session matrix to a pandas DataFrame for processing
-        df_history = pd.DataFrame(filtered_bank)
+        df_history = pd.DataFrame(missed_bank)
         
         # Calculate Core Metrics
         total_completed = len(df_history)
