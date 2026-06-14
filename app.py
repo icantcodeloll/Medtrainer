@@ -1150,26 +1150,37 @@ def render_stats_page():
     def display_analytics_dashboard():
         st.title("Stats")
         st.markdown("Dive deep into your historic learning diagnostics and systemic curriculum coverage.")
-        
-        # Check if any questions have been answered yet
+        # ────────── CHANGE THIS DATA SELECTION LOGIC ──────────
+        # Pull directly from the dynamically filtered session state memory space
         missed_bank = st.session_state.get("missed_questions", [])
         
-        # Fallback simulation or calculation helper
-        # In production, you should record a structured historical session log.
-        # For now, we cleanly calculate it right from the live session profile:
-        if not missed_bank:
-            st.info("No exam submissions recorded for this profile yet. Generate and grade an exam to unlock data insights!")
+        # Double check that we exclude legacy entries if any un-timestamped ones snuck through
+        target_cutoff = pd.to_datetime('2026-06-14')
+        filtered_bank = []
+        for item in missed_bank:
+            if isinstance(item, dict) and "date" in item:
+                item_date = pd.to_datetime(item["date"], errors='coerce')
+                if pd.notnull(item_date) and item_date >= target_cutoff:
+                    filtered_bank.append(item)
+            else:
+                # If you explicitly want to exclude legacy entries that lack a date field:
+                # skip them by leaving this block empty.
+                pass
+                
+        # ──────────────────────────────────────────────────────
+        
+        if not filtered_bank:
+            st.info("No exam submissions recorded for this profile since June 14, 2026. Generate and grade an exam to unlock data insights!")
             return
-
-        # Convert session history to a pandas DataFrame for processing
-        df_history = pd.DataFrame(missed_bank)
+            
+        # Convert the newly filtered timeline session matrix to a pandas DataFrame for processing
+        df_history = pd.DataFrame(filtered_bank)
         
         # Calculate Core Metrics
         total_completed = len(df_history)
         total_incorrect = df_history[df_history['yours'] != df_history['correct']].shape[0]
         total_correct = total_completed - total_incorrect
         overall_accuracy = (total_correct / total_completed) * 100
-
         # ==========================================
         # KPI METRIC CARDS ROW
         # ==========================================
