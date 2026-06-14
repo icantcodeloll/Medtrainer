@@ -564,7 +564,25 @@ def render_trainer_page():
             df_notes = pd.read_csv(NOTES_FILE)
             df = pd.merge(df_main, df_notes, on=JOIN_COLUMN, how='left')
 
-            # --- NEW LECTURE TAB OVERRIDE CHECK ---
+            # ────────── ADD THIS NEW BLOCK HERE TO INITIALIZE FILTERS ──────────
+            # Reconstruct subject_filter from session state checkboxes
+            categories = sorted(df_main['category'].fillna("Uncategorized").astype(str).unique().tolist())
+            subject_filter = [cat for cat in categories if st.session_state.get(f"focus_{cat}", True)]
+            
+            # Reconstruct exam_filter from session state checkboxes
+            exam_filter = []
+            if 'exam' in df_main.columns:
+                exams = sorted(df_main['exam'].fillna("Uncategorized").astype(str).unique().tolist())
+                exam_filter = [ex for ex in exams if st.session_state.get(f"exam_{ex}", True)]
+                
+            # Reconstruct system_filter from session state checkboxes
+            system_filter = []
+            if 'system' in df_main.columns:
+                systems = sorted(df_main['system'].fillna("Uncategorized").astype(str).unique().tolist())
+                system_filter = [sys for sys in systems if st.session_state.get(f"sys_{sys}", True)]
+            # ───────────────────────────────────────────────────────────────────
+
+            # --- NEW LECTURE TAB OVERRIDE CHECK --- 
             # If the user selected specific lectures in Tab 2, use them instead of Blueprint filters
             if 'filter_by_lecture_ids' in st.session_state and st.session_state.filter_by_lecture_ids:
                 df = df[df[JOIN_COLUMN].isin(st.session_state.filter_by_lecture_ids)]
