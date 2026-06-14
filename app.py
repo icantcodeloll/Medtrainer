@@ -55,7 +55,7 @@ def initialize_app(active_user, force_reset=False):
         # =========================================================================
         # NEW HISTORICAL STATS FILTER: ONLY PROCESS ENTRY DATA FROM JUNE 14, 2026
         # =========================================================================
-        target_cutoff = pd.to_datetime('2026-06-14')
+        target_cutoff = pd.to_datetime('2026-06-13')
         
         # 1. Filter out historical missed questions by date if timestamp metadata exists
         if "missed_questions" in loaded_progress and isinstance(loaded_progress["missed_questions"], list):
@@ -667,7 +667,7 @@ def render_trainer_page():
             try:
                 # We use replace=False so we don't duplicate questions in the same exam
                 st.session_state.samples_df = df.sample(min(n, len(df)), weights='sampling_weight', replace=False)
-                st.sidebar.info("Y2S1 complete...")
+                st.sidebar.info("Y2S1 complete")
             except ValueError:
                 # Fallback if weights math fails (e.g., all weights are zero)
                 st.session_state.samples_df = df.sample(min(n, len(df)))
