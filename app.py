@@ -1237,7 +1237,7 @@ def render_stats_page():
                 st.warning(
                     f"Your performance metrics show a structural vulnerability in **{weakest_subject['category']}** "
                     f"({weakest_subject['Accuracy (%)']:.1f}% accuracy). Consider isolating this subject in your filter settings "
-                    f"on the main menu during your next training sprint."
+                    f"on the main menu."
                 )
             else:
                 st.success("All subject tracks are performing above standard target parameters. Keep testing up to Level 50!")
