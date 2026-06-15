@@ -15,6 +15,51 @@ from google import genai
 from google.genai import types
 from progress_manager import save_progress, load_progress
 from fpdf import FPDF
+import shutil
+
+def initialize_pwa_assets():
+    """
+    Automated hook ensuring manifest, service worker, and app tags are mapped
+    directly into Streamlit Cloud's native frontend directory structure.
+    """
+    try:
+        # Resolve Streamlit's underlying static frontend webroot folder path
+        streamlit_static_path = os.path.join(os.path.dirname(st.__file__), "static")
+        
+        # Manifest assets that need to be public-facing at the root domain
+        target_assets = ["manifest.json", "sw.js", "app-icon.png"]
+        
+        for asset in target_assets:
+            if os.path.exists(asset):
+                shutil.copy(asset, os.path.join(streamlit_static_path, asset))
+        
+        # Inject the mandatory PWA mobile tags directly into the core index.html head
+        index_html_path = os.path.join(streamlit_static_path, "index.html")
+        with open(index_html_path, "r") as f:
+            html_content = f.read()
+            
+        if "manifest.json" not in html_content:
+            pwa_tags = """
+            <link rel="manifest" href="./manifest.json">
+            <meta name="apple-mobile-web-app-capable" content="yes">
+            <meta name="apple-mobile-web-app-status-bar-style" content="default">
+            <link rel="apple-touch-icon" href="./app-icon.png">
+            <script>
+              if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('./sw.js');
+              }
+            </script>
+            """
+            # Splice our custom metadata right inside the main document head boundary
+            updated_content = html_content.replace("</head>", f"{pwa_tags}</head>")
+            with open(index_html_path, "w") as f:
+                f.write(updated_content)
+    except Exception:
+        # Fails silently to prevent execution disruptions during local development environments
+        pass
+
+# Trigger asset pipeline validation prior to UI layout assembly
+initialize_pwa_assets()
 
 st.set_page_config(page_title="Trainer", page_icon="🩺", layout="wide")
 
