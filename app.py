@@ -910,7 +910,7 @@ def render_trainer_page():
         
         # Pair questions with original answer positions before shuffling
         individual_questions = list(zip(pure_questions, st.session_state.current_key))
-        random.shuffle(pure_questions))
+        random.shuffle(pure_questions)
         if 'user_selections' not in st.session_state:
             st.session_state.user_selections = {}
 
