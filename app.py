@@ -1140,6 +1140,12 @@ def render_trainer_page():
                 except Exception as e:
                     st.session_state.ai_feedback_clean = f"Error generating explanation: {e}"
 
+            # Auto-save progress after AI grading completes
+            try:
+                save_progress(st.session_state, active_user)
+            except Exception as e:
+                pass  # Silently fail to avoid disrupting the user experience
+
             percentage_correct = (score / num_actual_questions) * 100
             if (num_actual_questions - score) <= 1 or percentage_correct >= 90:
                 next_level = min(50, st.session_state.current_level + 1)
