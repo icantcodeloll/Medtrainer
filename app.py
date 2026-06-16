@@ -561,7 +561,7 @@ def render_trainer_page():
             st.markdown(st.session_state.level_message)
         
         if st.session_state.get('immediate_wrong_breakdown'):
-            st.markdown("### Immediate Answer Breakdown")
+            st.markdown("### Answer Breakdown")
             st.markdown(st.session_state.immediate_wrong_breakdown)
         
         st.write("---")
@@ -1069,6 +1069,7 @@ def render_trainer_page():
             if st.session_state.get('level_message'):
                 st.info(st.session_state.level_message)
             st.write("")
+            st.info("Click the button on the right to scroll up >>>")
 
         # Standalone execution grading submission action button (normalized look)
         submitted = st.button("Submit for Grading", type="primary")
