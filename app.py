@@ -1187,6 +1187,24 @@ def render_trainer_page():
     pass
 
 def render_stats_page():
+    # ==========================================
+    # INITIALIZATION FOR STATS PAGE
+    # ==========================================
+    if 'username' not in st.session_state:
+        st.session_state.username = "Default"
+
+    new_user = st.sidebar.text_input("Enter your username:", st.session_state.username)
+    if st.sidebar.button("Switch / Create Profile"):
+        st.session_state.username = new_user.strip()
+        st.rerun()
+
+    active_user = st.session_state.username
+    st.sidebar.success(f"Logged in as: **{active_user}**")
+    initialize_app(active_user)
+
+    # Load saved progress on startup
+    loaded_progress = load_progress(active_user)
+
     def display_analytics_dashboard():
         st.title("Stats")
         
