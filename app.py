@@ -519,53 +519,16 @@ def render_trainer_page():
         st.error(f"Fatal Error: Master template file '{CSV_FILE}' not found!")
         st.stop()
 
+
     if st.sidebar.button("Save Progress", help="Manually save your current progress"):
         try:
-            # 1. Capture the structural updates to mistakes history (as you had it)
-            st.session_state.missed_questions.append(st.session_state.current_exam)
-            
-            # 2. Extract a clean, JSON-serializable dictionary summary of the current exam run
-            # This replaces `st.session_state.exam_history.append(st.session_state)`
-            current_exam_summary = {
-                "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                "level": st.session_state.get("current_level", 1),
-                "semester": st.session_state.get("semester", "y2s1"),
-                "model_used": st.session_state.get("exam_model", 'gemini-3.1-flash-lite'),
-                "num_questions": st.session_state.get("num_questions", 5),
-                "questions_completed": len(st.session_state.get("current_key", []))
-            }
-            
-            # Append the clean summary to your history list
-            st.session_state.exam_history.append(current_exam_summary)
-            
-            # 3. Build a clean snapshot of your states to pass safely to the JSON save tool
-            state_snapshot = {
-                "current_level": st.session_state.get("current_level", 1),
-                "exam_model": st.session_state.get("exam_model", 'gemini-3.1-flash-lite'),
-                "num_questions": st.session_state.get("num_questions", 5),
-                "semester": st.session_state.get("semester", "y2s1"),
-                "missed_questions": st.session_state.get("missed_questions", []),
-                "exam_history": st.session_state.get("exam_history", []),
-                "current_exam": st.session_state.get("current_exam", ""),
-                "current_key": st.session_state.get("current_key", []),
-                "current_categories": st.session_state.get("current_categories", []),
-            }
-
-            # 4. Safely convert your pandas DataFrame to record format to bypass JSON encoding blocks
-            samples_df = st.session_state.get("samples_df", pd.DataFrame())
-            if isinstance(samples_df, pd.DataFrame) and not samples_df.empty:
-                state_snapshot["samples_df"] = samples_df.to_dict(orient="records")
-            else:
-                state_snapshot["samples_df"] = []
-
-            # 5. Pass the clean data snapshot to your file manager
-            if save_progress(state_snapshot, active_user):
-                st.sidebar.success("Progress and history saved successfully!")
+            if save_progress(st.session_state, active_user):
+                st.sidebar.success("Progress saved successfully!")
             else:
                 st.sidebar.error("Failed to save progress")
-                
         except Exception as e:
             st.sidebar.error(f"Serialization Error: Could not save progress yet. ({e})")
+
 
     # ==========================================
     # 2. CORE LOGIC FUNCTIONS
