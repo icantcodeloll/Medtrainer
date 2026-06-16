@@ -968,70 +968,66 @@ def render_trainer_page():
                 "D": opt_D.group(1).strip() if opt_D else "D. Option D"
             }
 
-            # Restrict options to a narrower column layout so they aren't overly large or wide
-            left_constrained_column, empty_right_space = st.columns([3, 2])
-            
-            with left_constrained_column:
-                current_selection = st.session_state.user_selections.get(i, None)
-                
-                # Safely convert keys to list and track indexing position mapping
-                choice_keys = list(options_dict.keys())
-                
-                # 1. Inject a style trick to completely hide this specific row of native radio selectors
-                st.markdown(f"""
-                    <style>
-                    div[data-testid="stRadio"] {{
-                        display: none !important;
-                    }}
-                    div[data-testid="stButton"] button {{
-                        white-space: normal !important;
-                        text-align: left !important;
-                        height: auto !important;
-                        word-break: break-word !important;
-                        padding: 12px 16px !important;
-                    }}
-                    </style>
-                """, unsafe_allow_html=True)
+            current_selection = st.session_state.user_selections.get(i, None)
 
-                # 2. Render an invisible radio button in the background to handle the variable state
-                selected_letter = st.radio(
-                    label=f"Radio Select Q{i}",
-                    options=choice_keys,
-                    index=choice_keys.index(current_selection) if current_selection in choice_keys else None,
-                    key=f"native_radio_q_{i}",
-                    label_visibility="collapsed"
-                )
+            # Safely convert keys to list and track indexing position mapping
+            choice_keys = list(options_dict.keys())
 
-                # 3. Render your custom styled choices as large, full-width clickable buttons
-                for choice_letter, full_sentence_text in options_dict.items():
-                    is_selected = (current_selection == choice_letter)
-                    btn_type = "primary" if is_selected else "secondary"
-                    prefix = "➔   " if is_selected else "      "
-                    
-                    # Use use_container_width=True to make the buttons big and fill the space
-                    # Disable buttons after submission so users can't change answers while viewing feedback
-                    if st.button(f"{prefix}{full_sentence_text}", key=f"btn_q_{i}_{choice_letter}", use_container_width=True, type=btn_type, disabled=st.session_state.get('exam_submitted', False)):
-                        st.session_state.user_selections[i] = choice_letter
-                        st.rerun()
+            # 1. Inject a style trick to completely hide this specific row of native radio selectors
+            st.markdown(f"""
+                <style>
+                div[data-testid="stRadio"] {{
+                    display: none !important;
+                }}
+                div[data-testid="stButton"] button {{
+                    white-space: normal !important;
+                    text-align: left !important;
+                    height: auto !important;
+                    word-break: break-word !important;
+                    padding: 12px 16px !important;
+                }}
+                </style>
+            """, unsafe_allow_html=True)
 
-                # --- NEW: INJECT PER-QUESTION AI FEEDBACK RIGHT HERE ---
-                if st.session_state.get('exam_submitted') and st.session_state.get('ai_feedback_clean'):
-                    # Look for the section matching "### Question X" or "### Question [X]"
-                    feedback_str = st.session_state.ai_feedback_clean
-                    pattern = rf"### Question \s*\[?{i+1}\]?.*?(?=### Question \s*\[?{i+2}\]?|---|$)"
-                    match = re.search(pattern, feedback_str, re.DOTALL | re.IGNORECASE)
-                    
-                    if match:
-                        st.info("💡 **AI Grading Feedback:**")
-                        st.markdown(match.group(0).strip())
-                    else:
-                        # If no specific incorrect feedback is found, the question might be correct
-                        correct_ans = st.session_state.current_key[i]
-                        user_ans = st.session_state.user_selections.get(i, "No Answer")
-                        if user_ans == correct_ans:
-                            st.success(f"Correct! You answered `{user_ans}`.")
+            # 2. Render an invisible radio button in the background to handle the variable state
+            selected_letter = st.radio(
+                label=f"Radio Select Q{i}",
+                options=choice_keys,
+                index=choice_keys.index(current_selection) if current_selection in choice_keys else None,
+                key=f"native_radio_q_{i}",
+                label_visibility="collapsed"
+            )
 
-                st.write("---")
+            # 3. Render your custom styled choices as large, full-width clickable buttons
+            for choice_letter, full_sentence_text in options_dict.items():
+                is_selected = (current_selection == choice_letter)
+                btn_type = "primary" if is_selected else "secondary"
+                prefix = "➔   " if is_selected else "      "
+
+                # Use use_container_width=True to make the buttons big and fill the space
+                # Disable buttons after submission so users can't change answers while viewing feedback
+                if st.button(f"{prefix}{full_sentence_text}", key=f"btn_q_{i}_{choice_letter}", use_container_width=True, type=btn_type, disabled=st.session_state.get('exam_submitted', False)):
+                    st.session_state.user_selections[i] = choice_letter
+                    st.rerun()
+
+            # --- NEW: INJECT PER-QUESTION AI FEEDBACK RIGHT HERE ---
+            if st.session_state.get('exam_submitted') and st.session_state.get('ai_feedback_clean'):
+                # Look for the section matching "### Question X" or "### Question [X]"
+                feedback_str = st.session_state.ai_feedback_clean
+                pattern = rf"### Question \s*\[?{i+1}\]?.*?(?=### Question \s*\[?{i+2}\]?|---|$)"
+                match = re.search(pattern, feedback_str, re.DOTALL | re.IGNORECASE)
+
+                if match:
+                    st.info("💡 **AI Grading Feedback:**")
+                    st.markdown(match.group(0).strip())
+                else:
+                    # If no specific incorrect feedback is found, the question might be correct
+                    correct_ans = st.session_state.current_key[i]
+                    user_ans = st.session_state.user_selections.get(i, "No Answer")
+                    if user_ans == correct_ans:
+                        st.success(f"Correct! You answered `{user_ans}`.")
+
+            st.write("---")
 
         # Standalone execution grading submission action button
         # --- NEW: SCORE & LEVELING FEEDBACK HIGHLIGHT ---
