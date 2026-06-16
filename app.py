@@ -532,13 +532,14 @@ def render_trainer_page():
     # 2. CORE LOGIC FUNCTIONS
     # ==========================================
     # Dynamically pick the target CSV depending on the selectbox state
+    global CSV_FILE
     if st.session_state.get("semester") == "Y2S2":
         CSV_FILE = "learning_objectives_y2s2.csv"
         NOTES_FILE = "lecture_notes.csv"
     else:
         CSV_FILE = "learning_objectives.csv"
         NOTES_FILE = "lecture_notes.csv"
-        
+
     JOIN_COLUMN = "lecture_id"
     # ==========================================
     # 3. WEB INTERFACE
