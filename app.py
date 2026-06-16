@@ -1172,7 +1172,7 @@ def render_trainer_page():
             else:
                 # Fallback safeguard: if it got stored as a raw string
                 export_text += f"\n[General] {str(item)}\n"
-                
+
         # Offer the file directly as a local browser download
         st.sidebar.download_button(
             label="Download Mistakes",
@@ -1403,15 +1403,36 @@ def render_settings_page():
     col1, col2 = st.columns(2)
     
     with col1:
-        if st.button("Reset All Session Progress", help="Clear all saved progress and reset to defaults", use_container_width=True):
-            user_specific_progress = f"{active_user}_progress.json"
-            if os.path.exists(user_specific_progress):
-                os.remove(user_specific_progress)
-                
-            initialize_app(active_user, force_reset=True)
-            st.success("Progress reset successfully!")
-            st.rerun()
+        # Initialize the confirmation flag if it doesn't exist yet
+        if "confirm_reset" not in st.session_state:
+            st.session_state.confirm_reset = False
+
+        # If the user hasn't clicked reset yet, show the main button
+        if not st.session_state.confirm_reset:
+            if st.button("Reset All Session Progress", help="Clear all saved progress and reset to defaults", use_container_width=True):
+                st.session_state.confirm_reset = True
+                st.rerun()
+        
+        # If clicked, reveal the confirmation warning window
+        else:
+            st.warning("⚠️ Are you absolutely sure? This will permanently delete your progress file and cannot be undone.")
             
+            sub_col1, sub_col2 = st.columns(2)
+            with sub_col1:
+                if st.button("Yes, Clear Everything", type="primary", use_container_width=True):
+                    user_specific_progress = f"{active_user}_progress.json"
+                    if os.path.exists(user_specific_progress):
+                        os.remove(user_specific_progress)
+                        
+                    initialize_app(active_user, force_reset=True)
+                    st.session_state.confirm_reset = False  # Reset flag state
+                    st.success("Progress reset successfully!")
+                    st.rerun()
+                    
+            with sub_col2:
+                if st.button("Cancel", use_container_width=True):
+                    st.session_state.confirm_reset = False  # Dismiss confirmation
+                    st.rerun()
     with col2:
         render_data_portability_interface()
 
