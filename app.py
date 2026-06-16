@@ -1163,9 +1163,16 @@ def render_trainer_page():
         melbourne_mistakes_time = datetime.datetime.now(ZoneInfo("Australia/Melbourne")).strftime('%Y-%m-%d %H:%M')
         export_text = f"=== WEB SESSION (Melbourne Time): {melbourne_mistakes_time} ===\n"    
         for item in st.session_state.missed_questions:
-            cat = item.get('category', 'General')
-            export_text += f"\n[{cat}] {item['question']}\n[CORRECT: {item['correct']} | YOURS: {item['yours']}]\n"
-
+            if isinstance(item, dict):
+                # If it's correctly structured as a dictionary
+                cat = item.get('category', 'General')
+                q_text = item.get('question', 'Unknown Question')
+                ans_text = item.get('correct_answer', 'N/A')
+                export_text += f"\n[{cat}] {q_text}\n[CORRECT: {ans_text}]\n"
+            else:
+                # Fallback safeguard: if it got stored as a raw string
+                export_text += f"\n[General] {str(item)}\n"
+                
         # Offer the file directly as a local browser download
         st.sidebar.download_button(
             label="Download Mistakes",
