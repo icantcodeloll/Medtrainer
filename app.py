@@ -102,6 +102,7 @@ def initialize_app(active_user, force_reset=False):
         "current_level": loaded_progress.get("current_level", 1),
         "exam_model": loaded_progress.get("exam_model", 'gemini-3.1-flash-lite'),
         "num_questions": loaded_progress.get("num_questions", 5),
+        "semester": loaded_progress.get("semester", "y2s1"),
         "missed_questions": loaded_progress.get("missed_questions", []),
         "exam_history": loaded_progress.get("exam_history", []),
         "current_exam": loaded_progress.get("current_exam", ""),
@@ -530,7 +531,15 @@ def render_trainer_page():
     # ==========================================
     # 2. CORE LOGIC FUNCTIONS
     # ==========================================
-
+    # Dynamically pick the target CSV depending on the selectbox state
+    if st.session_state.get("semester") == "Y2S2":
+        CSV_FILE = "learning_objectives_y2s2.csv"
+        NOTES_FILE = "lecture_notes.csv"
+    else:
+        CSV_FILE = "learning_objectives.csv"
+        NOTES_FILE = "lecture_notes.csv"
+        
+    JOIN_COLUMN = "lecture_id"
     # ==========================================
     # 3. WEB INTERFACE
     # ==========================================
@@ -630,29 +639,6 @@ def render_trainer_page():
                         st.stop()
                     else:
                         df = df[df['system'].isin(system_filter)]
-                    
-            # --- Filter by subject ---
-            if not subject_filter:
-                st.error("Please select at least one Subject filter.")
-                st.stop()
-            else:
-                df = df[df['category'].isin(subject_filter)]
-
-            # --- Filter by exam ---
-            if 'exam' in df.columns:
-                if not exam_filter:
-                    st.error("Please select at least one Exam filter.")
-                    st.stop()
-                else:
-                    df = df[df['exam'].isin(exam_filter)]
-
-            # --- Filter by system ---
-            if 'system' in df.columns:
-                if not system_filter:
-                    st.error("Please select at least one System filter.")
-                    st.stop()
-                else:
-                    df = df[df['system'].isin(system_filter)]
                     
             # Final safety check to ensure data isn't missing
             if df.empty:
@@ -1369,7 +1355,19 @@ def render_settings_page():
     st.session_state.current_level = st.slider("Starting Level", 1, 50, st.session_state.current_level)
     st.session_state.num_questions = st.slider("Number of Questions", 1, 50, st.session_state.num_questions)
     
-    st.session_state.semester = st.selectbox("Active Semester", ["Y2S1", "Y2S2"], index=0)
+    # Define the options exactly as you want them
+    semester_options = ["Y2S1", "Y2S2"]
+
+    # Look up what is currently saved in session state to determine the starting index (default to 0 if not found)
+    current_semester = st.session_state.get("semester", "Y2S1")
+    default_index = semester_options.index(current_semester) if current_semester in semester_options else 0
+
+    # Your selectbox, dynamically setting its initial value based on session state
+    st.session_state.semester = st.selectbox(
+        "Active Semester", 
+        options=semester_options, 
+        index=default_index
+    )
 
 
     st.session_state.thinking_level = st.selectbox(
