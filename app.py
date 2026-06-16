@@ -1002,19 +1002,61 @@ def render_trainer_page():
                 # Safely convert keys to list and track indexing position mapping
                 choice_keys = list(options_dict.keys())
                 
-                # 1. Inject a style trick to completely hide this specific row of native radio selectors
-                st.markdown(f"""
+                # --- 1. INJECT ISOLATED OPTION STYLE MATRIX ONLY ---
+                st.markdown("""
                     <style>
-                    div[data-testid="stRadio"] {{
-                        display: none !important;
-                    }}
-                    div[data-testid="stButton"] button {{
+                    /* Target BOTH the button and its nested inner containers to force wrapping */
+                    div[data-testid="stButton"] button,
+                    div[data-testid="stButton"] button p,
+                    div[data-testid="stButton"] button div {
                         white-space: normal !important;
                         text-align: left !important;
                         height: auto !important;
                         word-break: break-word !important;
-                        padding: 12px 16px !important;
-                    }}
+                        overflow: visible !important;
+                    }
+                    
+                    /* Give the text a little room to breathe over multiple lines */
+                    div[data-testid="stButton"] button {
+                        padding: 14px 20px !important;
+                        min-height: 55px !important;
+                        display: flex !important;
+                        align-items: center !important;
+                        justify-content: flex-start !important;
+                    }
+
+                    /* Target ONLY your quiz options, leaving all other site buttons untouched */
+                    .quiz-option-box {
+                        display: block;
+                        width: 100%;
+                        margin: 8px 0;
+                        border-radius: 8px;
+                        font-size: 15px;
+                        background-color: transparent;
+                        border: 2px solid #e0e0e0;
+                        color: #333333;
+                        transition: all 0.2s ease-in-out;
+                    }
+                    
+                    /* Elegant hover state strictly localized to quiz options */
+                    .quiz-option-box:hover {
+                        border-color: #4b6cb7;
+                        background-color: #f4f7fc;
+                        color: #4b6cb7;
+                    }
+                    
+                    /* Selected state has exact same structural dimensions to prevent shifting */
+                    .quiz-option-box-selected {
+                        display: block;
+                        width: 100%;
+                        margin: 8px 0;
+                        border-radius: 8px;
+                        font-size: 15px;
+                        border: 2px solid #4b6cb7;
+                        background-color: #eef2fa;
+                        color: #4b6cb7;
+                        font-weight: bold;
+                    }
                     </style>
                 """, unsafe_allow_html=True)
 
