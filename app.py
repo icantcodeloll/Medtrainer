@@ -1464,13 +1464,13 @@ def render_settings_page():
         render_data_portability_interface()
 
 # ==============================================================
-# FLOATING ACTION BUTTON (NATIVE HTML SCROLL BACK TO TOP)
+# FLOATING ACTION BUTTON (TRUE TOP-OF-PAGE SCROLL)
 # ==============================================================
 st.markdown(
     """
     <style>
-    /* Fixed container positioned perfectly over the app frame canvas */
-    .floating-container {
+    /* Fixed overlay container over the viewport canvas layout */
+    .sticky-arrow-container {
         position: fixed;
         bottom: 30px;
         right: 30px;
@@ -1478,7 +1478,7 @@ st.markdown(
     }
     
     .scroll-arrow-link {
-        background-color: #FF4B4B; /* Streamlit Signature Red */
+        background-color: #FF4B4B; /* Streamlit Primary Red Theme Accent */
         color: white !important;
         border-radius: 50%;
         width: 52px;
@@ -1499,8 +1499,8 @@ st.markdown(
     }
     </style>
     
-    <div class="floating-container">
-        <a href="#top-anchor" target="_self" class="scroll-arrow-link">▲</a>
+    <div class="sticky-arrow-container">
+        <a href="#root" target="_self" class="scroll-arrow-link">▲</a>
     </div>
     """,
     unsafe_allow_html=True
