@@ -480,7 +480,18 @@ def render_trainer_page():
 
     # Register the background cleanup hook with the Python runtime engine
     atexit.register(save_on_tab_close)
-
+   
+    if st.query_params.get("scroll_target") == "top":
+        # Clear the query safely without causing a double-refresh loop
+        st.query_params.clear()
+        components.html(
+            """
+            <script>
+                var mainContainer = window.parent.document.querySelector('.main');
+                if (mainContainer) { mainContainer.scrollTo({top: 0, behavior: 'instant'}); }
+            </script>
+            """, height=0, width=0
+        )
     # ==========================================
     # 1. SETUP & CONFIGURATION
     # ==========================================
@@ -547,6 +558,7 @@ def render_trainer_page():
     # 3. WEB INTERFACE
     # ==========================================
     st.title("Trainer")
+    st.markdown("<div id='page-top'></div>", unsafe_allow_html=True)
     # This layout structure prevents the button from stretching awkwardly on wide screens
     gen_col1, gen_col2, gen_col3 = st.columns([1, 2, 1])
 
@@ -1055,17 +1067,6 @@ def render_trainer_page():
         # Standalone execution grading submission action button (normalized look)
         submitted = st.button("Submit for Grading", type="primary")
         if submitted:
-            components.html(
-                """
-                <script>
-                    var mainEl = window.parent.document.querySelector('.main');
-                    if (mainEl) { mainEl.scrollTo({top: 0, behavior: 'instant'}); }
-                    window.parent.scrollTo({top: 0, behavior: 'instant'});
-                </script>
-                """,
-                height=0,
-                width=0,
-            )
             num_actual_questions = len(individual_questions)
             user_answers = [st.session_state.user_selections.get(idx, None) for idx in range(num_actual_questions)]
             user_input = "\n".join([f"Q{idx+1}: {ans if ans else 'No Answer'}" for idx, ans in enumerate(user_answers)])
@@ -1150,7 +1151,18 @@ def render_trainer_page():
                 st.session_state.current_level = next_level
             else:
                 st.session_state.level_message = f"**Solid effort ({percentage_correct:.0f}%)! Remaining at Level {st.session_state.current_level} to lock in consistency.**"
-                
+            
+            components.html(
+                """
+                <script>
+                    var mainContainer = window.parent.document.querySelector('.main');
+                    if (mainContainer) { mainContainer.scrollTop = 0; }
+                </script>
+                """, height=0, width=0
+            )
+            
+            # This forces Streamlit to reload the view anchored precisely at the top division
+            st.query_params["scroll_target"] = "top"
             st.rerun()
 
             # --- 2. THE FEEDBACK (Fully outside the st.form block) ---
