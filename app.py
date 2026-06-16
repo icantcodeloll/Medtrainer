@@ -1,5 +1,4 @@
 import streamlit as st
-import streamlit.components.v1 as components
 import pandas as pd
 import random
 import datetime
@@ -480,18 +479,7 @@ def render_trainer_page():
 
     # Register the background cleanup hook with the Python runtime engine
     atexit.register(save_on_tab_close)
-   
-    if st.query_params.get("scroll_target") == "top":
-        # Clear the query safely without causing a double-refresh loop
-        st.query_params.clear()
-        components.html(
-            """
-            <script>
-                var mainContainer = window.parent.document.querySelector('.main');
-                if (mainContainer) { mainContainer.scrollTo({top: 0, behavior: 'instant'}); }
-            </script>
-            """, height=0, width=0
-        )
+
     # ==========================================
     # 1. SETUP & CONFIGURATION
     # ==========================================
@@ -558,7 +546,6 @@ def render_trainer_page():
     # 3. WEB INTERFACE
     # ==========================================
     st.title("Trainer")
-    st.markdown("<div id='page-top'></div>", unsafe_allow_html=True)
     # This layout structure prevents the button from stretching awkwardly on wide screens
     gen_col1, gen_col2, gen_col3 = st.columns([1, 2, 1])
 
@@ -1151,18 +1138,7 @@ def render_trainer_page():
                 st.session_state.current_level = next_level
             else:
                 st.session_state.level_message = f"**Solid effort ({percentage_correct:.0f}%)! Remaining at Level {st.session_state.current_level} to lock in consistency.**"
-            
-            components.html(
-                """
-                <script>
-                    var mainContainer = window.parent.document.querySelector('.main');
-                    if (mainContainer) { mainContainer.scrollTop = 0; }
-                </script>
-                """, height=0, width=0
-            )
-            
-            # This forces Streamlit to reload the view anchored precisely at the top division
-            st.query_params["scroll_target"] = "top"
+                
             st.rerun()
 
             # --- 2. THE FEEDBACK (Fully outside the st.form block) ---
@@ -1492,45 +1468,4 @@ pg = st.navigation([
     st.Page(render_export_page, title="Export Questions", icon="📥", url_path="export"), 
     st.Page(render_settings_page, title="Settings", icon="⚙️", url_path="settings")
 ])
-# Add this anywhere in your main page rendering loop to display the floating button:
-st.markdown(
-    """
-    <style>
-    .scroll-top-btn {
-        position: fixed;
-        bottom: 30px;
-        right: 30px;
-        background-color: #FF4B4B; /* Streamlit Red (or change to your preferred hex color) */
-        color: white;
-        border: none;
-        border-radius: 50%;
-        width: 50px;
-        height: 50px;
-        font-size: 22px;
-        font-weight: bold;
-        cursor: pointer;
-        z-index: 999999;
-        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
-        transition: background-color 0.3s, transform 0.2s;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    .scroll-top-btn:hover {
-        background-color: #D33636;
-        transform: scale(1.05);
-    }
-    .scroll-top-btn:active {
-        transform: scale(0.95);
-    }
-    </style>
-    
-    <button class="scroll-top-btn" onclick="
-        var mainEl = window.parent.document.querySelector('.main');
-        if (mainEl) { mainEl.scrollTo({top: 0, behavior: 'smooth'}); }
-        window.parent.scrollTo({top: 0, behavior: 'smooth'});
-    ">▲</button>
-    """,
-    unsafe_allow_html=True
-)
 pg.run()
