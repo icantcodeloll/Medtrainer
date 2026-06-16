@@ -557,7 +557,7 @@ def render_trainer_page():
     
     # NEW: Show exam breakdown at top if submitted
     if st.session_state.get('exam_submitted'):
-        num_actual_questions = len(individual_questions)
+        num_actual_questions = len(st.session_state.current_key)
             
         # Display score and leveling notification in callout boxes
         st.metric(
