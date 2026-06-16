@@ -549,6 +549,7 @@ def render_trainer_page():
                 st.sidebar.error("Failed to save progress")
                 
         except Exception as e:
+            print(f"Write failure debug: {e}")
             st.sidebar.error(f"Serialization Error: Could not save progress yet. ({e})")
 
 
