@@ -881,13 +881,6 @@ def render_trainer_page():
 
     # Display the Exam
     if st.session_state.current_exam:
-        # Scroll to top after submission
-        if st.session_state.get('exam_submitted'):
-            st.markdown("""
-                <script>
-                window.scrollTo(0, 0);
-                </script>
-            """, unsafe_allow_html=True)
 
         # --- SCORE BREAKDOWN AT TOP (after submission) ---
         if st.session_state.get('exam_submitted'):
@@ -913,6 +906,11 @@ def render_trainer_page():
         # --- LOADING SPINNER AT TOP (during grading) ---
         # Check if we're in the middle of grading (submitted but not yet completed)
         if 'grading_in_progress' in st.session_state and st.session_state.grading_in_progress:
+            st.markdown("""
+                <script>
+                window.scrollTo(0, 0);
+                </script>
+            """, unsafe_allow_html=True)
             st.spinner("Analyzing answers...")
 
         # 1. CLEANING: Remove introductory fluff and trailing keys
