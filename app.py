@@ -546,6 +546,7 @@ def render_trainer_page():
     # ==========================================
     # 3. WEB INTERFACE
     # ==========================================
+    st.markdown("<div id='top-anchor'></div>", unsafe_allow_html=True)
     st.title("Trainer")
     # This layout structure prevents the button from stretching awkwardly on wide screens
     gen_col1, gen_col2, gen_col3 = st.columns([1, 2, 1])
@@ -1463,13 +1464,13 @@ def render_settings_page():
         render_data_portability_interface()
 
 # ==============================================================
-# FLOATING ACTION BUTTON (TRUE TOP-OF-PAGE SCROLL)
+# FLOATING ACTION BUTTON (NATIVE HTML SCROLL BACK TO TOP)
 # ==============================================================
 st.markdown(
     """
     <style>
-    /* Fixed overlay container over the viewport canvas layout */
-    .sticky-arrow-container {
+    /* Fixed container positioned perfectly over the app frame canvas */
+    .floating-container {
         position: fixed;
         bottom: 30px;
         right: 30px;
@@ -1477,7 +1478,7 @@ st.markdown(
     }
     
     .scroll-arrow-link {
-        background-color: #FF4B4B; /* Streamlit Primary Red Theme Accent */
+        background-color: #FF4B4B; /* Streamlit Signature Red */
         color: white !important;
         border-radius: 50%;
         width: 52px;
@@ -1498,13 +1499,12 @@ st.markdown(
     }
     </style>
     
-    <div class="sticky-arrow-container">
-        <a href="#root" target="_self" class="scroll-arrow-link">▲</a>
+    <div class="floating-container">
+        <a href="#top-anchor" target="_self" class="scroll-arrow-link">▲</a>
     </div>
     """,
     unsafe_allow_html=True
 )
-
 # Create the navigation router
 pg = st.navigation([
     st.Page(render_trainer_page, title="Exam Trainer", icon="📝"),
