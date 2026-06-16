@@ -1464,13 +1464,13 @@ def render_settings_page():
         render_data_portability_interface()
 
 # ==============================================================
-# FLOATING ACTION BUTTON (TRUE APPVIEW TOP SCROLL)
+# FLOATING ACTION BUTTON (NATIVE HTML SCROLL BACK TO TOP)
 # ==============================================================
 st.markdown(
     """
     <style>
-    /* Fixed container overlay */
-    .sticky-arrow-container {
+    /* Fixed container positioned perfectly over the app frame canvas */
+    .floating-container {
         position: fixed;
         bottom: 30px;
         right: 30px;
@@ -1478,7 +1478,7 @@ st.markdown(
     }
     
     .scroll-arrow-link {
-        background-color: #FF4B4B; /* Streamlit Primary Red Theme Accent */
+        background-color: #FF4B4B; /* Streamlit Signature Red */
         color: white !important;
         border-radius: 50%;
         width: 52px;
@@ -1490,8 +1490,6 @@ st.markdown(
         justify-content: center;
         text-decoration: none !important;
         box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.3);
-        border: none;
-        cursor: pointer;
         transition: transform 0.2s ease, background-color 0.2s ease;
     }
     
@@ -1501,13 +1499,8 @@ st.markdown(
     }
     </style>
     
-    <div class="sticky-arrow-container">
-        <button class="scroll-arrow-link" onclick="
-            var scrollTarget = window.parent.document.querySelector('.stAppViewMain');
-            if (scrollTarget) {
-                scrollTarget.scrollTo({top: 0, behavior: 'smooth'});
-            }
-        ">▲</button>
+    <div class="floating-container">
+        <a href="#top-anchor" target="_self" class="scroll-arrow-link">▲</a>
     </div>
     """,
     unsafe_allow_html=True
