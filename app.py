@@ -895,8 +895,6 @@ def render_trainer_page():
         # Remove any empty strings resulting from the split
         individual_questions = [q.strip() for q in raw_questions if q.strip()]
 
-        st.session_state.current_key = list(shuffled_keys)
-
 
 
         if 'user_selections' not in st.session_state:
