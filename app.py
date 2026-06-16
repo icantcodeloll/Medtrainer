@@ -546,7 +546,6 @@ def render_trainer_page():
     # ==========================================
     # 3. WEB INTERFACE
     # ==========================================
-    st.markdown("<div id='top-anchor'></div>", unsafe_allow_html=True)
     st.title("Trainer")
     # This layout structure prevents the button from stretching awkwardly on wide screens
     gen_col1, gen_col2, gen_col3 = st.columns([1, 2, 1])
