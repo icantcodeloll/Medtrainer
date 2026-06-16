@@ -998,55 +998,35 @@ def render_trainer_page():
             
             with left_constrained_column:
                 current_selection = st.session_state.user_selections.get(i, None)
+                
+                # Safely convert keys to list and track indexing position mapping
                 choice_keys = list(options_dict.keys())
                 
-                # Format options nicely to display the full sentence text
-                formatted_options = [options_dict[k] for k in choice_keys]
-                default_index = choice_keys.index(current_selection) if current_selection in choice_keys else None
-
-                # Style the radio items to look like full-width choice boxes that handle multi-line wrapping flawlessly
-                st.markdown("""
+                # 1. Inject a style trick to completely hide this specific row of native radio selectors
+                st.markdown(f"""
                     <style>
-                    div[data-testid="stRadio"] label {
-                        background-color: #ffffff;
-                        border: 2px solid #e0e0e0;
-                        padding: 14px 20px !important;
-                        border-radius: 8px;
-                        margin-bottom: 10px;
-                        width: 100%;
-                        display: flex !important;
-                        align-items: flex-start !important;
+                    div[data-testid="stRadio"] {{
+                        display: none !important;
+                    }}
+                    div[data-testid="stButton"] button {{
                         white-space: normal !important;
+                        text-align: left !important;
+                        height: auto !important;
                         word-break: break-word !important;
-                    }
-                    div[data-testid="stRadio"] label:hover {
-                        border-color: #4b6cb7;
-                        background-color: #f4f7fc;
-                    }
-                    /* Style selected option state */
-                    div[data-testid="stRadio"] [data-checked="true"] ~ div {
-                        font-weight: bold;
-                        color: #4b6cb7;
-                    }
+                        padding: 12px 16px !important;
+                    }}
                     </style>
                 """, unsafe_allow_html=True)
 
-                # Render selection list natively
-                selected_option_text = st.radio(
-                    label=f"Choose an answer for Question {i+1}:",
-                    options=formatted_options,
-                    index=default_index,
-                    key=f"visible_radio_q_{i}",
-                    disabled=st.session_state.get('exam_submitted', False),
+                # 2. Render an invisible radio button in the background to handle the variable state
+                selected_letter = st.radio(
+                    label=f"Radio Select Q{i}",
+                    options=choice_keys,
+                    index=choice_keys.index(current_selection) if current_selection in choice_keys else None,
+                    key=f"native_radio_q_{i}",
                     label_visibility="collapsed"
                 )
 
-                # Update selection state instantly based on the radio selection
-                if selected_option_text:
-                    chosen_letter = [k for k, v in options_dict.items() if v == selected_option_text][0]
-                    if st.session_state.user_selections.get(i) != chosen_letter:
-                        st.session_state.user_selections[i] = chosen_letter
-                        st.rerun()
                 # 3. Render your custom styled choices as large, full-width clickable buttons
                 for choice_letter, full_sentence_text in options_dict.items():
                     is_selected = (current_selection == choice_letter)
