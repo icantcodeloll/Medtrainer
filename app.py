@@ -984,7 +984,12 @@ def render_trainer_page():
                     text-align: left !important;
                     height: auto !important;
                     word-break: break-word !important;
+                    overflow-wrap: break-word !important;
+                    word-wrap: break-word !important;
                     padding: 12px 16px !important;
+                    line-height: 1.5 !important;
+                    min-height: auto !important;
+                    max-width: 100% !important;
                 }}
                 </style>
             """, unsafe_allow_html=True)
