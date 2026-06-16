@@ -547,7 +547,24 @@ def render_trainer_page():
     # 3. WEB INTERFACE
     # ==========================================
     st.markdown("<div id='top-anchor'></div>", unsafe_allow_html=True)
+    if st.session_state.get('exam_submitted'):
+        st.markdown("""
+            <script>
+                window.location.href = '#top-anchor';
+            </script>
+        """, unsafe_allow_html=True)
     st.title("Trainer")
+    
+    # NEW: Show exam breakdown at top if submitted
+    if st.session_state.get('exam_submitted'):
+        if st.session_state.get('level_message'):
+            st.markdown(st.session_state.level_message)
+        
+        if st.session_state.get('immediate_wrong_breakdown'):
+            st.markdown("### Immediate Answer Breakdown")
+            st.markdown(st.session_state.immediate_wrong_breakdown)
+        
+        st.write("---")
     # This layout structure prevents the button from stretching awkwardly on wide screens
     gen_col1, gen_col2, gen_col3 = st.columns([1, 2, 1])
 
@@ -1142,20 +1159,6 @@ def render_trainer_page():
                 st.session_state.level_message = f"**Solid effort ({percentage_correct:.0f}%)! Remaining at Level {st.session_state.current_level} to lock in consistency.**"
                 
             st.rerun()
-
-            # --- 2. THE FEEDBACK (Fully outside the st.form block) ---
-            # Locate this section at the very end of render_trainer_page()
-            if st.session_state.get('exam_submitted'):
-                if st.session_state.get('level_message'):
-                    st.markdown(st.session_state.level_message)
-                    
-                # --- REMOVE OR COMMENT OUT THE OLD BREAKDOWN LINES HERE ---
-                if st.session_state.get('immediate_wrong_breakdown'):
-                    st.markdown("### Immediate Answer Breakdown")
-                    st.markdown(st.session_state.immediate_wrong_breakdown)
-                
-            
-                st.write("---")
             
 
     # Missed Questions Bank in Sidebar
