@@ -998,77 +998,55 @@ def render_trainer_page():
             
             with left_constrained_column:
                 current_selection = st.session_state.user_selections.get(i, None)
-                
-                # Safely convert keys to list and track indexing position mapping
                 choice_keys = list(options_dict.keys())
                 
-                # --- 1. INJECT ISOLATED OPTION STYLE MATRIX ONLY ---
+                # Format options nicely to display the full sentence text
+                formatted_options = [options_dict[k] for k in choice_keys]
+                default_index = choice_keys.index(current_selection) if current_selection in choice_keys else None
+
+                # Style the radio items to look like full-width choice boxes that handle multi-line wrapping flawlessly
                 st.markdown("""
                     <style>
-                    /* Target BOTH the button and its nested inner containers to force wrapping */
-                    div[data-testid="stButton"] button,
-                    div[data-testid="stButton"] button p,
-                    div[data-testid="stButton"] button div {
-                        white-space: normal !important;
-                        text-align: left !important;
-                        height: auto !important;
-                        word-break: break-word !important;
-                        overflow: visible !important;
-                    }
-                    
-                    /* Give the text a little room to breathe over multiple lines */
-                    div[data-testid="stButton"] button {
-                        padding: 14px 20px !important;
-                        min-height: 55px !important;
-                        display: flex !important;
-                        align-items: center !important;
-                        justify-content: flex-start !important;
-                    }
-
-                    /* Target ONLY your quiz options, leaving all other site buttons untouched */
-                    .quiz-option-box {
-                        display: block;
-                        width: 100%;
-                        margin: 8px 0;
-                        border-radius: 8px;
-                        font-size: 15px;
-                        background-color: transparent;
+                    div[data-testid="stRadio"] label {
+                        background-color: #ffffff;
                         border: 2px solid #e0e0e0;
-                        color: #333333;
-                        transition: all 0.2s ease-in-out;
+                        padding: 14px 20px !important;
+                        border-radius: 8px;
+                        margin-bottom: 10px;
+                        width: 100%;
+                        display: flex !important;
+                        align-items: flex-start !important;
+                        white-space: normal !important;
+                        word-break: break-word !important;
                     }
-                    
-                    /* Elegant hover state strictly localized to quiz options */
-                    .quiz-option-box:hover {
+                    div[data-testid="stRadio"] label:hover {
                         border-color: #4b6cb7;
                         background-color: #f4f7fc;
-                        color: #4b6cb7;
                     }
-                    
-                    /* Selected state has exact same structural dimensions to prevent shifting */
-                    .quiz-option-box-selected {
-                        display: block;
-                        width: 100%;
-                        margin: 8px 0;
-                        border-radius: 8px;
-                        font-size: 15px;
-                        border: 2px solid #4b6cb7;
-                        background-color: #eef2fa;
-                        color: #4b6cb7;
+                    /* Style selected option state */
+                    div[data-testid="stRadio"] [data-checked="true"] ~ div {
                         font-weight: bold;
+                        color: #4b6cb7;
                     }
                     </style>
                 """, unsafe_allow_html=True)
 
-                # 2. Render an invisible radio button in the background to handle the variable state
-                selected_letter = st.radio(
-                    label=f"Radio Select Q{i}",
-                    options=choice_keys,
-                    index=choice_keys.index(current_selection) if current_selection in choice_keys else None,
-                    key=f"native_radio_q_{i}",
+                # Render selection list natively
+                selected_option_text = st.radio(
+                    label=f"Choose an answer for Question {i+1}:",
+                    options=formatted_options,
+                    index=default_index,
+                    key=f"visible_radio_q_{i}",
+                    disabled=st.session_state.get('exam_submitted', False),
                     label_visibility="collapsed"
                 )
 
+                # Update selection state instantly based on the radio selection
+                if selected_option_text:
+                    chosen_letter = [k for k, v in options_dict.items() if v == selected_option_text][0]
+                    if st.session_state.user_selections.get(i) != chosen_letter:
+                        st.session_state.user_selections[i] = chosen_letter
+                        st.rerun()
                 # 3. Render your custom styled choices as large, full-width clickable buttons
                 for choice_letter, full_sentence_text in options_dict.items():
                     is_selected = (current_selection == choice_letter)
