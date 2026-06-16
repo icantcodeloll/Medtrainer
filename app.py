@@ -88,32 +88,28 @@ GRADER_MODEL = 'gemini-3.1-flash-lite'
 # ==========================================
 def initialize_app(active_user, force_reset=False):
     st.markdown(
-    """
-    <style>
-    /* Force Streamlit radio button wrappers to layout horizontally on a single line */
-    div[data-testid="stRadio"] div[role="radiogroup"] label {
-        display: flex !important;
-        flex-direction: row !important;
-        align-items: center !important;
-        justify-content: flex-start !important;
-        gap: 8px !important;
-        white-space: normal !important;
-    }
-    
-    /* Ensure the radio circle icon itself aligns vertically crisp with inline text wrapping */
-    div[data-testid="stRadio"] div[role="radiogroup"] label > div:first-child {
-        display: flex !important;
-        align-items: center !important;
-        margin-bottom: 0px !important; /* Wipes default spacing that forces a split */
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
+        """
+        <style>
+        /* Force Streamlit radio button wrappers to layout horizontally on a single line */
+        div[data-testid="stRadio"] div[role="radiogroup"] label {
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            justify-content: flex-start !important;
+            gap: 8px !important;
+            white-space: normal !important;
+        }
+        
+        /* Ensure the radio circle icon itself aligns vertically crisp with inline text wrapping */
+        div[data-testid="stRadio"] div[role="radiogroup"] label > div:first-child {
+            display: flex !important;
+            align-items: center !important;
+            margin-bottom: 0px !important; /* Wipes default spacing that forces a split */
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
     )
-    """
-    Handles all initial state configurations, progress restoration, 
-    and systemic fallback settings in one central runtime hook.
-    """
     # Load saved progress dynamically from local disk storage
     if force_reset:
         loaded_progress = {}
