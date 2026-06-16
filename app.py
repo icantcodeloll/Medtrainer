@@ -1051,7 +1051,6 @@ def render_trainer_page():
 
         # Standalone execution grading submission action button (normalized look)
         submitted = st.button("Submit for Grading", type="primary")
-
         if submitted:
             num_actual_questions = len(individual_questions)
             user_answers = [st.session_state.user_selections.get(idx, None) for idx in range(num_actual_questions)]
@@ -1070,28 +1069,13 @@ def render_trainer_page():
                 
             score = 0
             incorrect_summary_markdown = ""
-
             for i, q_text in enumerate(individual_questions):
                 if i >= len(user_answers):
                     break
                 u_ans = user_answers[i] if user_answers[i] else "No Answer"
                 correct = correct_key[i] if i < len(correct_key) else None
-
-                if u_ans == correct:
-                    score += 1
-                else:
-                    clean_q_snippet = re.sub(r'<br\s*/?>', ' ', individual_questions[i].split('\n')[0][:120])
-                    incorrect_summary_markdown += f"**Question {i+1}:** *{clean_q_snippet}...*\n"
-                    incorrect_summary_markdown += f"&nbsp;&nbsp;&nbsp;&nbsp;• **Your Answer:** `{u_ans}` | **Correct Answer:** `{correct}`\n\n"
-                    
-                st.session_state.missed_questions.append({
-                    "question": individual_questions[i].strip(),
-                    "correct": correct,
-                    "yours": u_ans,
-                    "semester": st.session_state.get("semester", "Y2S1"),
-                    "category": st.session_state.current_categories[i] if i < len(st.session_state.current_categories) else "General",
-                })
-
+                
+                # 1. ALWAYS track the total exam performance history (Correct AND Incorrect)
                 st.session_state.exam_history.append({
                     "question": individual_questions[i].strip(),
                     "correct": correct,
@@ -1099,9 +1083,24 @@ def render_trainer_page():
                     "semester": st.session_state.get("semester", "Y2S1"),
                     "category": st.session_state.current_categories[i] if i < len(st.session_state.current_categories) else "General",
                 })
+                
+                if u_ans == correct:
+                    score += 1
+                else:
+                    clean_q_snippet = re.sub(r'<br\s*/?>', ' ', individual_questions[i].split('\n')[0][:120])
+                    incorrect_summary_markdown += f"**Question {i+1}:** *{clean_q_snippet}...*\n"
+                    incorrect_summary_markdown += f"&nbsp;&nbsp;&nbsp;&nbsp;• **Your Answer:** `{u_ans}` | **Correct Answer:** `{correct}`\n\n"
+                    
+                    # 2. ONLY add to the missed questions bank if it was wrong
+                    st.session_state.missed_questions.append({
+                        "question": individual_questions[i].strip(),
+                        "correct": correct,
+                        "yours": u_ans,
+                        "semester": st.session_state.get("semester", "Y2S1"),
+                        "category": st.session_state.current_categories[i] if i < len(st.session_state.current_categories) else "General",
+                    })
 
-                if u_ans != correct:
-                    st.session_state.missed_questions.append(individual_questions[i].strip())
+
                 
             st.session_state.exam_submitted = True
             st.session_state.last_score = score
@@ -1161,16 +1160,17 @@ def render_trainer_page():
         st.sidebar.subheader(f"Missed Questions ({len(st.session_state.missed_questions)})")
         # Prepare the missed questions text content dynamically in memory
         melbourne_mistakes_time = datetime.datetime.now(ZoneInfo("Australia/Melbourne")).strftime('%Y-%m-%d %H:%M')
-        export_text = f"=== WEB SESSION (Melbourne Time): {melbourne_mistakes_time} ===\n"    
+        export_text = f"=== WEB SESSION (Melbourne Time): {melbourne_mistakes_time} ===\n"
+
         for item in st.session_state.missed_questions:
             if isinstance(item, dict):
-                # If it's correctly structured as a dictionary
                 cat = item.get('category', 'General')
-                q_text = item.get('question', 'Unknown Question')
-                ans_text = item.get('correct_answer', 'N/A')
+                q_text = item.get('question', 'Unknown Question') 
+                # CHANGED: Match 'correct' key used in your dictionary snapshot
+                ans_text = item.get('correct', 'N/A') 
                 export_text += f"\n[{cat}] {q_text}\n[CORRECT: {ans_text}]\n"
             else:
-                # Fallback safeguard: if it got stored as a raw string
+                # Fallback safeguard
                 export_text += f"\n[General] {str(item)}\n"
 
         # Offer the file directly as a local browser download
@@ -1187,27 +1187,32 @@ def render_trainer_page():
 def render_stats_page():
     def display_analytics_dashboard():
         st.title("Stats")
-        # ────────── CHANGE THIS DATA SELECTION LOGIC ──────────
-        # Pull directly from the dynamically filtered session state memory space
-        missed_bank = st.session_state.get("missed_questions", [])        
-        if not missed_bank:
+        
+        # Pull directly from the complete exam history pool
+        history_data = st.session_state.get("exam_history", [])        
+        if not history_data:
             st.info("No exam submissions recorded for this profile. Generate and grade an exam to unlock data insights!")
             return
             
-        # Convert the newly filtered timeline session matrix to a pandas DataFrame for processing
-        df_history = pd.DataFrame(missed_bank)
+        # Convert the history collection to a pandas DataFrame for calculation
+        df_history = pd.DataFrame(history_data)
         
-        df_history = pd.DataFrame(st.session_state.get("exam_history", []))
-        if not df_history.empty and "semester" in df_history.columns:
-            # Filter stats dynamically
-            df_history = df_history[df_history['semester'] == st.session_state.get("semester", "Y2S1")]
-
-
-        # Calculate Core Metrics
+        # Apply the active semester filtering cleanly (Case-insensitive)
+        current_sem = st.session_state.get("semester", "Y2S1").upper()
+        if "semester" in df_history.columns:
+            df_history = df_history[df_history['semester'].str.upper() == current_sem]
+            
+        if df_history.empty:
+            st.info(f"No history records found matching active semester: {current_sem}")
+            return
+            
+        # Calculate Core Performance Metrics
         total_completed = len(df_history)
-        total_incorrect = df_history[df_history['yours'] != df_history['correct']].shape[0]
-        total_correct = total_completed - total_incorrect
-        overall_accuracy = (total_correct / total_completed) * 100
+        df_history['is_correct'] = df_history['yours'] == df_history['correct']
+        total_correct = df_history['is_correct'].sum()
+        total_incorrect = total_completed - total_correct
+        overall_accuracy = (total_correct / total_completed) * 100 if total_completed > 0 else 0
+        
         # ==========================================
         # KPI METRIC CARDS ROW
         # ==========================================
@@ -1225,25 +1230,24 @@ def render_stats_page():
             st.metric(label="Correct Answers", value=f"{total_correct}")
         with col4:
             st.metric(label="Current Level Tier", value=f"Lvl {st.session_state.get('current_level', 1)} / 50")
-
+            
         st.markdown("---")
-
+        
         # ==========================================
         # ADVANCED DIAGNOSTICS & CHARTS
         # ==========================================
-        # NEW CLEAN FULL-WIDTH LAYOUT:
-        st.subheader("Subject Mastery")
+        st.subheader("Performance Breakdown by Medical Specialty")
         
-        # Group by category and compute performance
-        subject_stats = df_history.groupby('category').apply(lambda x: pd.Series({
-            'Correct': (x['yours'] == x['correct']).sum(),
-            'Total': len(x)
-        })).reset_index()
+        # Group by category and compute accurate performance
+        subject_stats = df_history.groupby('category').agg(
+            Total=('is_correct', 'count'),
+            Correct=('is_correct', 'sum')
+        ).reset_index()
         
         subject_stats['Accuracy (%)'] = (subject_stats['Correct'] / subject_stats['Total']) * 100
         subject_stats = subject_stats.sort_values(by='Accuracy (%)', ascending=False)
         
-        # Display as a clean data table with highlight bars
+        # Display as a clean, full-width data table with built-in progress bars
         st.dataframe(
             subject_stats,
             column_config={
@@ -1259,16 +1263,16 @@ def render_stats_page():
                 )
             },
             hide_index=True,
-            use_container_width=True  # This will now stretch beautifully across the whole page
+            use_container_width=True  
         )
-
+        
         # ==========================================
         # STUDY RECOMMENDATION ENGINE
         # ==========================================
         st.markdown("---")
         st.subheader("Adaptive Study Recommendation")
         
-        # Identify lowest performing subject
+        # Identify lowest performing subject tracking metrics
         if not subject_stats.empty:
             weakest_subject = subject_stats.iloc[-1]
             if weakest_subject['Accuracy (%)'] < 70:
@@ -1279,8 +1283,9 @@ def render_stats_page():
                 )
             else:
                 st.success("All subject tracks are performing above standard target parameters. Keep testing up to Level 50!")
+                
     display_analytics_dashboard()
-
+    
 def render_export_page():
     st.title("Export Questions")
     
