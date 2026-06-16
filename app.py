@@ -1069,7 +1069,7 @@ def render_trainer_page():
             if st.session_state.get('level_message'):
                 st.info(st.session_state.level_message)
             st.write("")
-            st.info("Click the button on the right to scroll up >>>")
+            st.write("Click the button on the right to scroll up >>>")
 
         # Standalone execution grading submission action button (normalized look)
         submitted = st.button("Submit for Grading", type="primary")
