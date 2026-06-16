@@ -443,6 +443,43 @@ def render_trainer_page():
     # 0. INITIALIZATION ENGINE
     # ==========================================
 
+    def save_on_tab_close():
+        """
+        Background hook that intercepts Streamlit's session cleanup routine.
+        If the tab is closed, this function executes on the server right before 
+        the session memory is wiped, committing the latest state to disk.
+        """
+        try:
+            # Check if we have an active username and valid exam data to back up
+            if 'username' in st.session_state and st.session_state.username:
+                active_user = st.session_state.username
+                
+                # Construct a clean dictionary snapshot of the active workspace
+                state_snapshot = {
+                    "current_level": st.session_state.get("current_level", 1),
+                    "exam_model": st.session_state.get("exam_model", 'gemini-3.1-flash-lite'),
+                    "num_questions": st.session_state.get("num_questions", 5),
+                    "missed_questions": st.session_state.get("missed_questions", []),
+                    "exam_history": st.session_state.get("exam_history", []),
+                    "current_exam": st.session_state.get("current_exam", ""),
+                    "current_key": st.session_state.get("current_key", []),
+                }
+                
+                # Safely serialize the dataframe to standard records so the JSON manager handles it cleanly
+                samples_df = st.session_state.get("samples_df", pd.DataFrame())
+                if not samples_df.empty:
+                    state_snapshot["samples_df"] = samples_df.to_dict(orient="records")
+                else:
+                    state_snapshot["samples_df"] = []
+                    
+                # Fire the save function directly to the disk
+                save_progress(state_snapshot, active_user)
+        except Exception:
+            pass # Silently pass to ensure the server thread terminates smoothly
+
+    # Register the background cleanup hook with the Python runtime engine
+    atexit.register(save_on_tab_close)
+
     # ==========================================
     # 1. SETUP & CONFIGURATION
     # ==========================================
