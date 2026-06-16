@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import pandas as pd
 import random
 import datetime
@@ -545,6 +546,7 @@ def render_trainer_page():
     # ==========================================
     # 3. WEB INTERFACE
     # ==========================================
+    st.markdown("<div id='top-anchor'></div>", unsafe_allow_html=True)
     st.title("Trainer")
     # This layout structure prevents the button from stretching awkwardly on wide screens
     gen_col1, gen_col2, gen_col3 = st.columns([1, 2, 1])
@@ -1460,6 +1462,49 @@ def render_settings_page():
                     st.rerun()
     with col2:
         render_data_portability_interface()
+
+# ==============================================================
+# FLOATING ACTION BUTTON (NATIVE HTML SCROLL BACK TO TOP)
+# ==============================================================
+st.markdown(
+    """
+    <style>
+    /* Fixed container positioned perfectly over the app frame canvas */
+    .floating-container {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        z-index: 999999;
+    }
+    
+    .scroll-arrow-link {
+        background-color: #FF4B4B; /* Streamlit Signature Red */
+        color: white !important;
+        border-radius: 50%;
+        width: 52px;
+        height: 52px;
+        font-size: 24px;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none !important;
+        box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.3);
+        transition: transform 0.2s ease, background-color 0.2s ease;
+    }
+    
+    .scroll-arrow-link:hover {
+        background-color: #D33636;
+        transform: scale(1.1);
+    }
+    </style>
+    
+    <div class="floating-container">
+        <a href="#top-anchor" target="_self" class="scroll-arrow-link">▲</a>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
 # Create the navigation router
 pg = st.navigation([
