@@ -87,29 +87,10 @@ GRADER_MODEL = 'gemini-3.1-flash-lite'
 # 0. MULTI-PAGE CONFIGURATION & NAVIGATION
 # ==========================================
 def initialize_app(active_user, force_reset=False):
-    st.markdown(
-        """
-        <style>
-        /* Force Streamlit radio button wrappers to layout horizontally on a single line */
-        div[data-testid="stRadio"] div[role="radiogroup"] label {
-            display: flex !important;
-            flex-direction: row !important;
-            align-items: center !important;
-            justify-content: flex-start !important;
-            gap: 8px !important;
-            white-space: normal !important;
-        }
-        
-        /* Ensure the radio circle icon itself aligns vertically crisp with inline text wrapping */
-        div[data-testid="stRadio"] div[role="radiogroup"] label > div:first-child {
-            display: flex !important;
-            align-items: center !important;
-            margin-bottom: 0px !important; /* Wipes default spacing that forces a split */
-        }
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
+    """
+    Handles all initial state configurations, progress restoration, 
+    and systemic fallback settings in one central runtime hook.
+    """
     # Load saved progress dynamically from local disk storage
     if force_reset:
         loaded_progress = {}
@@ -462,43 +443,6 @@ def render_trainer_page():
     # 0. INITIALIZATION ENGINE
     # ==========================================
 
-    def save_on_tab_close():
-        """
-        Background hook that intercepts Streamlit's session cleanup routine.
-        If the tab is closed, this function executes on the server right before 
-        the session memory is wiped, committing the latest state to disk.
-        """
-        try:
-            # Check if we have an active username and valid exam data to back up
-            if 'username' in st.session_state and st.session_state.username:
-                active_user = st.session_state.username
-                
-                # Construct a clean dictionary snapshot of the active workspace
-                state_snapshot = {
-                    "current_level": st.session_state.get("current_level", 1),
-                    "exam_model": st.session_state.get("exam_model", 'gemini-3.1-flash-lite'),
-                    "num_questions": st.session_state.get("num_questions", 5),
-                    "missed_questions": st.session_state.get("missed_questions", []),
-                    "exam_history": st.session_state.get("exam_history", []),
-                    "current_exam": st.session_state.get("current_exam", ""),
-                    "current_key": st.session_state.get("current_key", []),
-                }
-                
-                # Safely serialize the dataframe to standard records so the JSON manager handles it cleanly
-                samples_df = st.session_state.get("samples_df", pd.DataFrame())
-                if not samples_df.empty:
-                    state_snapshot["samples_df"] = samples_df.to_dict(orient="records")
-                else:
-                    state_snapshot["samples_df"] = []
-                    
-                # Fire the save function directly to the disk
-                save_progress(state_snapshot, active_user)
-        except Exception:
-            pass # Silently pass to ensure the server thread terminates smoothly
-
-    # Register the background cleanup hook with the Python runtime engine
-    atexit.register(save_on_tab_close)
-
     # ==========================================
     # 1. SETUP & CONFIGURATION
     # ==========================================
@@ -541,10 +485,32 @@ def render_trainer_page():
 
     if st.sidebar.button("Save Progress", help="Manually save your current progress"):
         try:
-            if save_progress(st.session_state, active_user):
+            # 1. Create a clean, JSON-serializable dictionary snapshot of your workspace and stats
+            state_snapshot = {
+                "current_level": st.session_state.get("current_level", 1),
+                "exam_model": st.session_state.get("exam_model", 'gemini-3.1-flash-lite'),
+                "num_questions": st.session_state.get("num_questions", 5),
+                "semester": st.session_state.get("semester", "y2s1"),
+                "missed_questions": st.session_state.get("missed_questions", []),
+                "exam_history": st.session_state.get("exam_history", []),
+                "current_exam": st.session_state.get("current_exam", ""),
+                "current_key": st.session_state.get("current_key", []),
+                "current_categories": st.session_state.get("current_categories", []),
+            }
+
+            # 2. Safely serialize the pandas DataFrame to standard records so the JSON manager handles it cleanly
+            samples_df = st.session_state.get("samples_df", pd.DataFrame())
+            if isinstance(samples_df, pd.DataFrame) and not samples_df.empty:
+                state_snapshot["samples_df"] = samples_df.to_dict(orient="records")
+            else:
+                state_snapshot["samples_df"] = []
+
+            # 3. Save the clean snapshot instead of the raw st.session_state object
+            if save_progress(state_snapshot, active_user):
                 st.sidebar.success("Progress saved successfully!")
             else:
                 st.sidebar.error("Failed to save progress")
+                
         except Exception as e:
             st.sidebar.error(f"Serialization Error: Could not save progress yet. ({e})")
 
