@@ -460,6 +460,7 @@ def render_trainer_page():
                     "exam_model": st.session_state.get("exam_model", 'gemini-3.1-flash-lite'),
                     "num_questions": st.session_state.get("num_questions", 5),
                     "missed_questions": st.session_state.get("missed_questions", []),
+                    "exam_history": st.session_state.get("exam_history", []),
                     "current_exam": st.session_state.get("current_exam", ""),
                     "current_key": st.session_state.get("current_key", []),
                 }
@@ -497,7 +498,7 @@ def render_trainer_page():
         st.session_state.username = new_user.strip()
         
         # Wipe the screen clean so the new user's data can load
-        keys_to_clear = ['current_level', 'num_questions', 'missed_questions', 'current_exam', 'current_key', 'samples_df']
+        keys_to_clear = ['current_level', 'num_questions', 'missed_questions', 'exam_history', 'current_exam', 'current_key', 'samples_df']
         for k in keys_to_clear:
             if k in st.session_state:
                 del st.session_state[k]
@@ -1285,7 +1286,7 @@ def render_stats_page():
                 st.success("All subject tracks are performing above standard target parameters. Keep testing up to Level 50!")
                 
     display_analytics_dashboard()
-    
+
 def render_export_page():
     st.title("Export Questions")
     
