@@ -103,6 +103,7 @@ def initialize_app(active_user, force_reset=False):
         "exam_model": loaded_progress.get("exam_model", 'gemini-3.1-flash-lite'),
         "num_questions": loaded_progress.get("num_questions", 5),
         "missed_questions": loaded_progress.get("missed_questions", []),
+        "exam_history": loaded_progress.get("exam_history", []),
         "current_exam": loaded_progress.get("current_exam", ""),
         "current_key": loaded_progress.get("current_key", []),
         "key_index": min(loaded_progress.get("key_index", 0), max(0, len(API_KEYS) - 1)) if len(API_KEYS) > 0 else 0,
@@ -580,6 +581,8 @@ def render_trainer_page():
             df_main = pd.read_csv(CSV_FILE)
             df_notes = pd.read_csv(NOTES_FILE)
             df = pd.merge(df_main, df_notes, on=JOIN_COLUMN, how='left')
+            if "semester" in df.columns:
+                df = df[df['semester'] == st.session_state.semester]
 
             # ────────── ADD THIS NEW BLOCK HERE TO INITIALIZE FILTERS ──────────
             # Reconstruct subject_filter from session state checkboxes
@@ -891,6 +894,8 @@ def render_trainer_page():
     # Display the Exam
     if st.session_state.current_exam:
 
+        
+
         # 1. CLEANING: Remove introductory fluff and trailing keys
         clean_text = st.session_state.current_exam.strip()
         # Remove common AI intros like "Here are your questions..."
@@ -902,7 +907,10 @@ def render_trainer_page():
         
         # Remove any empty strings resulting from the split
         individual_questions = [q.strip() for q in raw_questions if q.strip()]
-
+        
+        # Pair questions with original answer positions before shuffling
+        zipped_questions = list(zip(individual_questions, st.session_state.current_key))
+        random.shuffle(zipped_questions)
         if 'user_selections' not in st.session_state:
             st.session_state.user_selections = {}
 
@@ -988,6 +996,13 @@ def render_trainer_page():
                     div[data-testid="stRadio"] {{
                         display: none !important;
                     }}
+                    div[data-testid="stButton"] button {
+                        white-space: normal !important;
+                        text-align: left !important;
+                        height: auto !important;
+                        word-break: break-word !important;
+                        padding: 12px 16px !important;
+                    }
                     </style>
                 """, unsafe_allow_html=True)
 
@@ -1082,14 +1097,26 @@ def render_trainer_page():
                     clean_q_snippet = re.sub(r'<br\s*/?>', ' ', individual_questions[i].split('\n')[0][:120])
                     incorrect_summary_markdown += f"**Question {i+1}:** *{clean_q_snippet}...*\n"
                     incorrect_summary_markdown += f"&nbsp;&nbsp;&nbsp;&nbsp;• **Your Answer:** `{u_ans}` | **Correct Answer:** `{correct}`\n\n"
-
+                    
                 st.session_state.missed_questions.append({
                     "question": individual_questions[i].strip(),
                     "correct": correct,
                     "yours": u_ans,
+                    "semester": st.session_state.get("semester", "Y2S1"),
                     "category": st.session_state.current_categories[i] if i < len(st.session_state.current_categories) else "General",
                 })
 
+                st.session_state.exam_history.append({
+                    "question": individual_questions[i].strip(),
+                    "correct": correct,
+                    "yours": u_ans,
+                    "semester": st.session_state.get("semester", "Y2S1"),
+                    "category": st.session_state.current_categories[i] if i < len(st.session_state.current_categories) else "General",
+                })
+
+                if u_ans != correct:
+                    st.session_state.missed_questions.append(individual_questions[i].strip())
+                
             st.session_state.exam_submitted = True
             st.session_state.last_score = score
             st.session_state.immediate_wrong_breakdown = incorrect_summary_markdown if incorrect_summary_markdown else "  🎉   **Perfect score! You got every question right!**"
@@ -1177,6 +1204,12 @@ def render_stats_page():
         # Convert the newly filtered timeline session matrix to a pandas DataFrame for processing
         df_history = pd.DataFrame(missed_bank)
         
+        df_history = pd.DataFrame(st.session_state.get("exam_history", []))
+        if not df_history.empty and "semester" in df_history.columns:
+            # Filter stats dynamically
+            df_history = df_history[df_history['semester'] == st.session_state.get("semester", "Y2S1")]
+
+
         # Calculate Core Metrics
         total_completed = len(df_history)
         total_incorrect = df_history[df_history['yours'] != df_history['correct']].shape[0]
@@ -1335,6 +1368,9 @@ def render_settings_page():
     st.session_state.current_level = st.slider("Starting Level", 1, 50, st.session_state.current_level)
     st.session_state.num_questions = st.slider("Number of Questions", 1, 50, st.session_state.num_questions)
     
+    st.session_state.semester = st.selectbox("Active Semester", ["Y2S1", "Y2S2"], index=0)
+
+
     st.session_state.thinking_level = st.selectbox(
         "Gemini Thinking Level",
         options=["MINIMAL", "LOW", "MEDIUM", "HIGH"],
