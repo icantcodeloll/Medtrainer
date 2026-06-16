@@ -1008,13 +1008,13 @@ def render_trainer_page():
                     div[data-testid="stRadio"] {{
                         display: none !important;
                     }}
-                    div[data-testid="stButton"] button {
+                    div[data-testid="stButton"] button {{
                         white-space: normal !important;
                         text-align: left !important;
                         height: auto !important;
                         word-break: break-word !important;
                         padding: 12px 16px !important;
-                    }
+                    }}
                     </style>
                 """, unsafe_allow_html=True)
 
