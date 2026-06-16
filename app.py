@@ -557,9 +557,16 @@ def render_trainer_page():
     
     # NEW: Show exam breakdown at top if submitted
     if st.session_state.get('exam_submitted'):
-        if st.session_state.get('level_message'):
-            st.markdown(st.session_state.level_message)
+
+        st.metric(
+            label="Exam Performance", 
+            value=f"{st.session_state.last_score} / {num_actual_questions}",
+            delta=f"{(st.session_state.last_score / num_actual_questions * 100):.1f}% Correct",
+            delta_color="normal" if st.session_state.last_score / num_actual_questions >= 0.7 else "inverse"
+        )
         
+        if st.session_state.get('level_message'):
+            st.info(st.session_state.level_message)
         if st.session_state.get('immediate_wrong_breakdown'):
             st.markdown("### Answer Breakdown")
             st.markdown(st.session_state.immediate_wrong_breakdown)
@@ -1057,18 +1064,6 @@ def render_trainer_page():
         # --- NEW: SCORE & LEVELING FEEDBACK HIGHLIGHT ---
         if st.session_state.get('exam_submitted'):
             num_actual_questions = len(individual_questions)
-            
-            # Display score and leveling notification in callout boxes
-            st.metric(
-                label="Exam Performance", 
-                value=f"{st.session_state.last_score} / {num_actual_questions}",
-                delta=f"{(st.session_state.last_score / num_actual_questions * 100):.1f}% Correct",
-                delta_color="normal" if st.session_state.last_score / num_actual_questions >= 0.7 else "inverse"
-            )
-            
-            if st.session_state.get('level_message'):
-                st.info(st.session_state.level_message)
-            st.write("")
             st.write("Click the button on the right to scroll up >>>")
 
         # Standalone execution grading submission action button (normalized look)
