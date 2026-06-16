@@ -906,11 +906,23 @@ def render_trainer_page():
         raw_questions = re.split(r'\n(?=\d+\.\s)', clean_text)
         
         # Remove any empty strings resulting from the split
-        pure_questions = [q.strip() for q in raw_questions if q.strip()]
-        
-        # Pair questions with original answer positions before shuffling
-        individual_questions = list(zip(pure_questions, st.session_state.current_key))
-        random.shuffle(pure_questions)
+        individual_questions = [q.strip() for q in raw_questions if q.strip()]
+
+        # 1. Pair questions with original answer positions
+        zipped = list(zip(individual_questions, st.session_state.current_key))
+
+        # 2. Shuffle the pairs together
+        random.shuffle(zipped)
+
+        # 3. Unzip them back into separate elements
+        individual_questions, shuffled_keys = zip(*zipped)
+
+        # 4. Save both back as standard lists
+        individual_questions = list(individual_questions)
+        st.session_state.current_key = list(shuffled_keys)
+
+
+
         if 'user_selections' not in st.session_state:
             st.session_state.user_selections = {}
 
