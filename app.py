@@ -546,10 +546,10 @@ def render_trainer_page():
             if save_progress(state_snapshot, active_user):
                 st.sidebar.success("Progress saved successfully!")
             else:
-                print(f"Write failure debug: {e}")
                 st.sidebar.error("Failed to save progress")
                 
         except Exception as e:
+            
             st.sidebar.error(f"Serialization Error: Could not save progress yet. ({e})")
 
 
