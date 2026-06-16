@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import pandas as pd
 import random
 import datetime
@@ -1054,6 +1055,17 @@ def render_trainer_page():
         # Standalone execution grading submission action button (normalized look)
         submitted = st.button("Submit for Grading", type="primary")
         if submitted:
+            components.html(
+                """
+                <script>
+                    var mainEl = window.parent.document.querySelector('.main');
+                    if (mainEl) { mainEl.scrollTo({top: 0, behavior: 'instant'}); }
+                    window.parent.scrollTo({top: 0, behavior: 'instant'});
+                </script>
+                """,
+                height=0,
+                width=0,
+            )
             num_actual_questions = len(individual_questions)
             user_answers = [st.session_state.user_selections.get(idx, None) for idx in range(num_actual_questions)]
             user_input = "\n".join([f"Q{idx+1}: {ans if ans else 'No Answer'}" for idx, ans in enumerate(user_answers)])
@@ -1468,4 +1480,45 @@ pg = st.navigation([
     st.Page(render_export_page, title="Export Questions", icon="📥", url_path="export"), 
     st.Page(render_settings_page, title="Settings", icon="⚙️", url_path="settings")
 ])
+# Add this anywhere in your main page rendering loop to display the floating button:
+st.markdown(
+    """
+    <style>
+    .scroll-top-btn {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        background-color: #FF4B4B; /* Streamlit Red (or change to your preferred hex color) */
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        font-size: 22px;
+        font-weight: bold;
+        cursor: pointer;
+        z-index: 999999;
+        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+        transition: background-color 0.3s, transform 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .scroll-top-btn:hover {
+        background-color: #D33636;
+        transform: scale(1.05);
+    }
+    .scroll-top-btn:active {
+        transform: scale(0.95);
+    }
+    </style>
+    
+    <button class="scroll-top-btn" onclick="
+        var mainEl = window.parent.document.querySelector('.main');
+        if (mainEl) { mainEl.scrollTo({top: 0, behavior: 'smooth'}); }
+        window.parent.scrollTo({top: 0, behavior: 'smooth'});
+    ">▲</button>
+    """,
+    unsafe_allow_html=True
+)
 pg.run()
