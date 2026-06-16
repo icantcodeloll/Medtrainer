@@ -882,36 +882,7 @@ def render_trainer_page():
     # Display the Exam
     if st.session_state.current_exam:
 
-        # --- SCORE BREAKDOWN AT TOP (after submission) ---
-        if st.session_state.get('exam_submitted'):
-            # Get the number of questions from the current exam
-            clean_text = st.session_state.current_exam.strip()
-            clean_text = re.sub(r"^(Here are|Based on|Sure|I have generated).*?\n", "", clean_text, flags=re.IGNORECASE)
-            raw_questions = re.split(r'\n(?=\d+\.\s)', clean_text)
-            individual_questions = [q.strip() for q in raw_questions if q.strip()]
-            num_actual_questions = len(individual_questions)
-            
-            # Display score and leveling notification at the top
-            st.metric(
-                label="Exam Performance", 
-                value=f"{st.session_state.last_score} / {num_actual_questions}",
-                delta=f"{(st.session_state.last_score / num_actual_questions * 100):.1f}% Correct",
-                delta_color="normal" if st.session_state.last_score / num_actual_questions >= 0.7 else "inverse"
-            )
-            
-            if st.session_state.get('level_message'):
-                st.info(st.session_state.level_message)
-            st.write("---")
-
-        # --- LOADING SPINNER AT TOP (during grading) ---
-        # Check if we're in the middle of grading (submitted but not yet completed)
-        if 'grading_in_progress' in st.session_state and st.session_state.grading_in_progress:
-            st.markdown("""
-                <script>
-                window.scrollTo(0, 0);
-                </script>
-            """, unsafe_allow_html=True)
-            st.spinner("Analyzing answers...")
+        
 
         # 1. CLEANING: Remove introductory fluff and trailing keys
         clean_text = st.session_state.current_exam.strip()
@@ -1063,15 +1034,26 @@ def render_trainer_page():
 
             st.write("---")
 
+        # Standalone execution grading submission action button
+        # --- NEW: SCORE & LEVELING FEEDBACK HIGHLIGHT ---
+        if st.session_state.get('exam_submitted'):
+            num_actual_questions = len(individual_questions)
+            
+            # Display score and leveling notification in callout boxes
+            st.metric(
+                label="Exam Performance", 
+                value=f"{st.session_state.last_score} / {num_actual_questions}",
+                delta=f"{(st.session_state.last_score / num_actual_questions * 100):.1f}% Correct",
+                delta_color="normal" if st.session_state.last_score / num_actual_questions >= 0.7 else "inverse"
+            )
+            
+            if st.session_state.get('level_message'):
+                st.info(st.session_state.level_message)
+            st.write("")
+
         # Standalone execution grading submission action button (normalized look)
         submitted = st.button("Submit for Grading", type="primary")
         if submitted:
-            # Set flag to show loading spinner at top
-            st.session_state.grading_in_progress = True
-            st.rerun()
-            
-        # If grading is in progress, perform the grading
-        if st.session_state.get('grading_in_progress', False):
             num_actual_questions = len(individual_questions)
             user_answers = [st.session_state.user_selections.get(idx, None) for idx in range(num_actual_questions)]
             user_input = "\n".join([f"Q{idx+1}: {ans if ans else 'No Answer'}" for idx, ans in enumerate(user_answers)])
@@ -1126,20 +1108,18 @@ def render_trainer_page():
             st.session_state.last_score = score
             st.session_state.immediate_wrong_breakdown = incorrect_summary_markdown if incorrect_summary_markdown else "  🎉   **Perfect score! You got every question right!**"
 
-            # --- FETCH FEEDBACK BEFORE RERUN SO IT DISPLAYS UNDER QUESTIONS ---
-            try:
-                feedback = get_ai_grading(
-                    st.session_state.current_exam,
-                    user_input,
-                    correct_key_formatted,
-                    score
-                )
-                st.session_state.ai_feedback_clean = feedback
-            except Exception as e:
-                st.session_state.ai_feedback_clean = f"Error generating explanation: {e}"
-
-            # Clear the grading in progress flag
-            st.session_state.grading_in_progress = False
+            # --- NEW: FETCH FEEDBACK BEFORE RERUN SO IT DISPLAYS UNDER QUESTIONS ---
+            with st.spinner("Analyzing answers..."):
+                try:
+                    feedback = get_ai_grading(
+                        st.session_state.current_exam,
+                        user_input,
+                        correct_key_formatted,
+                        score
+                    )
+                    st.session_state.ai_feedback_clean = feedback
+                except Exception as e:
+                    st.session_state.ai_feedback_clean = f"Error generating explanation: {e}"
 
             percentage_correct = (score / num_actual_questions) * 100
             if (num_actual_questions - score) <= 1 or percentage_correct >= 90:
