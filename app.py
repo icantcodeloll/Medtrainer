@@ -537,7 +537,7 @@ def render_trainer_page():
         CSV_FILE = "learning_objectives_y2s2.csv"
         NOTES_FILE = "lecture_notes.csv"
     else:
-        CSV_FILE = "learning_objectives.csv"
+        CSV_FILE = "learning_objectives_informative_reports.csv"
         NOTES_FILE = "lecture_notes.csv"
 
     JOIN_COLUMN = "lecture_id"
