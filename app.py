@@ -938,10 +938,10 @@ def render_trainer_page():
             .quiz-option-box {
                 display: block;
                 width: 100%;
-                padding: 14px 20px;
-                margin: 8px 0;
-                border-radius: 8px;
-                font-size: 15px;
+                padding: 8px 12px;
+                margin: 4px 0;
+                border-radius: 6px;
+                font-size: 12px;
                 text-align: left;
                 background-color: transparent;
                 border: 2px solid #e0e0e0;
