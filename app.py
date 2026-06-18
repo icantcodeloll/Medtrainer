@@ -973,132 +973,171 @@ def render_trainer_page():
             </style>
         """, unsafe_allow_html=True)
 
-        # --- 2. RENDER THE QUESTIONS DYNAMICALLY INSIDE A FORM FOR INSTANT SELECTION ---
-        with st.form("exam_form", clear_on_submit=False):
+        # --- 2. RENDER THE QUESTIONS DYNAMICALLY (OUTSIDE st.form CONSTRAINTS FOR FAST RERUNS) ---
+        for i, q_text in enumerate(individual_questions):
+            st.subheader(f"Question {i+1}")
+            
+            # Extract clinical question text body before the option choices begin
+            prompt_match = re.search(r"(\d+\s*\.\s*.*?)(?=A\s*\.\s*)", q_text, re.DOTALL)
+            q_prompt = prompt_match.group(1).strip() if prompt_match else q_text
+            
+            # Keep the question at its native, original markdown text size
+            st.markdown(q_prompt.replace("\n", "<br>"), unsafe_allow_html=True)
+            st.write("") 
+
+            # Clean option boundaries handling spacing nuances from API outputs
+            opt_A = re.search(r"(A\s*\.\s*.*?)(?=[B-D]\s*\.\s*|$)", q_text, re.DOTALL)
+            opt_B = re.search(r"(B\s*\.\s*.*?)(?=[A,C,D]\s*\.\s*|$)", q_text, re.DOTALL)
+            opt_C = re.search(r"(C\s*\.\s*.*?)(?=[A,B,D]\s*\.\s*|$)", q_text, re.DOTALL)
+            opt_D = re.search(r"(D\s*\.\s*.*?)(?=[A-C]\s*\.\s*|$)", q_text, re.DOTALL)
+
+            options_dict = {
+                "A": opt_A.group(1).strip() if opt_A else "A. Option A",
+                "B": opt_B.group(1).strip() if opt_B else "B. Option B",
+                "C": opt_C.group(1).strip() if opt_C else "C. Option C",
+                "D": opt_D.group(1).strip() if opt_D else "D. Option D"
+            }
+
+            current_selection = st.session_state.user_selections.get(i, None)
+
+            # Safely convert keys to list and track indexing position mapping
+            choice_keys = list(options_dict.keys())
+
+            # 1. Inject a style trick to completely hide this specific row of native radio selectors
+            st.markdown(f"""
+                <style>
+                div[data-testid="stRadio"] {{
+                    display: none !important;
+                }}
+                div[data-testid="stButton"] button {{
+                    white-space: normal !important;
+                    text-align: left !important;
+                    height: auto !important;
+                    word-break: break-word !important;
+                    overflow-wrap: break-word !important;
+                    word-wrap: break-word !important;
+                    padding: 12px 16px !important;
+                    line-height: 1.5 !important;
+                    min-height: auto !important;
+                    max-width: 100% !important;
+                }}
+                </style>
+            """, unsafe_allow_html=True)
+
+            # 2. Render an invisible radio button in the background to handle the variable state
+            selected_letter = st.radio(
+                label=f"Radio Select Q{i}",
+                options=choice_keys,
+                index=choice_keys.index(current_selection) if current_selection in choice_keys else None,
+                key=f"native_radio_q_{i}",
+                label_visibility="collapsed"
+            )
+
+            # 3. Render your custom styled choices as large, full-width clickable buttons
+            for choice_letter, full_sentence_text in options_dict.items():
+                is_selected = (current_selection == choice_letter)
+                btn_type = "primary" if is_selected else "secondary"
+                prefix = "➔   " if is_selected else "      "
+
+                # Use use_container_width=True to make the buttons big and fill the space
+                # Disable buttons after submission so users can't change answers while viewing feedback
+                if st.button(f"{prefix}{full_sentence_text}", key=f"btn_q_{i}_{choice_letter}", use_container_width=True, type=btn_type, disabled=st.session_state.get('exam_submitted', False)):
+                    st.session_state.user_selections[i] = choice_letter
+                    st.rerun()
+
+            # --- NEW: INJECT PER-QUESTION AI FEEDBACK RIGHT HERE ---
+            if st.session_state.get('exam_submitted') and st.session_state.get('ai_feedback_clean'):
+                # Look for the section matching "### Question X" or "### Question [X]"
+                feedback_str = st.session_state.ai_feedback_clean
+                pattern = rf"### Question \s*\[?{i+1}\]?.*?(?=### Question \s*\[?{i+2}\]?|---|$)"
+                match = re.search(pattern, feedback_str, re.DOTALL | re.IGNORECASE)
+
+                if match:
+                    st.info("💡 **AI Grading Feedback:**")
+                    st.markdown(match.group(0).strip())
+                else:
+                    # If no specific incorrect feedback is found, the question might be correct
+                    correct_ans = st.session_state.current_key[i]
+                    user_ans = st.session_state.user_selections.get(i, "No Answer")
+                    if user_ans == correct_ans:
+                        st.success(f"Correct! You answered `{user_ans}`.")
+
+            st.write("---")
+
+        # Standalone execution grading submission action button
+        # --- NEW: SCORE & LEVELING FEEDBACK HIGHLIGHT ---
+        if st.session_state.get('exam_submitted'):
+            st.write("Click the button on the right to scroll up >>>")
+
+        # Standalone execution grading submission action button (normalized look)
+        submitted = st.button("Submit for Grading", type="primary")
+        if submitted:
+            num_actual_questions = len(individual_questions)
+            user_answers = [st.session_state.user_selections.get(idx, None) for idx in range(num_actual_questions)]
+            user_input = "\n".join([f"Q{idx+1}: {ans if ans else 'No Answer'}" for idx, ans in enumerate(user_answers)])
+            
+            correct_key = st.session_state.current_key[:num_actual_questions]
+            correct_key_formatted = "\n".join([f"Q{idx+1}: {ans}" for idx, ans in enumerate(correct_key)])
+            
+            st.session_state.last_user_input = user_input
+            st.session_state.last_correct_key = correct_key_formatted
+            st.session_state.last_user_answers_list = user_answers
+            
+            if len(user_answers) != len(correct_key):
+                st.error(f"Mismatch: The exam has {len(correct_key)} questions, but you entered {len(user_answers)} answers.")
+                st.stop()
+                
+            score = 0
+            incorrect_summary_markdown = ""
             for i, q_text in enumerate(individual_questions):
-                st.subheader(f"Question {i+1}")
+                if i >= len(user_answers):
+                    break
+                u_ans = user_answers[i] if user_answers[i] else "No Answer"
+                correct = correct_key[i] if i < len(correct_key) else None
                 
-                # Extract clinical question text body before the option choices begin
-                prompt_match = re.search(r"(\d+\s*\.\s*.*?)(?=A\s*\.\s*)", q_text, re.DOTALL)
-                q_prompt = prompt_match.group(1).strip() if prompt_match else q_text
+                # 1. ALWAYS track the total exam performance history (Correct AND Incorrect)
+                st.session_state.exam_history.append({
+                    "question": individual_questions[i].strip(),
+                    "correct": correct,
+                    "yours": u_ans,
+                    "semester": st.session_state.get("semester", "Y2S1"),
+                    "category": st.session_state.current_categories[i] if i < len(st.session_state.current_categories) else "General",
+                })
                 
-                # Keep the question at its native, original markdown text size
-                st.markdown(q_prompt.replace("\n", "<br>"), unsafe_allow_html=True)
-                st.write("") 
-
-                # Clean option boundaries handling spacing nuances from API outputs
-                opt_A = re.search(r"(A\s*\.\s*.*?)(?=[B-D]\s*\.\s*|$)", q_text, re.DOTALL)
-                opt_B = re.search(r"(B\s*\.\s*.*?)(?=[A,C,D]\s*\.\s*|$)", q_text, re.DOTALL)
-                opt_C = re.search(r"(C\s*\.\s*.*?)(?=[A,B,D]\s*\.\s*|$)", q_text, re.DOTALL)
-                opt_D = re.search(r"(D\s*\.\s*.*?)(?=[A-C]\s*\.\s*|$)", q_text, re.DOTALL)
-
-                options_dict = {
-                    "A": opt_A.group(1).strip() if opt_A else "A. Option A",
-                    "B": opt_B.group(1).strip() if opt_B else "B. Option B",
-                    "C": opt_C.group(1).strip() if opt_C else "C. Option C",
-                    "D": opt_D.group(1).strip() if opt_D else "D. Option D"
-                }
-
-                current_selection = st.session_state.user_selections.get(i, None)
-
-                # Safely convert keys to list and track indexing position mapping
-                choice_keys = list(options_dict.keys())
-
-                # Render custom styled buttons (form prevents reruns until submission)
-                for choice_letter, full_sentence_text in options_dict.items():
-                    is_selected = (current_selection == choice_letter)
-                    btn_type = "primary" if is_selected else "secondary"
-                    prefix = "➔   " if is_selected else "      "
-
-                    if st.button(f"{prefix}{full_sentence_text}", key=f"btn_q_{i}_{choice_letter}", use_container_width=True, type=btn_type, disabled=st.session_state.get('exam_submitted', False)):
-                        st.session_state.user_selections[i] = choice_letter
-
-                # --- NEW: INJECT PER-QUESTION AI FEEDBACK RIGHT HERE ---
-                if st.session_state.get('exam_submitted') and st.session_state.get('ai_feedback_clean'):
-                    # Look for the section matching "### Question X" or "### Question [X]"
-                    feedback_str = st.session_state.ai_feedback_clean
-                    pattern = rf"### Question \s*\[?{i+1}\]?.*?(?=### Question \s*\[?{i+2}\]?|---|$)"
-                    match = re.search(pattern, feedback_str, re.DOTALL | re.IGNORECASE)
-
-                    if match:
-                        st.info("💡 **AI Grading Feedback:**")
-                        st.markdown(match.group(0).strip())
-                    else:
-                        # If no specific incorrect feedback is found, the question might be correct
-                        correct_ans = st.session_state.current_key[i]
-                        user_ans = st.session_state.user_selections.get(i, "No Answer")
-                        if user_ans == correct_ans:
-                            st.success(f"Correct! You answered `{user_ans}`.")
-
-                st.write("---")
-
-            # Form submit button (only reruns when this is clicked)
-            submitted = st.form_submit_button("Submit for Grading", type="primary")
-            if submitted:
-                num_actual_questions = len(individual_questions)
-                user_answers = [st.session_state.user_selections.get(idx, None) for idx in range(num_actual_questions)]
-                user_input = "\n".join([f"Q{idx+1}: {ans if ans else 'No Answer'}" for idx, ans in enumerate(user_answers)])
-                
-                correct_key = st.session_state.current_key[:num_actual_questions]
-                correct_key_formatted = "\n".join([f"Q{idx+1}: {ans}" for idx, ans in enumerate(correct_key)])
-                
-                st.session_state.last_user_input = user_input
-                st.session_state.last_correct_key = correct_key_formatted
-                st.session_state.last_user_answers_list = user_answers
-                
-                if len(user_answers) != len(correct_key):
-                    st.error(f"Mismatch: The exam has {len(correct_key)} questions, but you entered {len(user_answers)} answers.")
-                    st.stop()
+                if u_ans == correct:
+                    score += 1
+                else:
+                    clean_q_snippet = re.sub(r'<br\s*/?>', ' ', individual_questions[i].split('\n')[0][:120])
+                    incorrect_summary_markdown += f"**Question {i+1}:** *{clean_q_snippet}...*\n"
+                    incorrect_summary_markdown += f"&nbsp;&nbsp;&nbsp;&nbsp;• **Your Answer:** `{u_ans}` | **Correct Answer:** `{correct}`\n\n"
                     
-                score = 0
-                incorrect_summary_markdown = ""
-                for i, q_text in enumerate(individual_questions):
-                    if i >= len(user_answers):
-                        break
-                    u_ans = user_answers[i] if user_answers[i] else "No Answer"
-                    correct = correct_key[i] if i < len(correct_key) else None
-                    
-                    # 1. ALWAYS track the total exam performance history (Correct AND Incorrect)
-                    st.session_state.exam_history.append({
+                    # 2. ONLY add to the missed questions bank if it was wrong
+                    st.session_state.missed_questions.append({
                         "question": individual_questions[i].strip(),
                         "correct": correct,
                         "yours": u_ans,
                         "semester": st.session_state.get("semester", "Y2S1"),
                         "category": st.session_state.current_categories[i] if i < len(st.session_state.current_categories) else "General",
                     })
-                    
-                    if u_ans == correct:
-                        score += 1
-                    else:
-                        clean_q_snippet = re.sub(r'<br\s*/?>', ' ', individual_questions[i].split('\n')[0][:120])
-                        incorrect_summary_markdown += f"**Question {i+1}:** *{clean_q_snippet}...*\n"
-                        incorrect_summary_markdown += f"&nbsp;&nbsp;&nbsp;&nbsp;• **Your Answer:** `{u_ans}` | **Correct Answer:** `{correct}`\n\n"
-                        
-                        # 2. ONLY add to the missed questions bank if it was wrong
-                        st.session_state.missed_questions.append({
-                            "question": individual_questions[i].strip(),
-                            "correct": correct,
-                            "yours": u_ans,
-                            "semester": st.session_state.get("semester", "Y2S1"),
-                            "category": st.session_state.current_categories[i] if i < len(st.session_state.current_categories) else "General",
-                        })
 
-                st.session_state.exam_submitted = True
-                st.session_state.last_score = score
-                st.session_state.immediate_wrong_breakdown = incorrect_summary_markdown if incorrect_summary_markdown else "  🎉   **Perfect score! You got every question right!**"
 
-                # --- NEW: FETCH FEEDBACK BEFORE RERUN SO IT DISPLAYS UNDER QUESTIONS ---
-                with st.spinner("Analyzing answers..."):
-                    try:
-                        feedback = get_ai_grading(
-                            st.session_state.current_exam,
-                            user_input,
-                            correct_key_formatted,
-                            score
-                        )
-                        st.session_state.ai_feedback_clean = feedback
-                    except Exception as e:
-                        st.session_state.ai_feedback_clean = f"Error generating explanation: {e}"
+                
+            st.session_state.exam_submitted = True
+            st.session_state.last_score = score
+            st.session_state.immediate_wrong_breakdown = incorrect_summary_markdown if incorrect_summary_markdown else "  🎉   **Perfect score! You got every question right!**"
+
+            # --- NEW: FETCH FEEDBACK BEFORE RERUN SO IT DISPLAYS UNDER QUESTIONS ---
+            with st.spinner("Analyzing answers..."):
+                try:
+                    feedback = get_ai_grading(
+                        st.session_state.current_exam,
+                        user_input,
+                        correct_key_formatted,
+                        score
+                    )
+                    st.session_state.ai_feedback_clean = feedback
+                except Exception as e:
+                    st.session_state.ai_feedback_clean = f"Error generating explanation: {e}"
 
             # Auto-save progress after AI grading completes
             try:
