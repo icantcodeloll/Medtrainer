@@ -591,6 +591,7 @@ def render_trainer_page():
         )
     
     if generate_clicked:
+        st.session_state.is_submitting = False
         # --- NEW: BACKUP THE CURRENT EXAM BEFORE OVERWRITING ---
         if st.session_state.get('current_exam'):
             st.session_state.previous_test_data = {
@@ -1166,7 +1167,7 @@ def render_trainer_page():
                 st.session_state.level_message = f"**Solid effort ({percentage_correct:.0f}%)! Remaining at Level {st.session_state.current_level} to lock in consistency.**"
             
             st.rerun()
-            st.session_state.is_submitting = False
+            
             
 
     # Missed Questions Bank in Sidebar
