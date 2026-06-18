@@ -357,6 +357,8 @@ def create_exam_pdf(exam_text, answer_key, user_answers=None, score=None, max_sc
     os.unlink(tmp_path) # Clean up temp file
     return pdf_bytes
 
+def lock_submit():
+    st.session_state.is_submitting = True
 
 def render_data_portability_interface():
     """
@@ -1070,7 +1072,7 @@ def render_trainer_page():
             st.write("Click the button on the right to scroll up >>>")
 
         # Standalone execution grading submission action button (normalized look)
-        submitted = st.button("Submit for Grading", type="primary")
+        submitted = st.button("Submit for Grading", disabled=st.session_state.get('is_submitting', False), on_click=lock_submit)
         if submitted:
             num_actual_questions = len(individual_questions)
             user_answers = [st.session_state.user_selections.get(idx, None) for idx in range(num_actual_questions)]
@@ -1162,8 +1164,9 @@ def render_trainer_page():
                 st.session_state.current_level = next_level
             else:
                 st.session_state.level_message = f"**Solid effort ({percentage_correct:.0f}%)! Remaining at Level {st.session_state.current_level} to lock in consistency.**"
-                
+            
             st.rerun()
+            st.session_state.is_submitting = False
             
 
     # Missed Questions Bank in Sidebar
