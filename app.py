@@ -1003,12 +1003,9 @@ def render_trainer_page():
             # Safely convert keys to list and track indexing position mapping
             choice_keys = list(options_dict.keys())
 
-            # 1. Inject a style trick to completely hide this specific row of native radio selectors
+            # 1. Style the custom buttons for instant visual feedback
             st.markdown(f"""
                 <style>
-                div[data-testid="stRadio"] {{
-                    display: none !important;
-                }}
                 div[data-testid="stButton"] button {{
                     white-space: normal !important;
                     text-align: left !important;
@@ -1020,27 +1017,76 @@ def render_trainer_page():
                     line-height: 1.5 !important;
                     min-height: auto !important;
                     max-width: 100% !important;
+                    transition: all 0.05s ease !important;
                 }}
                 </style>
+                <script>
+                (function() {{
+                    const questionId = 'q_{i}';
+                    const choiceLetters = {list(options_dict.keys())};
+                    
+                    // Function to handle instant visual selection
+                    function handleInstantSelect(clickedBtn, choiceLetter) {{
+                        // Update visual state immediately
+                        choiceLetters.forEach(letter => {{
+                            const btnKey = 'btn_q_{i}_' + letter;
+                            const btn = document.querySelector('button[data-key="' + btnKey + '"]');
+                            if (btn) {{
+                                const span = btn.querySelector('span');
+                                if (letter === choiceLetter) {{
+                                    // Selected state
+                                    btn.classList.remove('stButton-secondary');
+                                    btn.classList.add('stButton-primary');
+                                    if (span) {{
+                                        span.textContent = span.textContent.replace('      ', '➔   ');
+                                    }}
+                                }} else {{
+                                    // Deselected state
+                                    btn.classList.remove('stButton-primary');
+                                    btn.classList.add('stButton-secondary');
+                                    if (span) {{
+                                        span.textContent = span.textContent.replace('➔   ', '      ');
+                                    }}
+                                }}
+                            }}
+                        }});
+                    }}
+                    
+                    // Attach click handlers when DOM is ready
+                    if (document.readyState === 'loading') {{
+                        document.addEventListener('DOMContentLoaded', function() {{
+                            choiceLetters.forEach(letter => {{
+                                const btnKey = 'btn_q_{i}_' + letter;
+                                const btn = document.querySelector('button[data-key="' + btnKey + '"]');
+                                if (btn) {{
+                                    btn.addEventListener('click', function(e) {{
+                                        handleInstantSelect(btn, letter);
+                                    }});
+                                }}
+                            }});
+                        }});
+                    }} else {{
+                        // DOM already loaded
+                        choiceLetters.forEach(letter => {{
+                            const btnKey = 'btn_q_{i}_' + letter;
+                            const btn = document.querySelector('button[data-key="' + btnKey + '"]');
+                            if (btn) {{
+                                btn.addEventListener('click', function(e) {{
+                                    handleInstantSelect(btn, letter);
+                                }});
+                            }}
+                        }});
+                    }}
+                }})();
+                </script>
             """, unsafe_allow_html=True)
 
-            # 2. Render an invisible radio button in the background to handle the variable state
-            selected_letter = st.radio(
-                label=f"Radio Select Q{i}",
-                options=choice_keys,
-                index=choice_keys.index(current_selection) if current_selection in choice_keys else None,
-                key=f"native_radio_q_{i}",
-                label_visibility="collapsed"
-            )
-
-            # 3. Render your custom styled choices as large, full-width clickable buttons
+            # 2. Render custom styled buttons with instant visual feedback
             for choice_letter, full_sentence_text in options_dict.items():
                 is_selected = (current_selection == choice_letter)
                 btn_type = "primary" if is_selected else "secondary"
                 prefix = "➔   " if is_selected else "      "
 
-                # Use use_container_width=True to make the buttons big and fill the space
-                # Disable buttons after submission so users can't change answers while viewing feedback
                 if st.button(f"{prefix}{full_sentence_text}", key=f"btn_q_{i}_{choice_letter}", use_container_width=True, type=btn_type, disabled=st.session_state.get('exam_submitted', False)):
                     st.session_state.user_selections[i] = choice_letter
                     st.rerun()
@@ -1168,13 +1214,21 @@ def render_trainer_page():
 
     # Missed Questions Bank in Sidebar
     if st.session_state.missed_questions:
+        # Filter to only include mistakes from the active semester
+        current_semester = st.session_state.get("semester", "Y2S1")
+        semester_filtered_mistakes = [
+            item for item in st.session_state.missed_questions
+            if isinstance(item, dict) and item.get('semester') == current_semester
+        ]
+        
         # 2. YOUR ORIGINAL SIDEBAR EXPORT (Preserved)
-        st.sidebar.subheader(f"Missed Questions ({len(st.session_state.missed_questions)})")
+        st.sidebar.subheader(f"Missed Questions ({len(semester_filtered_mistakes)})")
         # Prepare the missed questions text content dynamically in memory
         melbourne_mistakes_time = datetime.datetime.now(ZoneInfo("Australia/Melbourne")).strftime('%Y-%m-%d %H:%M')
         export_text = f"=== WEB SESSION (Melbourne Time): {melbourne_mistakes_time} ===\n"
+        export_text += f"=== SEMESTER: {current_semester} ===\n"
 
-        for item in st.session_state.missed_questions:
+        for item in semester_filtered_mistakes:
             if isinstance(item, dict):
                 cat = item.get('category', 'General')
                 q_text = item.get('question', 'Unknown Question') 
