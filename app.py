@@ -365,7 +365,7 @@ def render_data_portability_interface():
     Renders password-protected download/upload tools in the sidebar to 
     safeguard user JSON progress profiles and tracking CSV matrices.
     """
-
+    
     st.sidebar.subheader("Admin")
     
     # 1. ENFORCE SECURITY PASSWORD
@@ -1481,6 +1481,18 @@ def render_settings_page():
                     st.session_state.confirm_reset = False  # Dismiss confirmation
                     st.rerun()
     with col2:
+        st.sidebar.markdown("### Contribute")
+        uploaded_note = st.sidebar.file_uploader("Upload Notes to Contribute", type=["txt", "csv", "pdf"])
+
+        if uploaded_note is not None:
+            # Save it to a designated directory or process it into your database
+            save_path = os.path.join("contributions", uploaded_note.name)
+            os.makedirs("contributions", exist_ok=True)
+            
+            with open(save_path, "wb") as f:
+                f.write(uploaded_note.getbuffer())
+            
+            st.sidebar.success("Thank you for contributing! Your notes have been submitted.")
         render_data_portability_interface()
 
 # ==============================================================
