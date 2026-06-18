@@ -1100,31 +1100,31 @@ def render_trainer_page():
                     except Exception as e:
                         st.session_state.ai_feedback_clean = f"Error generating explanation: {e}"
 
-                # Auto-save progress after AI grading completes
-                try:
-                    save_progress(st.session_state, active_user)
-                except Exception as e:
-                    pass  # Silently fail to avoid disrupting the user experience
+            # Auto-save progress after AI grading completes
+            try:
+                save_progress(st.session_state, active_user)
+            except Exception as e:
+                pass  # Silently fail to avoid disrupting the user experience
 
-                percentage_correct = (score / num_actual_questions) * 100
-                if (num_actual_questions - score) <= 1 or percentage_correct >= 90:
-                    next_level = min(50, st.session_state.current_level + 1)
-                    if next_level > st.session_state.current_level:
-                        st.session_state.level_message = f"**Excellent performance ({percentage_correct:.0f}%)! You have leveled up to Level {next_level}!**"
-                    else:
-                        st.session_state.level_message = f"**Fantastic score ({percentage_correct:.0f}%)! You are at the maximum mastery level (Level 50)!**"
-                    st.session_state.current_level = next_level
-                elif percentage_correct <= 60:
-                    next_level = max(1, st.session_state.current_level - 1)
-                    if next_level < st.session_state.current_level:
-                        st.session_state.level_message = f"**Score was {percentage_correct:.0f}%. The system adjusted your difficulty down to Level {next_level} to rebuild foundations.**"
-                    else:
-                        st.session_state.level_message = f"**Score was {percentage_correct:.0f}%. You are at Level 1. Keep practicing to build confidence!**"
-                    st.session_state.current_level = next_level
+            percentage_correct = (score / num_actual_questions) * 100
+            if (num_actual_questions - score) <= 1 or percentage_correct >= 90:
+                next_level = min(50, st.session_state.current_level + 1)
+                if next_level > st.session_state.current_level:
+                    st.session_state.level_message = f"**Excellent performance ({percentage_correct:.0f}%)! You have leveled up to Level {next_level}!**"
                 else:
-                    st.session_state.level_message = f"**Solid effort ({percentage_correct:.0f}%)! Remaining at Level {st.session_state.current_level} to lock in consistency.**"
-                    
-                st.rerun()
+                    st.session_state.level_message = f"**Fantastic score ({percentage_correct:.0f}%)! You are at the maximum mastery level (Level 50)!**"
+                st.session_state.current_level = next_level
+            elif percentage_correct <= 60:
+                next_level = max(1, st.session_state.current_level - 1)
+                if next_level < st.session_state.current_level:
+                    st.session_state.level_message = f"**Score was {percentage_correct:.0f}%. The system adjusted your difficulty down to Level {next_level} to rebuild foundations.**"
+                else:
+                    st.session_state.level_message = f"**Score was {percentage_correct:.0f}%. You are at Level 1. Keep practicing to build confidence!**"
+                st.session_state.current_level = next_level
+            else:
+                st.session_state.level_message = f"**Solid effort ({percentage_correct:.0f}%)! Remaining at Level {st.session_state.current_level} to lock in consistency.**"
+                
+            st.rerun()
             
 
     # Missed Questions Bank in Sidebar
