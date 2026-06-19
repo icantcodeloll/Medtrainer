@@ -421,7 +421,7 @@ def render_data_portability_interface():
     )
 
     if uploaded_zip is not None:
-        if st.sidebar.button("💥 Confirm Overwrite & Extract Data"):
+        if st.sidebar.button("Confirm Overwrite & Extract Data"):
             try:
                 with zipfile.ZipFile(uploaded_zip, "r") as zip_ref:
                     file_list = zip_ref.namelist()
@@ -438,6 +438,34 @@ def render_data_portability_interface():
                 st.balloons()
             except Exception as e:
                 st.sidebar.error(f"Migration processing error: {str(e)}")
+
+    # -------------------------------------------------------------
+    # 4. DOWNLOAD USER CONTRIBUTIONS
+    # -------------------------------------------------------------
+    st.sidebar.markdown("---")
+    st.sidebar.markdown("**User Contributions**")
+    
+    contrib_dir = "contributions"
+    # Check if the folder exists and actually has files in it
+    if os.path.exists(contrib_dir) and os.listdir(contrib_dir):
+        contrib_zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(contrib_zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+            for file_name in os.listdir(contrib_dir):
+                file_path = os.path.join(contrib_dir, file_name)
+                if os.path.isfile(file_path):
+                    zip_file.write(file_path, file_name)
+        
+        contrib_zip_buffer.seek(0)
+        
+        st.sidebar.download_button(
+            label="Download All Contributed Notes (.zip)",
+            data=contrib_zip_buffer,
+            file_name=f"contributed_notes_{timestamp_melb}.zip",
+            mime="application/zip",
+            key="download_contrib_zip"
+        )
+    else:
+        st.sidebar.info("No user contributions available yet.")
 
 # Define the view functions
 def render_trainer_page():
@@ -724,24 +752,23 @@ def render_trainer_page():
                 st.session_state.current_categories = ['General'] * n
 
             def randomize_paragraph_start(text):
-                """Splits a paragraph into sentences and randomizes their order or starting point."""
                 if not text or not isinstance(text, str):
                     return ""
                 
-                # Split text into sentences using a simple regex (handles ., !, ?)
                 sentences = re.split(r'(?<=[.!?])\s+', text.strip())
                 if len(sentences) <= 1:
-                    return text # Return as-is if it's only one sentence
+                    rotated_text = text
+                else:
+                    start_idx = random.randint(0, len(sentences) - 1)
+                    rotated_sentences = sentences[start_idx:] + sentences[:start_idx]
+                    rotated_text = " ".join(rotated_sentences)
                 
-                # Option A: Completely shuffle the sentences
-                #random.shuffle(sentences)
-                #return " ".join(sentences)
-
-                # ALTERNATIVE (Option B): If you prefer to keep the sequential order but just want 
-                # to start at a random sentence and wrap around to the beginning, uncomment below:
-                start_idx = random.randint(0, len(sentences) - 1)
-                rotated_sentences = sentences[start_idx:] + sentences[:start_idx]
-                return " ".join(rotated_sentences)
+                # --- NEW: Word limit enforcer ---
+                words = rotated_text.split()
+                if len(words) > 500:
+                    return " ".join(words[:500]) + "..." # Truncate and add ellipsis
+                    
+                return rotated_text
 
             # 1. Helper function to safely merge the columns into a single continuous string per row
             def combine_row_text(row):
@@ -1430,8 +1457,19 @@ def render_settings_page():
         help="Control how deeply the model deliberates before generating questions or grading."
     )
     
+
+    if st.button("Undo last submission"):
+        if 'pre_submit_backup' in st.session_state and st.session_state['pre_submit_backup']:
+            # Overwrite the database with the pre-submission backup
+            save_progress(st.session_state['pre_submit_backup'], st.session_state.username)
+            
+            st.success("Previous save restored successfully! Please refresh the page.")
+            # Clear the backup so it can't be spammed
+            del st.session_state['pre_submit_backup'] 
+        else:
+            st.info("No previous submission backup found to restore.")
+
     st.write("---")
-    
     # 2. Speed Switch
     st.subheader("Model Selection")
     model_choice = st.radio(
