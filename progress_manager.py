@@ -20,17 +20,20 @@ supabase = init_supabase()
 def save_progress(session_state, username="Default"):
     """
     Save all relevant progress data directly to Supabase for a specific user.
-    Exceptions bubble up to let the main application's sidebar catch them.
+    Handles NaN float clearing to ensure JSON compliance.
     """
     if not username:
         username = "Default"
 
-    # Robust handling for samples_df workspace conversion
     raw_samples = session_state.get("samples_df", None)
     if raw_samples is not None:
         if isinstance(raw_samples, pd.DataFrame):
-            # FIXED: orient="records" converts rows into clean string-keyed JSON documents
-            samples_serialized = raw_samples.to_dict(orient="records")
+            try:
+                # Replace all NaN values with None, which maps cleanly to JSON null
+                cleaned_df = raw_samples.astype(object).where(pd.notnull(raw_samples), None)
+                samples_serialized = cleaned_df.to_dict(orient="records")
+            except Exception:
+                samples_serialized = None
         elif isinstance(raw_samples, (dict, list)):
             samples_serialized = raw_samples
         else:
@@ -38,7 +41,7 @@ def save_progress(session_state, username="Default"):
     else:
         samples_serialized = None
 
-    # Structure the progress metadata payload
+    # Structure the progress dictionary
     progress_data = {
         "timestamp": datetime.now().isoformat(),
         "current_level": session_state.get("current_level", 10),
@@ -63,10 +66,8 @@ def save_progress(session_state, username="Default"):
         "progress_data": progress_data  
     }
     
-    # Let database exceptions rise naturally to the main application catch layout
     supabase.table("user_progress").upsert(row_payload).execute()
     return True
-
 
 def load_progress(username="Default"):
     """Load progress data from Supabase database for a specific user."""
