@@ -16,11 +16,11 @@ def init_supabase() -> Client:
 # Create a single global client instance
 supabase = init_supabase()
 
+
 def save_progress(session_state, username="Default"):
     """
     Save all relevant progress data directly to Supabase for a specific user.
     Handles NaN float clearing to ensure JSON compliance.
-    Only saves missed questions to Supabase (not correct answers).
     """
     if not username:
         username = "Default"
@@ -29,6 +29,7 @@ def save_progress(session_state, username="Default"):
     if raw_samples is not None:
         if isinstance(raw_samples, pd.DataFrame):
             try:
+                # Replace all NaN values with None, which maps cleanly to JSON null
                 cleaned_df = raw_samples.astype(object).where(pd.notnull(raw_samples), None)
                 samples_serialized = cleaned_df.to_dict(orient="records")
             except Exception:
@@ -40,7 +41,7 @@ def save_progress(session_state, username="Default"):
     else:
         samples_serialized = None
 
-    # Structure the progress dictionary - ONLY save missed questions to Supabase
+    # Structure the progress dictionary
     progress_data = {
         "timestamp": datetime.now().isoformat(),
         "current_level": session_state.get("current_level", 10),
@@ -48,11 +49,13 @@ def save_progress(session_state, username="Default"):
         "num_questions": session_state.get("num_questions", 10),
         "semester": session_state.get("semester", "y2s1"),
         "last_score": session_state.get("last_score", 0),
-        "missed_questions": session_state.get("missed_questions", []),  # ONLY wrong ones saved
-        # NOTE: exam_history is kept in memory but NOT sent to Supabase (saves storage)
+        "missed_questions": session_state.get("missed_questions", []),
+        "exam_history": session_state.get("exam_history", []),
         "current_exam": session_state.get("current_exam", ""),
         "current_key": session_state.get("current_key", []),
         "key_index": session_state.get("key_index", 0),
+        "last_user_input": session_state.get("last_user_input", ""),
+        "last_correct_key": session_state.get("last_correct_key", ""),
         "exam_submitted": session_state.get("exam_submitted", False),
         "current_categories": session_state.get("current_categories", []),
         "samples_df": samples_serialized
