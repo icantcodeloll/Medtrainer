@@ -551,14 +551,6 @@ def render_trainer_page():
         st.stop()
 
 
-    if st.sidebar.button("Save Progress", help="Manually save your current progress"):
-        try:
-            if save_progress(st.session_state, active_user):
-                st.sidebar.success("Progress saved successfully!")
-            else:
-                st.sidebar.error("Failed to save progress")
-        except Exception as e:
-            st.sidebar.error(f"Serialization Error: Could not save progress yet. ({e})")
 
 
     # ==========================================
@@ -1171,7 +1163,7 @@ def render_trainer_page():
 
             # Auto-save progress after AI grading completes
             try:
-                save_progress(st.session_state, active_user)
+                save_progress(st.session_state, st.session_state.get("username", "Default"))
             except Exception as e:
                 pass  # Silently fail to avoid disrupting the user experience
 
