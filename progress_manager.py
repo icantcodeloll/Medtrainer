@@ -25,22 +25,6 @@ def save_progress(session_state, username="Default"):
     if not username:
         username = "Default"
 
-    raw_samples = session_state.get("samples_df", None)
-    if raw_samples is not None:
-        if isinstance(raw_samples, pd.DataFrame):
-            try:
-                # Replace all NaN values with None, which maps cleanly to JSON null
-                cleaned_df = raw_samples.astype(object).where(pd.notnull(raw_samples), None)
-                samples_serialized = cleaned_df.to_dict(orient="records")
-            except Exception:
-                samples_serialized = None
-        elif isinstance(raw_samples, (dict, list)):
-            samples_serialized = raw_samples
-        else:
-            samples_serialized = None
-    else:
-        samples_serialized = None
-
     # Structure the progress dictionary
     progress_data = {
         "timestamp": datetime.now().isoformat(),
@@ -57,8 +41,7 @@ def save_progress(session_state, username="Default"):
         "last_user_input": session_state.get("last_user_input", ""),
         "last_correct_key": session_state.get("last_correct_key", ""),
         "exam_submitted": session_state.get("exam_submitted", False),
-        "current_categories": session_state.get("current_categories", []),
-        "samples_df": samples_serialized
+        "current_categories": session_state.get("current_categories", [])
     }
     
     row_payload = {
@@ -99,10 +82,3 @@ def restore_progress(session_state, progress_data):
     session_state.last_correct_key = progress_data.get("last_correct_key", "")
     session_state.exam_submitted = progress_data.get("exam_submitted", False)
     session_state.current_categories = progress_data.get("current_categories", [])
-    
-    # Reconstruct pandas DataFrame safely from database list format structure
-    if "samples_df" in progress_data and progress_data["samples_df"]:
-        try:
-            session_state.samples_df = pd.DataFrame(progress_data["samples_df"])
-        except Exception:
-            pass
