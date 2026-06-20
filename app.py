@@ -83,14 +83,122 @@ EXAM_WEIGHTS = {
 EXAM_MODEL = 'gemini-3.1-flash-lite'
 GRADER_MODEL = 'gemini-3.1-flash-lite'
 
+# Constants
+LEVEL_UP_THRESHOLD = 90
+LEVEL_DOWN_THRESHOLD = 60
+MAX_LEVEL = 50
+MIN_LEVEL = 1
+
+# Compiled regex patterns for performance
+SENTENCE_SPLIT_PATTERN = re.compile(r'(?<=[.!?])\s+')
+ANSWER_KEY_PATTERN = re.compile(r'[A-D]')
+INTRO_CLEANUP_PATTERN = re.compile(r"^(Here are|Based on|Sure|I have generated).*?\n", re.IGNORECASE)
+QUESTION_SPLIT_PATTERN = re.compile(r'\n(?=\d+\.\s)')
+QUESTION_PROMPT_PATTERN = re.compile(r"(\d+\s*\.\s*.*?)(?=A\s*\.\s*)", re.DOTALL)
+OPTION_A_PATTERN = re.compile(r"(A\s*\.\s*.*?)(?=[B-D]\s*\.\s*|$)", re.DOTALL)
+OPTION_B_PATTERN = re.compile(r"(B\s*\.\s*.*?)(?=[A,C,D]\s*\.\s*|$)", re.DOTALL)
+OPTION_C_PATTERN = re.compile(r"(C\s*\.\s*.*?)(?=[A,B,D]\s*\.\s*|$)", re.DOTALL)
+OPTION_D_PATTERN = re.compile(r"(D\s*\.\s*.*?)(?=[A-C]\s*\.\s*|$)", re.DOTALL)
+USERNAME_SANITIZE_PATTERN = re.compile(r'[^\w\s-]')
+BR_CLEANUP_PATTERN = re.compile(r'<br\s*/?>')
+EXAM_CLEANUP_PATTERN = re.compile(r'(D \. \s.*?) \n +(?=\d+ \. \s)')
+
+# Helper Functions
+def create_exam_backup(session_state) -> dict:
+    """
+    Create a backup dictionary of the current exam state.
+    
+    Args:
+        session_state: Streamlit session state object
+        
+    Returns:
+        dict: Backup dictionary containing exam data
+    """
+    if not session_state.get('current_exam'):
+        return {}
+    
+    return {
+        'current_exam': session_state.current_exam,
+        'current_key': session_state.current_key,
+        'user_selections': session_state.get('user_selections', {}),
+        'exam_submitted': session_state.get('exam_submitted', False),
+        'last_score': session_state.get('last_score', 0),
+        'last_user_input': session_state.get('last_user_input', ""),
+        'last_correct_key': session_state.get('last_correct_key', ""),
+        'last_user_answers_list': session_state.get('last_user_answers_list', []),
+        'current_categories': session_state.get('current_categories', []),
+        'samples_df': session_state.get('samples_df', None)
+    }
+
+def restore_exam_from_backup(session_state, backup: dict) -> None:
+    """
+    Restore exam state from a backup dictionary.
+    
+    Args:
+        session_state: Streamlit session state object
+        backup: Backup dictionary containing exam data
+    """
+    if not backup:
+        return
+        
+    session_state.current_exam = backup.get('current_exam')
+    session_state.current_key = backup.get('current_key')
+    session_state.user_selections = backup.get('user_selections', {})
+    session_state.exam_submitted = backup.get('exam_submitted', False)
+    session_state.last_score = backup.get('last_score', 0)
+    session_state.last_user_input = backup.get('last_user_input', "")
+    session_state.last_correct_key = backup.get('last_correct_key', "")
+    session_state.last_user_answers_list = backup.get('last_user_answers_list', [])
+    session_state.current_categories = backup.get('current_categories', [])
+    session_state.samples_df = backup.get('samples_df', None)
+
+def validate_username(username: str) -> str:
+    """
+    Validate and sanitize username input.
+    
+    Args:
+        username: Raw username input
+        
+    Returns:
+        str: Sanitized username
+    """
+    if not username:
+        return "Default"
+    
+    # Remove any potentially harmful characters
+    sanitized = username.strip()
+    # Limit length to prevent abuse
+    sanitized = sanitized[:50]
+    # Remove special characters except alphanumeric, spaces, underscores, hyphens
+    sanitized = USERNAME_SANITIZE_PATTERN.sub('', sanitized)
+    
+    return sanitized if sanitized else "Default"
+
+@st.cache_data
+def load_csv_data(file_path: str) -> pd.DataFrame:
+    """
+    Load CSV data with caching to improve performance.
+    
+    Args:
+        file_path: Path to the CSV file
+        
+    Returns:
+        pd.DataFrame: Loaded CSV data
+    """
+    return pd.read_csv(file_path)
+
 
 # ==========================================
 # 0. MULTI-PAGE CONFIGURATION & NAVIGATION
 # ==========================================
-def initialize_app(active_user, force_reset=False):
+def initialize_app(active_user: str, force_reset: bool = False) -> None:
     """
     Handles all initial state configurations, progress restoration, 
     and systemic fallback settings in one central runtime hook.
+    
+    Args:
+        active_user: Username for the current session
+        force_reset: Whether to force reset all state to defaults
     """
     # Load saved progress dynamically from local disk storage
     if force_reset:
@@ -136,10 +244,11 @@ def initialize_app(active_user, force_reset=False):
         else:
             st.session_state.samples_df = pd.DataFrame()
 
-def get_client():
+def get_client() -> genai.Client:
+    """Get the current Gemini AI client with API key rotation."""
     return genai.Client(api_key=API_KEYS[st.session_state.key_index])
 
-def call_gemini_with_rotation(prompt, model_to_use, use_search=False):
+def call_gemini_with_rotation(prompt: str, model_to_use: str, use_search: bool = False) -> str | None:
     keys_tried = 0
     
     # 1. Establish tool rules: Google Search ONLY applies to Gemini 2.5 Flash
@@ -186,7 +295,18 @@ def call_gemini_with_rotation(prompt, model_to_use, use_search=False):
                 st.error(f"Error during generation: {e}")
                 return None
 
-def get_blind_exam(topics_list, level, num_questions):
+def get_blind_exam(topics_list: list[str], level: int, num_questions: int) -> str | None:
+    """
+    Generate a blind exam using AI based on provided topics and difficulty level.
+    
+    Args:
+        topics_list: List of topic strings to base questions on
+        level: Difficulty level (1-50)
+        num_questions: Number of questions to generate
+        
+    Returns:
+        Generated exam text or None if generation fails
+    """
     combined_content = "\n\n".join([f"Source {i+1}: {t}" for i, t in enumerate(topics_list)])
 
     # Difficulty calibration from intuitive basics to counterintuitive expert challenges
@@ -261,7 +381,19 @@ def get_blind_exam(topics_list, level, num_questions):
     exam_text = call_gemini_with_rotation(prompt, st.session_state.exam_model, use_search=st.session_state.use_search)
     return exam_text
 
-def get_ai_grading(exam_text, user_answers, correct_key, score):
+def get_ai_grading(exam_text: str, user_answers: str, correct_key: str, score: int) -> str | None:
+    """
+    Generate AI grading feedback for exam answers.
+    
+    Args:
+        exam_text: The exam questions text
+        user_answers: The student's answers
+        correct_key: The correct answer key
+        score: The student's score
+        
+    Returns:
+        AI-generated grading feedback or None if generation fails
+    """
     prompt = f"""
     Here is the input:
     EXAM QUESTIONS: {exam_text}
@@ -292,8 +424,21 @@ def get_ai_grading(exam_text, user_answers, correct_key, score):
     # Using search during grading ensures explanations match current guidelines
     return call_gemini_with_rotation(prompt, GRADER_MODEL, use_search=st.session_state.use_search)
 
-def create_exam_pdf(exam_text, answer_key, user_answers=None, score=None, max_score=None, metadata=None):
-    """Generates a PDF containing the exam questions, answer key, and optionally user selections and filters."""
+def create_exam_pdf(exam_text: str, answer_key: list, user_answers: list = None, score: int = None, max_score: int = None, metadata: dict = None) -> bytes | None:
+    """
+    Generate a PDF containing the exam questions, answer key, and optionally user selections and filters.
+    
+    Args:
+        exam_text: The exam questions text
+        answer_key: List of correct answers
+        user_answers: List of user's answers (optional)
+        score: User's score (optional)
+        max_score: Maximum possible score (optional)
+        metadata: Dictionary containing exam metadata (optional)
+        
+    Returns:
+        PDF bytes or None if FPDF is not available
+    """
     if not FPDF:
         return None
 
@@ -357,7 +502,8 @@ def create_exam_pdf(exam_text, answer_key, user_answers=None, score=None, max_sc
     os.unlink(tmp_path) # Clean up temp file
     return pdf_bytes
 
-def lock_submit():
+def lock_submit() -> None:
+    """Lock the submit button to prevent multiple submissions."""
     st.session_state.is_submitting = True
 
 def render_data_portability_interface():
@@ -505,8 +651,10 @@ def render_trainer_page():
                     
                 # Fire the save function directly to the disk
                 save_progress(state_snapshot, active_user)
-        except Exception:
-            pass # Silently pass to ensure the server thread terminates smoothly
+        except Exception as e:
+            # Silently pass to ensure the server thread terminates smoothly
+            # Log error for debugging purposes
+            print(f"Error in save_on_tab_close: {e}")
 
     # Register the background cleanup hook with the Python runtime engine
     atexit.register(save_on_tab_close)
@@ -526,7 +674,7 @@ def render_trainer_page():
 
     new_user = st.sidebar.text_input("Enter your username:", st.session_state.username)
     if st.sidebar.button("Switch / Create Profile"):
-        st.session_state.username = new_user.strip()
+        st.session_state.username = validate_username(new_user)
         
         # Wipe the screen clean so the new user's data can load
         keys_to_clear = ['current_level', 'num_questions', 'missed_questions', 'exam_history', 'current_exam', 'current_key', 'samples_df']
@@ -613,19 +761,7 @@ def render_trainer_page():
     if generate_clicked:
         st.session_state.is_submitting = False
         # --- NEW: BACKUP THE CURRENT EXAM BEFORE OVERWRITING ---
-        if st.session_state.get('current_exam'):
-            st.session_state.previous_test_data = {
-                'current_exam': st.session_state.current_exam,
-                'current_key': st.session_state.current_key,
-                'user_selections': st.session_state.get('user_selections', {}),
-                'exam_submitted': st.session_state.get('exam_submitted', False),
-                'last_score': st.session_state.get('last_score', 0),
-                'last_user_input': st.session_state.get('last_user_input', ""),
-                'last_correct_key': st.session_state.get('last_correct_key', ""),
-                'last_user_answers_list': st.session_state.get('last_user_answers_list', []),
-                'current_categories': st.session_state.get('current_categories', []),
-                'samples_df': st.session_state.get('samples_df', None)
-            }
+        st.session_state.previous_test_data = create_exam_backup(st.session_state)
         # -------------------------------------------------------
         st.session_state.exam_submitted = False  # Add this line
         st.session_state.last_score = 0
@@ -642,8 +778,8 @@ def render_trainer_page():
 
         n = st.session_state.num_questions
         try:
-            df_main = pd.read_csv(CSV_FILE)
-            df_notes = pd.read_csv(NOTES_FILE)
+            df_main = load_csv_data(CSV_FILE)
+            df_notes = load_csv_data(NOTES_FILE)
             df = pd.merge(df_main, df_notes, on=JOIN_COLUMN, how='left')
             if "semester" in df.columns:
                 df = df[df['semester'] == st.session_state.semester]
@@ -747,7 +883,7 @@ def render_trainer_page():
                 if not text or not isinstance(text, str):
                     return ""
                 
-                sentences = re.split(r'(?<=[.!?])\s+', text.strip())
+                sentences = SENTENCE_SPLIT_PATTERN.split(text.strip())
                 if len(sentences) <= 1:
                     rotated_text = text
                 else:
@@ -790,13 +926,13 @@ def render_trainer_page():
 
                     # CLEANING: Remove the key section from the visible text
                     st.session_state.current_exam = text.strip()
-                    st.session_state.current_key = re.findall(r'[A-D]', key_part)
+                    st.session_state.current_key = ANSWER_KEY_PATTERN.findall(key_part)
                     
                     # --- PERSISTENT SAVE AT MOMENT OF GENERATION ---
                     try:
                         save_progress(st.session_state, active_user)
-                    except Exception:
-                        pass # Safeguard to ensure any serialization issues won't crash the UI runtime
+                    except Exception as e:
+                        st.error(f"Failed to save progress to Supabase: {e}")
                     # -----------------------------------------------
 
                     st.rerun()
@@ -810,7 +946,7 @@ def render_trainer_page():
     # Move Active Level metric here
     st.sidebar.metric("Active Level", f"{st.session_state.current_level}/50")
 
-    df_sidebar = pd.read_csv(CSV_FILE)
+    df_sidebar = load_csv_data(CSV_FILE)
 
     # Create two tabs inside the sidebar
     filter_tab1, filter_tab2 = st.sidebar.tabs(["Exam Filter", "Lecture Filter"])
@@ -879,33 +1015,10 @@ def render_trainer_page():
         if st.sidebar.button("Load Previous Exam", help="Accidentally clicked generate? Restore the last exam.", use_container_width=True):
             
             # Take a snapshot of the active exam before swapping, so you can toggle back and forth!
-            current_backup = {}
-            if st.session_state.get('current_exam'):
-                current_backup = {
-                    'current_exam': st.session_state.current_exam,
-                    'current_key': st.session_state.current_key,
-                    'user_selections': st.session_state.get('user_selections', {}),
-                    'exam_submitted': st.session_state.get('exam_submitted', False),
-                    'last_score': st.session_state.get('last_score', 0),
-                    'last_user_input': st.session_state.get('last_user_input', ""),
-                    'last_correct_key': st.session_state.get('last_correct_key', ""),
-                    'last_user_answers_list': st.session_state.get('last_user_answers_list', []),
-                    'current_categories': st.session_state.get('current_categories', []),
-                    'samples_df': st.session_state.get('samples_df', None)
-                }
+            current_backup = create_exam_backup(st.session_state)
             
             # Load the backup into the live view
-            backup = st.session_state.previous_test_data
-            st.session_state.current_exam = backup.get('current_exam')
-            st.session_state.current_key = backup.get('current_key')
-            st.session_state.user_selections = backup.get('user_selections', {})
-            st.session_state.exam_submitted = backup.get('exam_submitted', False)
-            st.session_state.last_score = backup.get('last_score', 0)
-            st.session_state.last_user_input = backup.get('last_user_input', "")
-            st.session_state.last_correct_key = backup.get('last_correct_key', "")
-            st.session_state.last_user_answers_list = backup.get('last_user_answers_list', [])
-            st.session_state.current_categories = backup.get('current_categories', [])
-            st.session_state.samples_df = backup.get('samples_df', None)
+            restore_exam_from_backup(st.session_state, st.session_state.previous_test_data)
             
             # Make the old current exam the new backup
             st.session_state.previous_test_data = current_backup if current_backup else {}
@@ -923,11 +1036,11 @@ def render_trainer_page():
         # 1. CLEANING: Remove introductory fluff and trailing keys
         clean_text = st.session_state.current_exam.strip()
         # Remove common AI intros like "Here are your questions..."
-        clean_text = re.sub(r"^(Here are|Based on|Sure|I have generated).*?\n", "", clean_text, flags=re.IGNORECASE)
+        clean_text = INTRO_CLEANUP_PATTERN.sub("", clean_text)
 
         # 2. SPLITTING: Look for "1. ", "2. ", etc. at the START of a line only
         # This prevents it from splitting on "1." inside a sentence
-        raw_questions = re.split(r'\n(?=\d+\.\s)', clean_text)
+        raw_questions = QUESTION_SPLIT_PATTERN.split(clean_text)
         
         # Remove any empty strings resulting from the split
         individual_questions = [q.strip() for q in raw_questions if q.strip()]
@@ -984,7 +1097,7 @@ def render_trainer_page():
             st.subheader(f"Question {i+1}")
             
             # Extract clinical question text body before the option choices begin
-            prompt_match = re.search(r"(\d+\s*\.\s*.*?)(?=A\s*\.\s*)", q_text, re.DOTALL)
+            prompt_match = QUESTION_PROMPT_PATTERN.search(q_text)
             q_prompt = prompt_match.group(1).strip() if prompt_match else q_text
             
             # Keep the question at its native, original markdown text size
@@ -992,10 +1105,10 @@ def render_trainer_page():
             st.write("") 
 
             # Clean option boundaries handling spacing nuances from API outputs
-            opt_A = re.search(r"(A\s*\.\s*.*?)(?=[B-D]\s*\.\s*|$)", q_text, re.DOTALL)
-            opt_B = re.search(r"(B\s*\.\s*.*?)(?=[A,C,D]\s*\.\s*|$)", q_text, re.DOTALL)
-            opt_C = re.search(r"(C\s*\.\s*.*?)(?=[A,B,D]\s*\.\s*|$)", q_text, re.DOTALL)
-            opt_D = re.search(r"(D\s*\.\s*.*?)(?=[A-C]\s*\.\s*|$)", q_text, re.DOTALL)
+            opt_A = OPTION_A_PATTERN.search(q_text)
+            opt_B = OPTION_B_PATTERN.search(q_text)
+            opt_C = OPTION_C_PATTERN.search(q_text)
+            opt_D = OPTION_D_PATTERN.search(q_text)
 
             options_dict = {
                 "A": opt_A.group(1).strip() if opt_A else "A. Option A",
@@ -1113,7 +1226,7 @@ def render_trainer_page():
                 if u_ans == correct:
                     score += 1
                 else:
-                    clean_q_snippet = re.sub(r'<br\s*/?>', ' ', individual_questions[i].split('\n')[0][:120])
+                    clean_q_snippet = BR_CLEANUP_PATTERN.sub(' ', individual_questions[i].split('\n')[0][:120])
                     incorrect_summary_markdown += f"**Question {i+1}:** *{clean_q_snippet}...*\n"
                     incorrect_summary_markdown += f"&nbsp;&nbsp;&nbsp;&nbsp;• **Your Answer:** `{u_ans}` | **Correct Answer:** `{correct}`\n\n"
                     
@@ -1149,7 +1262,7 @@ def render_trainer_page():
             try:
                 save_progress(st.session_state, st.session_state.get("username", "Default"))
             except Exception as e:
-                pass  # Silently fail to avoid disrupting the user experience
+                st.error(f"Failed to save progress after grading: {e}")
 
             percentage_correct = (score / num_actual_questions) * 100
             if (num_actual_questions - score) <= 1 or percentage_correct >= 90:
@@ -1220,7 +1333,7 @@ def render_stats_page():
 
     new_user = st.sidebar.text_input("Enter your username:", st.session_state.username)
     if st.sidebar.button("Switch / Create Profile"):
-        st.session_state.username = new_user.strip()
+        st.session_state.username = validate_username(new_user)
         st.rerun()
 
     active_user = st.session_state.username
@@ -1373,7 +1486,7 @@ def render_export_page():
             
     # 2. TXT Export Section
     raw_exam_text = st.session_state.current_exam.strip()
-    clean_exam_text = re.sub(r'(D \. \s.*?) \n +(?=\d+ \. \s)', r'\1 \n ', raw_exam_text)
+    clean_exam_text = EXAM_CLEANUP_PATTERN.sub(r'\1 \n ', raw_exam_text)
     
     from zoneinfo import ZoneInfo
     melbourne_now = datetime.datetime.now(ZoneInfo("Australia/Melbourne")).strftime('%Y-%m-%d %H:%M:%S')

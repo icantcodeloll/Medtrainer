@@ -9,18 +9,33 @@ import pandas as pd
 @st.cache_resource
 def init_supabase() -> Client:
     """Initialize cached connection to Supabase cloud database."""
-    url: str = st.secrets["SUPABASE_URL"]
-    key: str = st.secrets["SUPABASE_KEY"]
-    return create_client(url, key)
+    try:
+        url: str = st.secrets["SUPABASE_URL"]
+        key: str = st.secrets["SUPABASE_KEY"]
+        
+        if not url or not key:
+            raise ValueError("Supabase URL or key is missing from secrets")
+            
+        return create_client(url, key)
+    except Exception as e:
+        st.error(f"Failed to initialize Supabase client: {e}")
+        raise
 
 # Create a single global client instance
 supabase = init_supabase()
 
 
-def save_progress(session_state, username="Default"):
+def save_progress(session_state, username: str = "Default") -> bool:
     """
     Save all relevant progress data directly to Supabase for a specific user.
     Handles NaN float clearing to ensure JSON compliance.
+    
+    Args:
+        session_state: Streamlit session state object
+        username: Username for the current session
+        
+    Returns:
+        bool: True if save was successful, False otherwise
     """
     if not username:
         username = "Default"
@@ -52,8 +67,16 @@ def save_progress(session_state, username="Default"):
     supabase.table("user_progress").upsert(row_payload).execute()
     return True
 
-def load_progress(username="Default"):
-    """Load progress data from Supabase database for a specific user."""
+def load_progress(username: str = "Default") -> dict:
+    """
+    Load progress data from Supabase database for a specific user.
+    
+    Args:
+        username: Username for the current session
+        
+    Returns:
+        dict: Progress data dictionary or empty dict if not found/error
+    """
     if not username:
         username = "Default"
         
@@ -61,7 +84,9 @@ def load_progress(username="Default"):
         response = supabase.table("user_progress").select("progress_data").eq("username", username).execute()
         
         if response.data and len(response.data) > 0:
-            return response.data[0]["progress_data"]
+            progress_data = response.data[0]["progress_data"]
+            # Apply migrations to ensure compatibility
+            return migrate_progress_data(progress_data)
             
     except Exception as e:
         st.error(f"Error loading progress from Supabase: {e}")
@@ -69,8 +94,14 @@ def load_progress(username="Default"):
     return {}
 
 
-def restore_progress(session_state, progress_data):
-    """Restore loaded database records cleanly back into live Streamlit app memory structure."""
+def restore_progress(session_state, progress_data: dict) -> None:
+    """
+    Restore loaded database records cleanly back into live Streamlit app memory structure.
+    
+    Args:
+        session_state: Streamlit session state object
+        progress_data: Progress data dictionary to restore
+    """
     if not progress_data:
         return
     
@@ -82,3 +113,27 @@ def restore_progress(session_state, progress_data):
     session_state.last_correct_key = progress_data.get("last_correct_key", "")
     session_state.exam_submitted = progress_data.get("exam_submitted", False)
     session_state.current_categories = progress_data.get("current_categories", [])
+
+def migrate_progress_data(progress_data: dict) -> dict:
+    """
+    Migrate progress data to handle schema changes between versions.
+    This ensures backward compatibility when the data structure changes.
+    
+    Args:
+        progress_data: Progress data dictionary from database
+        
+    Returns:
+        dict: Migrated progress data compatible with current schema
+    """
+    if not progress_data:
+        return {}
+    
+    # Migration v1: Remove samples_df (no longer saved to Supabase)
+    if "samples_df" in progress_data:
+        del progress_data["samples_df"]
+    
+    # Add future migrations here as needed
+    # Example: if "new_field" not in progress_data:
+    #     progress_data["new_field"] = default_value
+    
+    return progress_data
