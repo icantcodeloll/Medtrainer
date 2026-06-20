@@ -1122,47 +1122,28 @@ def render_trainer_page():
             # Safely convert keys to list and track indexing position mapping
             choice_keys = list(options_dict.keys())
 
-            # 1. Inject a style trick to completely hide this specific row of native radio selectors
-            st.markdown(f"""
-                <style>
-                div[data-testid="stRadio"] {{
-                    display: none !important;
-                }}
-                div[data-testid="stButton"] button {{
-                    white-space: normal !important;
-                    text-align: left !important;
-                    height: auto !important;
-                    word-break: break-word !important;
-                    overflow-wrap: break-word !important;
-                    word-wrap: break-word !important;
-                    padding: 12px 16px !important;
-                    line-height: 1.5 !important;
-                    min-height: auto !important;
-                    max-width: 100% !important;
-                }}
-                </style>
-            """, unsafe_allow_html=True)
+            # 1. Create a seamless callback to sync selection with your existing data engine
+            def handle_radio_selection(q_index):
+                chosen_letter = st.session_state[f"radio_q_{q_index}"]
+                st.session_state.user_selections[q_index] = chosen_letter
 
-            # 2. Render an invisible radio button in the background to handle the variable state
-            selected_letter = st.radio(
-                label=f"Radio Select Q{i}",
+            # 2. Track current choice indexing parameters
+            choice_keys = list(options_dict.keys())
+            current_selection = st.session_state.user_selections.get(i, None)
+            default_index = choice_keys.index(current_selection) if current_selection in choice_keys else None
+
+            # 3. Render the native circular options aligned neatly to the left
+            st.radio(
+                label=f"Options for Question {i}",
                 options=choice_keys,
-                index=choice_keys.index(current_selection) if current_selection in choice_keys else None,
-                key=f"native_radio_q_{i}",
-                label_visibility="collapsed"
+                index=default_index,
+                format_func=lambda x: f"**{x}.** {options_dict[x]}",
+                key=f"radio_q_{i}",
+                disabled=st.session_state.get('exam_submitted', False),
+                label_visibility="collapsed",
+                on_change=handle_radio_selection,
+                args=(i,)
             )
-
-            # 3. Render your custom styled choices as large, full-width clickable buttons
-            for choice_letter, full_sentence_text in options_dict.items():
-                is_selected = (current_selection == choice_letter)
-                btn_type = "primary" if is_selected else "secondary"
-                prefix = "➔   " if is_selected else "      "
-
-                # Use use_container_width=True to make the buttons big and fill the space
-                # Disable buttons after submission so users can't change answers while viewing feedback
-                if st.button(f"{prefix}{full_sentence_text}", key=f"btn_q_{i}_{choice_letter}", use_container_width=True, type=btn_type, disabled=st.session_state.get('exam_submitted', False)):
-                    st.session_state.user_selections[i] = choice_letter
-                    st.rerun()
 
             # --- NEW: INJECT PER-QUESTION AI FEEDBACK RIGHT HERE ---
             if st.session_state.get('exam_submitted') and st.session_state.get('ai_feedback_clean'):
