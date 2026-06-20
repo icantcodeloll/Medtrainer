@@ -793,24 +793,8 @@ def render_trainer_page():
                     st.session_state.current_key = re.findall(r'[A-D]', key_part)
                     
                     # --- PERSISTENT SAVE AT MOMENT OF GENERATION ---
-                    state_snapshot = {
-                        "current_level": st.session_state.current_level,
-                        "exam_model": st.session_state.get("exam_model", 'gemini-3.1-flash-lite'),
-                        "num_questions": st.session_state.num_questions,
-                        "missed_questions": st.session_state.missed_questions,
-                        "current_exam": st.session_state.current_exam,
-                        "current_key": st.session_state.current_key,
-                        "current_categories": st.session_state.current_categories
-                    }
-                    
-                    # Convert the sampling DataFrame to JSON records if it contains valid context data
-                    if hasattr(st.session_state, 'samples_df') and isinstance(st.session_state.samples_df, pd.DataFrame) and not st.session_state.samples_df.empty:
-                        state_snapshot["samples_df"] = st.session_state.samples_df.to_dict(orient="records")
-                    else:
-                        state_snapshot["samples_df"] = []
-
                     try:
-                        save_progress(state_snapshot, active_user)
+                        save_progress(st.session_state, active_user)
                     except Exception:
                         pass # Safeguard to ensure any serialization issues won't crash the UI runtime
                     # -----------------------------------------------
