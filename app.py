@@ -547,30 +547,40 @@ def render_data_portability_interface():
     st.sidebar.success("Access Granted")
     st.sidebar.caption("Download data profiles before changing code, and reupload them afterward.")
 
-    # 2. SCAN AND ARCHIVE ALL PROGRESS DATA
-    json_files = glob.glob("*_progress.json")
-    if json_files:
-        # Create an in-memory ZIP package
-        zip_buffer = io.BytesIO()
-        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
-            for file_path in json_files:
-                if os.path.exists(file_path):
-                    zip_file.write(file_path, os.path.basename(file_path))
+    # 2. FETCH ALL USER PROGRESS DATA FROM SUPABASE
+    try:
+        from progress_manager import supabase
+        response = supabase.table("user_progress").select("*").execute()
         
-        zip_buffer.seek(0)
-        
-        timestamp_melb = datetime.datetime.now(ZoneInfo("Australia/Melbourne")).strftime('%Y%m%d_%H%M%S')
-        st.sidebar.download_button(
-            label="Download All User Data (.zip)",
-            data=zip_buffer,
-            file_name=f"backup_user_profiles_{timestamp_melb}.zip",
-            mime="application/zip",
-            key="download_all_data_zip"
-        )
-    else:
-        st.sidebar.info("No user tracking files found to back up yet.")
+        if response.data:
+            # Create an in-memory ZIP package
+            zip_buffer = io.BytesIO()
+            with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+                for user_record in response.data:
+                    username = user_record.get("username", "unknown")
+                    progress_data = user_record.get("progress_data", {})
+                    
+                    # Create a JSON file for each user
+                    import json
+                    json_content = json.dumps(progress_data, indent=2)
+                    zip_file.writestr(f"{username}_progress.json", json_content)
+            
+            zip_buffer.seek(0)
+            
+            timestamp_melb = datetime.datetime.now(ZoneInfo("Australia/Melbourne")).strftime('%Y%m%d_%H%M%S')
+            st.sidebar.download_button(
+                label="Download All User Data (.zip)",
+                data=zip_buffer,
+                file_name=f"backup_user_profiles_{timestamp_melb}.zip",
+                mime="application/zip",
+                key="download_all_data_zip"
+            )
+        else:
+            st.sidebar.info("No user progress data found in Supabase.")
+    except Exception as e:
+        st.sidebar.error(f"Error fetching data from Supabase: {str(e)}")
 
-    # 3. RESTORE AND UNPACK USER ARCHIVES
+    # 3. RESTORE AND UNPACK USER ARCHIVES TO SUPABASE
     uploaded_zip = st.sidebar.file_uploader(
         "Restore / Migrate Profiles (.zip)", 
         type=["zip"], 
@@ -578,19 +588,32 @@ def render_data_portability_interface():
     )
 
     if uploaded_zip is not None:
-        if st.sidebar.button("Confirm Overwrite & Extract Data"):
+        if st.sidebar.button("Confirm Overwrite & Restore Data"):
             try:
+                import json
+                restored_count = 0
+                
                 with zipfile.ZipFile(uploaded_zip, "r") as zip_ref:
                     file_list = zip_ref.namelist()
-                    valid_extensions = ('.json', '.bak')
-
-                    if not all(any(f.endswith(ext) for ext in valid_extensions) for f in file_list):
-                        st.sidebar.error("Invalid archive payload. Must contain only .json progress profiles.")
-
-                    # Unpack files into the execution root directory
-                    zip_ref.extractall(".")
+                    
+                    for file_name in file_list:
+                        if file_name.endswith('.json'):
+                            # Extract username from filename (remove _progress.json suffix)
+                            username = file_name.replace('_progress.json', '').replace('.json', '')
+                            
+                            # Read JSON content
+                            json_content = zip_ref.read(file_name)
+                            progress_data = json.loads(json_content)
+                            
+                            # Upsert to Supabase
+                            row_payload = {
+                                "username": username,
+                                "progress_data": progress_data
+                            }
+                            supabase.table("user_progress").upsert(row_payload).execute()
+                            restored_count += 1
                 
-                st.sidebar.success(f"Successfully restored {len(file_list)} database tracking asset(s)!")
+                st.sidebar.success(f"Successfully restored {restored_count} user profile(s) to Supabase!")
                 st.sidebar.info("Please refresh or interact with the app to load profiles.")
                 st.balloons()
             except Exception as e:
