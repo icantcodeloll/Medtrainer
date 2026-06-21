@@ -1065,7 +1065,7 @@ def render_trainer_page():
         st.markdown("""
             <style>
             div[data-testid="stRadio"] > div > div > label > div {
-                font-size: 16px !important;
+                font-size: 24px !important;
             }
             </style>
         """, unsafe_allow_html=True)
