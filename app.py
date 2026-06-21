@@ -1069,10 +1069,10 @@ def render_trainer_page():
             opt_D = OPTION_D_PATTERN.search(q_text)
 
             options_dict = {
-                "A": opt_A.group(1).strip() if opt_A else "A. Option A",
-                "B": opt_B.group(1).strip() if opt_B else "B. Option B",
-                "C": opt_C.group(1).strip() if opt_C else "C. Option C",
-                "D": opt_D.group(1).strip() if opt_D else "D. Option D"
+                "A": opt_A.group(1).strip()[2:].strip() if opt_A else "Option A",
+                "B": opt_B.group(1).strip()[2:].strip() if opt_B else "Option B",
+                "C": opt_C.group(1).strip()[2:].strip() if opt_C else "Option C",
+                "D": opt_D.group(1).strip()[2:].strip() if opt_D else "Option D"
             }
 
             current_selection = st.session_state.user_selections.get(i, None)
@@ -1087,7 +1087,6 @@ def render_trainer_page():
 
             # Render the clean native layout with left-aligned circular radio dots
             st.radio(
-                label=f"Options for Question {i+1}",
                 options=choice_keys,
                 index=default_index,
                 format_func=lambda x: f"{x.lower()}. {options_dict[x]}",
