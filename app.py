@@ -1087,11 +1087,13 @@ def render_trainer_page():
 
             # Render the clean native layout with left-aligned circular radio dots
             st.radio(
+                label=f"Options for Question {i+1}",
                 options=choice_keys,
                 index=default_index,
                 format_func=lambda x: f"{x.lower()}. {options_dict[x]}",
                 key=f"radio_q_{i}",
                 disabled=st.session_state.get('exam_submitted', False),
+                label_visibility="collapsed",
                 on_change=update_selection
             )
 
