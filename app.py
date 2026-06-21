@@ -221,6 +221,8 @@ def initialize_app(active_user: str, force_reset: bool = False) -> None:
         "previous_test_data": {},
         "use_search": False,
         "thinking_level": "MEDIUM",
+        "temperature": 1.0,
+        "top_p": 0.95,
         "exam_submitted": False,
         "last_score": 0,
         "user_selections": {},
@@ -267,6 +269,10 @@ def call_gemini_with_rotation(prompt: str, model_to_use: str, use_search: bool =
         # Safeguard default state if UI component hasn't rendered yet
         current_level = st.session_state.get("thinking_level", "MEDIUM")
         config_args["thinking_config"] = types.ThinkingConfig(thinking_level=current_level)
+
+    # Add temperature and top_p settings
+    config_args["temperature"] = st.session_state.get("temperature", 1.0)
+    config_args["top_p"] = st.session_state.get("top_p", 0.95)
 
     # Pack arguments into the structural API configuration object
     generation_config = types.GenerateContentConfig(**config_args)
@@ -342,6 +348,11 @@ def get_blind_exam(topics_list: list[str], level: int, num_questions: int) -> st
     DIFFICULTY LEVEL: {level}/50.
     DIFFICULTY DESCRIPTION: {difficulty_desc}.
     COMPLEXITY GUIDANCE: {complexity_guide}.
+
+    CRITICAL RULES FOR APPLICATION:
+    1. Do NOT use the exact phrasing, sentences, or structured examples found in the source text. 
+    2. Apply "Conceptual Paraphrasing": Extract the core medical mechanism or fact, and invent a completely new patient case study or scenario to test that concept.
+    3. If the source text mentions a specific drug or symptom explicitly in an example, write your question using an entirely different clinical presentation that tests the exact same underlying physiology.
 
     CRITICAL BIAS PREVENTION:
     1. AVOID confirmation bias - Ensure each option could plausibly be correct
@@ -1050,9 +1061,18 @@ def render_trainer_page():
         if 'user_selections' not in st.session_state:
             st.session_state.user_selections = {}
 
+        # Increase radio option text size for better readability
+        st.markdown("""
+            <style>
+            div[data-testid="stRadio"] > div > div > label > div {
+                font-size: 16px !important;
+            }
+            </style>
+        """, unsafe_allow_html=True)
+
         # --- 2. RENDER THE QUESTIONS DYNAMICALLY (OUTSIDE st.form CONSTRAINTS FOR FAST RERUNS) ---
         for i, q_text in enumerate(individual_questions):
-            st.subheader(f"Question {i+1}")
+            st.markdown(f"**Question {i+1}**")
             
             # Extract clinical question text body before the option choices begin
             prompt_match = QUESTION_PROMPT_PATTERN.search(q_text)
@@ -1477,6 +1497,24 @@ def render_settings_page():
         options=["MINIMAL", "LOW", "MEDIUM", "HIGH"],
         index=["MINIMAL", "LOW", "MEDIUM", "HIGH"].index(st.session_state.thinking_level),
         help="Control how deeply the model deliberates before generating questions or grading."
+    )
+    
+    st.session_state.temperature = st.slider(
+        "Temperature",
+        min_value=0.0,
+        max_value=2.0,
+        value=st.session_state.temperature,
+        step=0.1,
+        help="Controls randomness: Lower (0.0) = more deterministic, Higher (2.0) = more creative/random"
+    )
+    
+    st.session_state.top_p = st.slider(
+        "Top P",
+        min_value=0.0,
+        max_value=1.0,
+        value=st.session_state.top_p,
+        step=0.05,
+        help="Nucleus sampling: Lower (0.0) = more focused, Higher (1.0) = more diverse"
     )
     
 
