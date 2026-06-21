@@ -1,6 +1,5 @@
 streamlit
 pandas
 google-genai
-google
 fpdf
 supabase

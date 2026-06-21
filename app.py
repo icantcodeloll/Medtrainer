@@ -12,11 +12,18 @@ import zipfile
 import tempfile
 import time
 import atexit
+import json
 from google import genai
 from google.genai import types
 from progress_manager import save_progress, load_progress
-from fpdf import FPDF
 import shutil
+
+# FPDF availability check
+try:
+    from fpdf import FPDF
+    FPDF_AVAILABLE = True
+except ImportError:
+    FPDF_AVAILABLE = False
 
 def initialize_pwa_assets():
     """
@@ -55,7 +62,7 @@ def initialize_pwa_assets():
             updated_content = html_content.replace("</head>", f"{pwa_tags}</head>")
             with open(index_html_path, "w") as f:
                 f.write(updated_content)
-    except Exception:
+    except (FileNotFoundError, PermissionError, OSError, IOError):
         # Fails silently to prevent execution disruptions during local development environments
         pass
 
@@ -173,6 +180,82 @@ def validate_username(username: str) -> str:
     sanitized = USERNAME_SANITIZE_PATTERN.sub('', sanitized)
     
     return sanitized if sanitized else "Default"
+
+def setup_user_profile() -> str:
+    """
+    Shared function to handle user profile setup across all pages.
+    Displays username input, handles profile switching, and initializes app state.
+    
+    Returns:
+        str: Active username
+    """
+    if 'username' not in st.session_state:
+        st.session_state.username = "Default"
+    
+    new_user = st.sidebar.text_input("Enter your username:", st.session_state.username)
+    if st.sidebar.button("Switch / Create Profile"):
+        st.session_state.username = validate_username(new_user)
+        
+        # Wipe the screen clean so the new user's data can load
+        keys_to_clear = ['current_level', 'num_questions', 'missed_questions', 'exam_history', 'current_exam', 'current_key', 'samples_df']
+        for k in keys_to_clear:
+            if k in st.session_state:
+                del st.session_state[k]
+        st.rerun()
+    
+    active_user = st.session_state.username
+    st.sidebar.success(f"Logged in as: **{active_user}**")
+    initialize_app(active_user)
+    
+    return active_user
+
+# Global cleanup handler for tab close - defined at module level to avoid multiple registrations
+_atexit_registered = False
+
+def save_on_tab_close():
+    """
+    Background hook that intercepts Streamlit's session cleanup routine.
+    If the tab is closed, this function executes on the server right before 
+    the session memory is wiped, committing the latest state to disk.
+    """
+    try:
+        # Check if we have an active username and valid exam data to back up
+        if 'username' in st.session_state and st.session_state.username:
+            active_user = st.session_state.username
+            
+            # Construct a clean dictionary snapshot of the active workspace
+            state_snapshot = {
+                "current_level": st.session_state.get("current_level", 1),
+                "exam_model": st.session_state.get("exam_model", 'gemini-3.1-flash-lite'),
+                "num_questions": st.session_state.get("num_questions", 5),
+                "missed_questions": st.session_state.get("missed_questions", []),
+                "exam_history": st.session_state.get("exam_history", []),
+                "current_exam": st.session_state.get("current_exam", ""),
+                "current_key": st.session_state.get("current_key", []),
+            }
+            
+            # Safely serialize the dataframe to standard records so the JSON manager handles it cleanly
+            samples_df = st.session_state.get("samples_df", pd.DataFrame())
+            if not samples_df.empty:
+                state_snapshot["samples_df"] = samples_df.to_dict(orient="records")
+            else:
+                state_snapshot["samples_df"] = []
+                
+            # Fire the save function directly to the disk
+            save_progress(state_snapshot, active_user)
+    except (KeyError, AttributeError, TypeError, IOError) as e:
+        # Silently pass to ensure the server thread terminates smoothly
+        # Log error for debugging purposes
+        print(f"Error in save_on_tab_close: {e}")
+
+def register_cleanup_handler():
+    """
+    Register the cleanup handler once at module level to prevent multiple registrations.
+    """
+    global _atexit_registered
+    if not _atexit_registered:
+        atexit.register(save_on_tab_close)
+        _atexit_registered = True
 
 @st.cache_data
 def load_csv_data(file_path: str) -> pd.DataFrame:
@@ -450,7 +533,7 @@ def create_exam_pdf(exam_text: str, answer_key: list, user_answers: list = None,
     Returns:
         PDF bytes or None if FPDF is not available
     """
-    if not FPDF:
+    if not FPDF_AVAILABLE:
         return None
 
     pdf = FPDF()
@@ -561,7 +644,6 @@ def render_data_portability_interface():
                     progress_data = user_record.get("progress_data", {})
                     
                     # Create a JSON file for each user
-                    import json
                     json_content = json.dumps(progress_data, indent=2)
                     zip_file.writestr(f"{username}_progress.json", json_content)
             
@@ -590,7 +672,6 @@ def render_data_portability_interface():
     if uploaded_zip is not None:
         if st.sidebar.button("Confirm Overwrite & Restore Data"):
             try:
-                import json
                 restored_count = 0
                 
                 with zipfile.ZipFile(uploaded_zip, "r") as zip_ref:
@@ -654,72 +735,18 @@ def render_trainer_page():
     # 0. INITIALIZATION ENGINE
     # ==========================================
 
-    def save_on_tab_close():
-        """
-        Background hook that intercepts Streamlit's session cleanup routine.
-        If the tab is closed, this function executes on the server right before 
-        the session memory is wiped, committing the latest state to disk.
-        """
-        try:
-            # Check if we have an active username and valid exam data to back up
-            if 'username' in st.session_state and st.session_state.username:
-                active_user = st.session_state.username
-                
-                # Construct a clean dictionary snapshot of the active workspace
-                state_snapshot = {
-                    "current_level": st.session_state.get("current_level", 1),
-                    "exam_model": st.session_state.get("exam_model", 'gemini-3.1-flash-lite'),
-                    "num_questions": st.session_state.get("num_questions", 5),
-                    "missed_questions": st.session_state.get("missed_questions", []),
-                    "exam_history": st.session_state.get("exam_history", []),
-                    "current_exam": st.session_state.get("current_exam", ""),
-                    "current_key": st.session_state.get("current_key", []),
-                }
-                
-                # Safely serialize the dataframe to standard records so the JSON manager handles it cleanly
-                samples_df = st.session_state.get("samples_df", pd.DataFrame())
-                if not samples_df.empty:
-                    state_snapshot["samples_df"] = samples_df.to_dict(orient="records")
-                else:
-                    state_snapshot["samples_df"] = []
-                    
-                # Fire the save function directly to the disk
-                save_progress(state_snapshot, active_user)
-        except Exception as e:
-            # Silently pass to ensure the server thread terminates smoothly
-            # Log error for debugging purposes
-            print(f"Error in save_on_tab_close: {e}")
-
-    # Register the background cleanup hook with the Python runtime engine
-    atexit.register(save_on_tab_close)
+    # Register the cleanup handler once
+    register_cleanup_handler()
 
     # ==========================================
     # 1. SETUP & CONFIGURATION
     # ==========================================
     st.set_page_config(page_title="Trainer", page_icon="🩺", layout="wide")
 
-
-
     # ==========================================
     # 1A. PROFILE MANAGEMENT
     # ==========================================
-    if 'username' not in st.session_state:
-        st.session_state.username = "Default"
-
-    new_user = st.sidebar.text_input("Enter your username:", st.session_state.username)
-    if st.sidebar.button("Switch / Create Profile"):
-        st.session_state.username = validate_username(new_user)
-        
-        # Wipe the screen clean so the new user's data can load
-        keys_to_clear = ['current_level', 'num_questions', 'missed_questions', 'exam_history', 'current_exam', 'current_key', 'samples_df']
-        for k in keys_to_clear:
-            if k in st.session_state:
-                del st.session_state[k]
-        st.rerun()
-
-    active_user = st.session_state.username
-    st.sidebar.success(f"Logged in as: **{active_user}**")
-    initialize_app(active_user)
+    active_user = setup_user_profile()
 
     # Load saved progress on startup
     loaded_progress = load_progress(active_user)
@@ -1241,19 +1268,19 @@ def render_trainer_page():
                 st.error(f"Failed to save progress after grading: {e}")
 
             percentage_correct = (score / num_actual_questions) * 100
-            if (num_actual_questions - score) <= 1 or percentage_correct >= 90:
-                next_level = min(50, st.session_state.current_level + 1)
+            if (num_actual_questions - score) <= 1 or percentage_correct >= LEVEL_UP_THRESHOLD:
+                next_level = min(MAX_LEVEL, st.session_state.current_level + 1)
                 if next_level > st.session_state.current_level:
                     st.session_state.level_message = f"**Excellent performance ({percentage_correct:.0f}%)! You have leveled up to Level {next_level}!**"
                 else:
-                    st.session_state.level_message = f"**Fantastic score ({percentage_correct:.0f}%)! You are at the maximum mastery level (Level 50)!**"
+                    st.session_state.level_message = f"**Fantastic score ({percentage_correct:.0f}%)! You are at the maximum mastery level (Level {MAX_LEVEL})!**"
                 st.session_state.current_level = next_level
-            elif percentage_correct <= 60:
-                next_level = max(1, st.session_state.current_level - 1)
+            elif percentage_correct <= LEVEL_DOWN_THRESHOLD:
+                next_level = max(MIN_LEVEL, st.session_state.current_level - 1)
                 if next_level < st.session_state.current_level:
                     st.session_state.level_message = f"**Score was {percentage_correct:.0f}%. The system adjusted your difficulty down to Level {next_level} to rebuild foundations.**"
                 else:
-                    st.session_state.level_message = f"**Score was {percentage_correct:.0f}%. You are at Level 1. Keep practicing to build confidence!**"
+                    st.session_state.level_message = f"**Score was {percentage_correct:.0f}%. You are at Level {MIN_LEVEL}. Keep practicing to build confidence!**"
                 st.session_state.current_level = next_level
             else:
                 st.session_state.level_message = f"**Solid effort ({percentage_correct:.0f}%)! Remaining at Level {st.session_state.current_level} to lock in consistency.**"
@@ -1304,17 +1331,7 @@ def render_stats_page():
     # ==========================================
     # INITIALIZATION FOR STATS PAGE
     # ==========================================
-    if 'username' not in st.session_state:
-        st.session_state.username = "Default"
-
-    new_user = st.sidebar.text_input("Enter your username:", st.session_state.username)
-    if st.sidebar.button("Switch / Create Profile"):
-        st.session_state.username = validate_username(new_user)
-        st.rerun()
-
-    active_user = st.session_state.username
-    st.sidebar.success(f"Logged in as: **{active_user}**")
-    initialize_app(active_user)
+    active_user = setup_user_profile()
 
     # Load saved progress on startup
     loaded_progress = load_progress(active_user)
@@ -1430,12 +1447,7 @@ def render_export_page():
     st.info("Download your currently active exam in your preferred format below.")
     
     # 1. PDF Export Section
-    try:
-        from fpdf import FPDF
-    except ImportError:
-        FPDF = None
-        
-    if FPDF:
+    if FPDF_AVAILABLE:
         # Recreate the metadata context
         current_metadata = {
             "level": st.session_state.get('current_level', 1),
@@ -1464,7 +1476,6 @@ def render_export_page():
     raw_exam_text = st.session_state.current_exam.strip()
     clean_exam_text = EXAM_CLEANUP_PATTERN.sub(r'\1 \n ', raw_exam_text)
     
-    from zoneinfo import ZoneInfo
     melbourne_now = datetime.datetime.now(ZoneInfo("Australia/Melbourne")).strftime('%Y-%m-%d %H:%M:%S')
     
     txt_content = (
@@ -1488,12 +1499,7 @@ def render_settings_page():
     st.title("⚙️ Global Settings")
     st.write("---")
     
-    if 'username' not in st.session_state:
-        st.session_state.username = "Default"
-    active_user = st.session_state.username
-    
-    # Run core parameter synchronization
-    initialize_app(active_user)
+    active_user = setup_user_profile()
     
     # 1. Main Configuration Sliders
     st.subheader("Manually adjust")
@@ -1588,9 +1594,12 @@ def render_settings_page():
             sub_col1, sub_col2 = st.columns(2)
             with sub_col1:
                 if st.button("Yes, Clear Everything", type="primary", use_container_width=True):
-                    user_specific_progress = f"{active_user}_progress.json"
-                    if os.path.exists(user_specific_progress):
-                        os.remove(user_specific_progress)
+                    # Clear progress from Supabase instead of local file
+                    try:
+                        from progress_manager import supabase
+                        supabase.table("user_progress").delete().eq("username", active_user).execute()
+                    except Exception as e:
+                        st.error(f"Failed to clear progress from Supabase: {e}")
                         
                     initialize_app(active_user, force_reset=True)
                     st.session_state.confirm_reset = False  # Reset flag state
