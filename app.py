@@ -1122,63 +1122,47 @@ def render_trainer_page():
             # Safely convert keys to list and track indexing position mapping
             choice_keys = list(options_dict.keys())
 
-            # --- 2. RENDER THE QUESTIONS DYNAMICALLY INSIDE A LIGHTWEIGHT FRAGMENT ---
-            # This keeps option switches instant and completely eliminates full-page reloads.
-            @st.fragment
-            def render_quiz_block(individual_questions, options_dict_template):
-                for i, q_text in enumerate(individual_questions):
-                    st.subheader(f"Question {i+1}")
-                    
-                    # Extract clinical question text body before the option choices begin
-                    prompt_match = re.search(r"(\d+\s*\.\s*.*?)(?=A\s*\.\s*)", q_text, re.DOTALL)
-                    q_prompt = prompt_match.group(1).strip() if prompt_match else q_text
-                    
-                    # Keep the question at its native size
-                    st.markdown(q_prompt.replace("\n", "<br>"), unsafe_allow_html=True)
-                    st.write("") 
+            # 1. Inject a style trick to completely hide this specific row of native radio selectors
+            st.markdown(f"""
+                <style>
+                div[data-testid="stRadio"] {{
+                    display: none !important;
+                }}
+                div[data-testid="stButton"] button {{
+                    white-space: normal !important;
+                    text-align: left !important;
+                    height: auto !important;
+                    word-break: break-word !important;
+                    overflow-wrap: break-word !important;
+                    word-wrap: break-word !important;
+                    padding: 12px 16px !important;
+                    line-height: 1.5 !important;
+                    min-height: auto !important;
+                    max-width: 100% !important;
+                }}
+                </style>
+            """, unsafe_allow_html=True)
 
-                    # Clean option boundaries handling spacing nuances from API outputs
-                    opt_A = re.search(r"(A\s*\.\s*.*?)(?=[B-D]\s*\.\s*|$)", q_text, re.DOTALL)
-                    opt_B = re.search(r"(B\s*\.\s*.*?)(?=[A,C,D]\s*\.\s*|$)", q_text, re.DOTALL)
-                    opt_C = re.search(r"(C\s*\.\s*.*?)(?=[A,B,D]\s*\.\s*|$)", q_text, re.DOTALL)
-                    opt_D = re.search(r"(D\s*\.\s*.*?)(?=[A-C]\s*\.\s*|$)", q_text, re.DOTALL)
+            # 2. Render an invisible radio button in the background to handle the variable state
+            selected_letter = st.radio(
+                label=f"Radio Select Q{i}",
+                options=choice_keys,
+                index=choice_keys.index(current_selection) if current_selection in choice_keys else None,
+                key=f"native_radio_q_{i}",
+                label_visibility="collapsed"
+            )
 
-                    options_dict = {
-                        "A": opt_A.group(1).strip() if opt_A else "A. Option A",
-                        "B": opt_B.group(1).strip() if opt_B else "B. Option B",
-                        "C": opt_C.group(1).strip() if opt_C else "C. Option C",
-                        "D": opt_D.group(1).strip() if opt_D else "D. Option D"
-                    }
+            # 3. Render your custom styled choices as large, full-width clickable buttons
+            for choice_letter, full_sentence_text in options_dict.items():
+                is_selected = (current_selection == choice_letter)
+                btn_type = "primary" if is_selected else "secondary"
+                prefix = "➔   " if is_selected else "      "
 
-                    choice_keys = list(options_dict.keys())
-                    current_selection = st.session_state.user_selections.get(i, None)
-                    default_index = choice_keys.index(current_selection) if current_selection in choice_keys else None
-
-                    # Inline selection callback function to record entries cleanly
-                    def update_selection(q_idx):
-                        st.session_state.user_selections[q_idx] = st.session_state[f"radio_q_{q_idx}"]
-
-                    # Render the clean native layout with left-aligned circular radio dots
-                    st.radio(
-                        label=f"Options for Question {i}",
-                        options=choice_keys,
-                        index=default_index,
-                        format_func=lambda x: options_dict[x],  # <-- FIXED: Removed manual label prefix duplication
-                        key=f"radio_q_{i}",
-                        disabled=st.session_state.get('exam_submitted', False),
-                        label_visibility="collapsed",
-                        on_change=update_selection,
-                        args=(i,)
-                    )
-
-                    # Inject feedback inside the container frame if submitted
-                    if st.session_state.get('exam_submitted') and st.session_state.get('ai_feedback_clean'):
-                        feedback_lookup = f"### Question {i+1}"
-                        if feedback_lookup in st.session_state.ai_feedback_clean:
-                            st.info(f"**Feedback:** {st.session_state.ai_feedback_clean.split(feedback_lookup)[1].split('###')[0].strip()}")
-
-            # Execute the newly optimized isolated fragment block
-            render_quiz_block(individual_questions, options_dict)
+                # Use use_container_width=True to make the buttons big and fill the space
+                # Disable buttons after submission so users can't change answers while viewing feedback
+                if st.button(f"{prefix}{full_sentence_text}", key=f"btn_q_{i}_{choice_letter}", use_container_width=True, type=btn_type, disabled=st.session_state.get('exam_submitted', False)):
+                    st.session_state.user_selections[i] = choice_letter
+                    st.rerun()
 
             # --- NEW: INJECT PER-QUESTION AI FEEDBACK RIGHT HERE ---
             if st.session_state.get('exam_submitted') and st.session_state.get('ai_feedback_clean'):
