@@ -1102,8 +1102,8 @@ def render_trainer_page():
             default_index = choice_keys.index(current_selection) if current_selection in choice_keys else None
 
             # Inline selection callback function to record entries cleanly
-            def update_selection():
-                st.session_state.user_selections[i] = st.session_state[f"radio_q_{i}"]
+            def update_selection(idx=i):
+                st.session_state.user_selections[idx] = st.session_state[f"radio_q_{idx}"]
 
             # Render the clean native layout with left-aligned circular radio dots
             st.radio(
