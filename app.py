@@ -1072,7 +1072,7 @@ def render_trainer_page():
 
         # --- 2. RENDER THE QUESTIONS DYNAMICALLY (OUTSIDE st.form CONSTRAINTS FOR FAST RERUNS) ---
         for i, q_text in enumerate(individual_questions):
-            st.markdown(f"**Question {i+1}**")
+            st.subheader(f"**Question {i+1}**")
             
             # Extract clinical question text body before the option choices begin
             prompt_match = QUESTION_PROMPT_PATTERN.search(q_text)
