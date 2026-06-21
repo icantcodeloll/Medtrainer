@@ -1050,48 +1050,6 @@ def render_trainer_page():
         if 'user_selections' not in st.session_state:
             st.session_state.user_selections = {}
 
-        # --- 1. INJECT ISOLATED OPTION STYLE MATRIX ONLY ---
-        st.markdown("""
-            <style>
-            /* Target ONLY your quiz options, leaving all other site buttons untouched */
-            .quiz-option-box {
-                display: block;
-                width: 100%;
-                padding: 8px 12px;
-                margin: 4px 0;
-                border-radius: 6px;
-                font-size: 12px;
-                text-align: left;
-                background-color: transparent;
-                border: 2px solid #e0e0e0;
-                color: #333333;
-                transition: all 0.2s ease-in-out;
-            }
-            
-            /* Elegant hover state strictly localized to quiz options */
-            .quiz-option-box:hover {
-                border-color: #4b6cb7;
-                background-color: #f4f7fc;
-                color: #4b6cb7;
-            }
-            
-            /* Selected state has exact same structural dimensions to prevent shifting */
-            .quiz-option-box-selected {
-                display: block;
-                width: 100%;
-                padding: 14px 20px;
-                margin: 8px 0;
-                border-radius: 8px;
-                font-size: 15px;
-                text-align: left;
-                border: 2px solid #4b6cb7;
-                background-color: #eef2fa;
-                color: #4b6cb7;
-                font-weight: bold;
-            }
-            </style>
-        """, unsafe_allow_html=True)
-
         # --- 2. RENDER THE QUESTIONS DYNAMICALLY (OUTSIDE st.form CONSTRAINTS FOR FAST RERUNS) ---
         for i, q_text in enumerate(individual_questions):
             st.subheader(f"Question {i+1}")
@@ -1121,64 +1079,22 @@ def render_trainer_page():
 
             # Safely convert keys to list and track indexing position mapping
             choice_keys = list(options_dict.keys())
+            default_index = choice_keys.index(current_selection) if current_selection in choice_keys else None
 
-            # --- 2. RENDER THE QUESTIONS DYNAMICALLY INSIDE A LIGHTWEIGHT FRAGMENT ---
-            # Note: This function sits directly inside render_trainer_page(), NOT inside a loop!
-            @st.fragment
-            def render_quiz_block(individual_questions):
-                for i, q_text in enumerate(individual_questions):
-                    st.subheader(f"Question {i+1}")
-                    
-                    # Extract clinical question text body before the option choices begin
-                    prompt_match = re.search(r"(\d+\s*\.\s*.*?)(?=A\s*\.\s*)", q_text, re.DOTALL)
-                    q_prompt = prompt_match.group(1).strip() if prompt_match else q_text
-                    
-                    # Keep the question at its native size
-                    st.markdown(q_prompt.replace("\n", "<br>"), unsafe_allow_html=True)
-                    st.write("") 
+            # Inline selection callback function to record entries cleanly
+            def update_selection():
+                st.session_state.user_selections[i] = st.session_state[f"radio_q_{i}"]
 
-                    # Clean option boundaries handling spacing nuances from API outputs
-                    opt_A = re.search(r"(A\s*\.\s*.*?)(?=[B-D]\s*\.\s*|$)", q_text, re.DOTALL)
-                    opt_B = re.search(r"(B\s*\.\s*.*?)(?=[A,C,D]\s*\.\s*|$)", q_text, re.DOTALL)
-                    opt_C = re.search(r"(C\s*\.\s*.*?)(?=[A,B,D]\s*\.\s*|$)", q_text, re.DOTALL)
-                    opt_D = re.search(r"(D\s*\.\s*.*?)(?=[A-C]\s*\.\s*|$)", q_text, re.DOTALL)
-
-                    options_dict = {
-                        "A": opt_A.group(1).strip() if opt_A else "A. Option A",
-                        "B": opt_B.group(1).strip() if opt_B else "B. Option B",
-                        "C": opt_C.group(1).strip() if opt_C else "C. Option C",
-                        "D": opt_D.group(1).strip() if opt_D else "D. Option D"
-                    }
-
-                    choice_keys = list(options_dict.keys())
-                    current_selection = st.session_state.user_selections.get(i, None)
-                    default_index = choice_keys.index(current_selection) if current_selection in choice_keys else None
-
-                    # Inline selection callback function to record entries cleanly
-                    def update_selection(q_idx):
-                        st.session_state.user_selections[q_idx] = st.session_state[f"radio_q_{q_idx}"]
-
-                    # Render the clean native layout with left-aligned circular radio dots
-                    st.radio(
-                        label=f"Options for Question {i}",
-                        options=choice_keys,
-                        index=default_index,
-                        format_func=lambda x: options_dict[x],  
-                        key=f"radio_q_{i}",
-                        disabled=st.session_state.get('exam_submitted', False),
-                        label_visibility="collapsed",
-                        on_change=update_selection,
-                        args=(i,)
-                    )
-
-                    # Inject feedback inside the container frame if submitted
-                    if st.session_state.get('exam_submitted') and st.session_state.get('ai_feedback_clean'):
-                        feedback_lookup = f"### Question {i+1}"
-                        if feedback_lookup in st.session_state.ai_feedback_clean:
-                            st.info(f"**Feedback:** {st.session_state.ai_feedback_clean.split(feedback_lookup)[1].split('###')[0].strip()}")
-
-            # Call the fragment function ONCE, allowing it to handle its own single loop internally
-            render_quiz_block(individual_questions)
+            # Render the clean native layout with left-aligned circular radio dots
+            st.radio(
+                label=f"Options for Question {i+1}",
+                options=choice_keys,
+                index=default_index,
+                format_func=lambda x: f"{x.lower()}. {options_dict[x]}",
+                key=f"radio_q_{i}",
+                disabled=st.session_state.get('exam_submitted', False),
+                on_change=update_selection
+            )
 
             # --- NEW: INJECT PER-QUESTION AI FEEDBACK RIGHT HERE ---
             if st.session_state.get('exam_submitted') and st.session_state.get('ai_feedback_clean'):
