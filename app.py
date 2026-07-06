@@ -905,24 +905,11 @@ def render_trainer_page():
                     st.error("No active objectives found. Mark some as 'y' in your CSV.")
                     st.stop()
         
-            # --- SMART SAMPLING (LECTURE WEIGHTED EQUALLY) ---
-            # 1. Map the base category weights from your blueprint
-            df['base_weight'] = df['category'].map(EXAM_WEIGHTS).fillna(0.05)
+            # --- SMART SAMPLING (CATEGORY WEIGHTED) ---
+            # Map the base category weights from your blueprint
+            df['sampling_weight'] = df['category'].map(EXAM_WEIGHTS).fillna(0.05)
 
-            # 2. Count how many rows (learning objectives) each unique lecture has
-            # This uses your JOIN_COLUMN ("lecture_id") to find the size of each lecture
-            lecture_counts = df.groupby(JOIN_COLUMN).size().to_dict()
-
-            # 3. Normalize the weight: divide the base weight by the number of objectives in that lecture
-            # This ensures a lecture's total weight is split equally among its rows
-            df['sampling_weight'] = df.apply(
-                lambda row: row['base_weight'] / lecture_counts[row[JOIN_COLUMN]] 
-                if row[JOIN_COLUMN] in lecture_counts and lecture_counts[row[JOIN_COLUMN]] > 0 
-                else 0.05, 
-                axis=1
-            )
-
-            # 4. Sample using the normalized lecture-balanced weights
+            # Sample using the category weights
             try:
                 # We use replace=False so we don't duplicate questions in the same exam
                 st.session_state.samples_df = df.sample(min(n, len(df)), weights='sampling_weight', replace=False)
@@ -1120,81 +1107,81 @@ def render_trainer_page():
             </style>
         """, unsafe_allow_html=True)
 
-        # --- 2. RENDER THE QUESTIONS DYNAMICALLY (OUTSIDE st.form CONSTRAINTS FOR FAST RERUNS) ---
-        for i, q_text in enumerate(individual_questions):
-            st.subheader(f"**Question {i+1}**")
-            
-            # Extract clinical question text body before the option choices begin
-            prompt_match = QUESTION_PROMPT_PATTERN.search(q_text)
-            q_prompt = prompt_match.group(1).strip() if prompt_match else q_text
-            
-            # Keep the question at its native, original markdown text size
-            st.markdown(q_prompt.replace("\n", "<br>"), unsafe_allow_html=True)
-            st.write("") 
+        # --- 2. RENDER THE QUESTIONS DYNAMICALLY (INSIDE FORM TO PREVENT RELOADS) ---
+        with st.form(key="exam_form"):
+            for i, q_text in enumerate(individual_questions):
+                st.subheader(f"**Question {i+1}**")
+                
+                # Extract clinical question text body before the option choices begin
+                prompt_match = QUESTION_PROMPT_PATTERN.search(q_text)
+                q_prompt = prompt_match.group(1).strip() if prompt_match else q_text
+                
+                # Keep the question at its native, original markdown text size
+                st.markdown(q_prompt.replace("\n", "<br>"), unsafe_allow_html=True)
+                st.write("") 
 
-            # Clean option boundaries handling spacing nuances from API outputs
-            opt_A = OPTION_A_PATTERN.search(q_text)
-            opt_B = OPTION_B_PATTERN.search(q_text)
-            opt_C = OPTION_C_PATTERN.search(q_text)
-            opt_D = OPTION_D_PATTERN.search(q_text)
+                # Clean option boundaries handling spacing nuances from API outputs
+                opt_A = OPTION_A_PATTERN.search(q_text)
+                opt_B = OPTION_B_PATTERN.search(q_text)
+                opt_C = OPTION_C_PATTERN.search(q_text)
+                opt_D = OPTION_D_PATTERN.search(q_text)
 
-            options_dict = {
-                "A": opt_A.group(1).strip()[2:].strip() if opt_A else "Option A",
-                "B": opt_B.group(1).strip()[2:].strip() if opt_B else "Option B",
-                "C": opt_C.group(1).strip()[2:].strip() if opt_C else "Option C",
-                "D": opt_D.group(1).strip()[2:].strip() if opt_D else "Option D"
-            }
+                options_dict = {
+                    "A": opt_A.group(1).strip()[2:].strip() if opt_A else "Option A",
+                    "B": opt_B.group(1).strip()[2:].strip() if opt_B else "Option B",
+                    "C": opt_C.group(1).strip()[2:].strip() if opt_C else "Option C",
+                    "D": opt_D.group(1).strip()[2:].strip() if opt_D else "Option D"
+                }
 
-            current_selection = st.session_state.user_selections.get(i, None)
+                current_selection = st.session_state.user_selections.get(i, None)
 
-            # Safely convert keys to list and track indexing position mapping
-            choice_keys = list(options_dict.keys())
-            default_index = choice_keys.index(current_selection) if current_selection in choice_keys else None
+                # Safely convert keys to list and track indexing position mapping
+                choice_keys = list(options_dict.keys())
+                default_index = choice_keys.index(current_selection) if current_selection in choice_keys else None
 
-            # Inline selection callback function to record entries cleanly
-            def update_selection(idx=i):
-                st.session_state.user_selections[idx] = st.session_state[f"radio_q_{idx}"]
+                # Render the clean native layout with left-aligned circular radio dots
+                st.radio(
+                    label=f"Options for Question {i+1}",
+                    options=choice_keys,
+                    index=default_index,
+                    format_func=lambda x: f"{x.lower()}. {options_dict[x]}",
+                    key=f"radio_q_{i}",
+                    disabled=st.session_state.get('exam_submitted', False),
+                    label_visibility="collapsed"
+                )
 
-            # Render the clean native layout with left-aligned circular radio dots
-            st.radio(
-                label=f"Options for Question {i+1}",
-                options=choice_keys,
-                index=default_index,
-                format_func=lambda x: f"{x.lower()}. {options_dict[x]}",
-                key=f"radio_q_{i}",
-                disabled=st.session_state.get('exam_submitted', False),
-                label_visibility="collapsed",
-                on_change=update_selection
-            )
+                # --- NEW: INJECT PER-QUESTION AI FEEDBACK RIGHT HERE ---
+                if st.session_state.get('exam_submitted') and st.session_state.get('ai_feedback_clean'):
+                    # Look for the section matching "### Question X" or "### Question [X]"
+                    feedback_str = st.session_state.ai_feedback_clean
+                    pattern = rf"### Question \s*\[?{i+1}\]?.*?(?=### Question \s*\[?{i+2}\]?|---|$)"
+                    match = re.search(pattern, feedback_str, re.DOTALL | re.IGNORECASE)
 
-            # --- NEW: INJECT PER-QUESTION AI FEEDBACK RIGHT HERE ---
-            if st.session_state.get('exam_submitted') and st.session_state.get('ai_feedback_clean'):
-                # Look for the section matching "### Question X" or "### Question [X]"
-                feedback_str = st.session_state.ai_feedback_clean
-                pattern = rf"### Question \s*\[?{i+1}\]?.*?(?=### Question \s*\[?{i+2}\]?|---|$)"
-                match = re.search(pattern, feedback_str, re.DOTALL | re.IGNORECASE)
+                    if match:
+                        st.info("💡 **AI Grading Feedback:**")
+                        st.markdown(match.group(0).strip())
+                    else:
+                        # If no specific incorrect feedback is found, the question might be correct
+                        correct_ans = st.session_state.current_key[i]
+                        user_ans = st.session_state.user_selections.get(i, "No Answer")
+                        if user_ans == correct_ans:
+                            st.success(f"Correct! You answered `{user_ans}`.")
 
-                if match:
-                    st.info("💡 **AI Grading Feedback:**")
-                    st.markdown(match.group(0).strip())
-                else:
-                    # If no specific incorrect feedback is found, the question might be correct
-                    correct_ans = st.session_state.current_key[i]
-                    user_ans = st.session_state.user_selections.get(i, "No Answer")
-                    if user_ans == correct_ans:
-                        st.success(f"Correct! You answered `{user_ans}`.")
+                st.write("---")
 
-            st.write("---")
+            # Standalone execution grading submission action button
+            # --- NEW: SCORE & LEVELING FEEDBACK HIGHLIGHT ---
+            if st.session_state.get('exam_submitted'):
+                st.write("Click the button on the right to scroll up >>>")
 
-        # Standalone execution grading submission action button
-        # --- NEW: SCORE & LEVELING FEEDBACK HIGHLIGHT ---
-        if st.session_state.get('exam_submitted'):
-            st.write("Click the button on the right to scroll up >>>")
-
-        # Standalone execution grading submission action button (normalized look)
-        submitted = st.button("Submit for Grading", disabled=st.session_state.get('is_submitting', False), on_click=lock_submit)
+            # Standalone execution grading submission action button (normalized look)
+            submitted = st.form_submit_button("Submit for Grading", disabled=st.session_state.get('is_submitting', False) or st.session_state.get('exam_submitted', False))
         if submitted:
+            # Capture selections from form radio buttons
             num_actual_questions = len(individual_questions)
+            for idx in range(num_actual_questions):
+                st.session_state.user_selections[idx] = st.session_state.get(f"radio_q_{idx}")
+            
             user_answers = [st.session_state.user_selections.get(idx, None) for idx in range(num_actual_questions)]
             user_input = "\n".join([f"Q{idx+1}: {ans if ans else 'No Answer'}" for idx, ans in enumerate(user_answers)])
             
