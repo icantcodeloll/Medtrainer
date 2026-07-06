@@ -1158,8 +1158,13 @@ def render_trainer_page():
                     match = re.search(pattern, feedback_str, re.DOTALL | re.IGNORECASE)
 
                     if match:
-                        st.info("💡 **AI Grading Feedback:**")
-                        st.markdown(match.group(0).strip())
+                        correct_ans = st.session_state.current_key[i]
+                        user_ans = st.session_state.user_selections.get(i, "No Answer")
+                        st.error(f"**Your Answer:** {user_ans} | **Correct Answer:** {correct_ans}")
+                        # Remove the "### Question X" heading from the feedback
+                        feedback_text = match.group(0).strip()
+                        feedback_text = re.sub(r'^### Question \s*\[?\d+\]?.*?\n', '', feedback_text, flags=re.IGNORECASE)
+                        st.markdown(feedback_text.strip())
                     else:
                         # If no specific incorrect feedback is found, the question might be correct
                         correct_ans = st.session_state.current_key[i]
