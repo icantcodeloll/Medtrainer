@@ -1161,9 +1161,10 @@ def render_trainer_page():
                         correct_ans = st.session_state.current_key[i]
                         user_ans = st.session_state.user_selections.get(i, "No Answer")
                         st.error(f"**Your Answer:** {user_ans} | **Correct Answer:** {correct_ans}")
-                        # Remove the "### Question X" heading from the feedback
+                        # Remove the "### Question X" heading and answer line from the feedback
                         feedback_text = match.group(0).strip()
                         feedback_text = re.sub(r'^### Question \s*\[?\d+\]?.*?\n', '', feedback_text, flags=re.IGNORECASE)
+                        feedback_text = re.sub(r'^\*\*Your Answer:.*?\n', '', feedback_text, flags=re.IGNORECASE)
                         st.markdown(feedback_text.strip())
                     else:
                         # If no specific incorrect feedback is found, the question might be correct
