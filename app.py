@@ -1543,7 +1543,7 @@ def render_export_page():
     st.info("Download your currently active exam in your preferred format below.")
     
     # 1. PDF Export Section
-    if FPDF_AVAILABLE:
+    if PDF_AVAILABLE:
         # Recreate the metadata context
         current_metadata = {
             "level": st.session_state.get('current_level', 1),
