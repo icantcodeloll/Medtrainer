@@ -18,12 +18,23 @@ from google.genai import types
 from progress_manager import save_progress, load_progress
 import shutil
 
-# FPDF availability check
+# PDF library availability check
 try:
-    from fpdf import FPDF
-    FPDF_AVAILABLE = True
+    from reportlab.pdfgen import canvas
+    from reportlab.lib.pagesizes import letter
+    from reportlab.lib.styles import getSampleStyleSheet
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+    from reportlab.lib.units import inch
+    from reportlab.pdfbase import pdfmetrics
+    from reportlab.pdfbase.ttfonts import TTFont
+    from reportlab.lib.enums import TA_LEFT
+    from reportlab.pdfbase.pdfdoc import PDFArray
+    from reportlab.pdfbase.pdfdoc import PDFDictionary
+    from reportlab.pdfbase.pdfdoc import PDFName
+    from reportlab.pdfbase.pdfdoc import PDFString
+    PDF_AVAILABLE = True
 except ImportError:
-    FPDF_AVAILABLE = False
+    PDF_AVAILABLE = False
 
 def initialize_pwa_assets():
     """
@@ -520,7 +531,7 @@ def get_ai_grading(exam_text: str, user_answers: str, correct_key: str, score: i
 
 def create_exam_pdf(exam_text: str, answer_key: list, user_answers: list = None, score: int = None, max_score: int = None, metadata: dict = None) -> bytes | None:
     """
-    Generate a PDF containing the exam questions, answer key, and optionally user selections and filters.
+    Generate a PDF containing the exam questions with interactive radio buttons, answer key, and optionally user selections and filters.
     
     Args:
         exam_text: The exam questions text
@@ -531,70 +542,162 @@ def create_exam_pdf(exam_text: str, answer_key: list, user_answers: list = None,
         metadata: Dictionary containing exam metadata (optional)
         
     Returns:
-        PDF bytes or None if FPDF is not available
+        PDF bytes or None if PDF library is not available
     """
-    if not FPDF_AVAILABLE:
+    if not PDF_AVAILABLE:
         return None
 
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_auto_page_break(auto=True, margin=15)
-
-    # Title
-    pdf.set_font("Arial", "B", 12)
-    if score is not None and max_score is not None:
-        pdf.cell(0, 10, f"Practice Exam Results - Score: {score}/{max_score}", ln=True, align="C")
-    else:
-        pdf.cell(0, 10, "Practice Exam", ln=True, align="C")
-    pdf.ln(2)
-
-    # --- ADD METADATA BLOCK ---
-    if metadata:
-        pdf.set_font("Arial", "I", 9)
-        melbourne_time = datetime.datetime.now(ZoneInfo("Australia/Melbourne")).strftime('%Y-%m-%d %H:%M:%S')
-        meta_text = f"Level: {metadata.get('level', 'N/A')} | Subject: {metadata.get('subject', 'All')} | Exam Filter: {metadata.get('exam', 'All')} | System Filter: {metadata.get('system', 'All')}"
-        time_text = f"Generated on (Melbourne Time): {melbourne_time}"
-        pdf.cell(0, 6, meta_text, ln=True, align="C")
-        pdf.cell(0, 6, time_text, ln=True, align="C")
-        pdf.ln(5)
-    else:
-        pdf.ln(3)
-    # --------------------------
-
-    # Clean text to prevent Unicode encoding errors in FPDF
-    clean_text = exam_text.replace('\u2019', "'").replace('\u201c', '"').replace('\u201d', '"')
-    clean_text = clean_text.encode('latin-1', 'replace').decode('latin-1')
-
-    # Print Questions
-    pdf.set_font("Arial", "", 9)
-    pdf.multi_cell(0, 7, clean_text)
-
-    # Add Answer Key & User Answers on a new page
-    pdf.add_page()
-    pdf.set_font("Arial", "B", 12)
-    pdf.cell(0, 10, "Exam Summary", ln=True, align="C")
-    pdf.ln(5)
-
-    pdf.set_font("Arial", "", 9)
-    for i, ans in enumerate(answer_key):
-        text = f"Question {i+1}: Correct Key: {ans}"
-        if user_answers and i < len(user_answers):
-            u_ans = user_answers[i] if user_answers[i] else "No Answer"
-            match_text = " (CORRECT)" if u_ans == ans else " (INCORRECT)"
-            text += f" | Your Answer: {u_ans}{match_text}"
-
-        pdf.cell(0, 8, text, ln=True)
-
-    # Save to temp file and return bytes
+    # Create a temporary file for the PDF
     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
-        pdf.output(tmp.name)
         tmp_path = tmp.name
-
-    with open(tmp_path, "rb") as f:
-        pdf_bytes = f.read()
-
-    os.unlink(tmp_path) # Clean up temp file
-    return pdf_bytes
+    
+    try:
+        # Create PDF with canvas
+        c = canvas.Canvas(tmp_path, pagesize=letter)
+        width, height = letter
+        margin = 72
+        y_position = height - margin
+        
+        # Title
+        c.setFont("Helvetica-Bold", 16)
+        if score is not None and max_score is not None:
+            title = f"Practice Exam Results - Score: {score}/{max_score}"
+        else:
+            title = "Practice Exam"
+        c.drawCentredString(width / 2, y_position, title)
+        y_position -= 30
+        
+        # Metadata
+        if metadata:
+            c.setFont("Helvetica-Oblique", 9)
+            melbourne_time = datetime.datetime.now(ZoneInfo("Australia/Melbourne")).strftime('%Y-%m-%d %H:%M:%S')
+            meta_text = f"Level: {metadata.get('level', 'N/A')} | Subject: {metadata.get('subject', 'All')} | Exam Filter: {metadata.get('exam', 'All')} | System Filter: {metadata.get('system', 'All')}"
+            time_text = f"Generated on (Melbourne Time): {melbourne_time}"
+            c.drawCentredString(width / 2, y_position, meta_text)
+            y_position -= 15
+            c.drawCentredString(width / 2, y_position, time_text)
+            y_position -= 25
+        
+        # Parse questions
+        individual_questions = QUESTION_SPLIT_PATTERN.split(exam_text.strip())
+        
+        c.setFont("Helvetica", 10)
+        
+        for q_idx, q_text in enumerate(individual_questions):
+            # Check if we need a new page
+            if y_position < 100:
+                c.showPage()
+                y_position = height - margin
+            
+            # Question number
+            c.setFont("Helvetica-Bold", 12)
+            c.drawString(margin, y_position, f"Question {q_idx + 1}")
+            y_position -= 20
+            
+            # Extract question text
+            prompt_match = QUESTION_PROMPT_PATTERN.search(q_text)
+            q_prompt = prompt_match.group(1).strip() if prompt_match else q_text
+            
+            # Draw question text (wrapped)
+            c.setFont("Helvetica", 10)
+            lines = []
+            for line in q_prompt.split('\n'):
+                words = line.split()
+                current_line = ""
+                for word in words:
+                    if c.stringWidth(current_line + " " + word, "Helvetica", 10) < width - 2 * margin:
+                        current_line += " " + word if current_line else word
+                    else:
+                        if current_line:
+                            lines.append(current_line)
+                        current_line = word
+                if current_line:
+                    lines.append(current_line)
+            
+            for line in lines:
+                if y_position < margin + 20:
+                    c.showPage()
+                    y_position = height - margin
+                c.drawString(margin, y_position, line)
+                y_position -= 12
+            
+            y_position -= 10
+            
+            # Extract options
+            opt_A = OPTION_A_PATTERN.search(q_text)
+            opt_B = OPTION_B_PATTERN.search(q_text)
+            opt_C = OPTION_C_PATTERN.search(q_text)
+            opt_D = OPTION_D_PATTERN.search(q_text)
+            
+            options = [
+                ("A", opt_A.group(1).strip()[2:].strip() if opt_A else "Option A"),
+                ("B", opt_B.group(1).strip()[2:].strip() if opt_B else "Option B"),
+                ("C", opt_C.group(1).strip()[2:].strip() if opt_C else "Option C"),
+                ("D", opt_D.group(1).strip()[2:].strip() if opt_D else "Option D")
+            ]
+            
+            # Draw options with interactive radio buttons
+            for opt_idx, (opt_letter, opt_text) in enumerate(options):
+                if y_position < margin + 20:
+                    c.showPage()
+                    y_position = height - margin
+                
+                # Create radio button form field
+                radio_name = f"q{q_idx+1}"
+                c.acroForm.radio(
+                    name=radio_name,
+                    value=opt_letter,
+                    selected=False,
+                    x=margin + 10,
+                    y=y_position - 10,
+                    buttonStyle='circle',
+                    size=12,
+                    borderStyle='solid',
+                    borderWidth=1
+                )
+                
+                # Option text
+                opt_label = f"{opt_letter.lower()}. {opt_text}"
+                c.drawString(margin + 30, y_position - 6, opt_label)
+                y_position -= 20
+            
+            y_position -= 15
+        
+        # Add Answer Key page
+        c.showPage()
+        y_position = height - margin
+        
+        c.setFont("Helvetica-Bold", 16)
+        c.drawCentredString(width / 2, y_position, "Exam Summary")
+        y_position -= 30
+        
+        c.setFont("Helvetica", 10)
+        for i, ans in enumerate(answer_key):
+            if y_position < margin + 20:
+                c.showPage()
+                y_position = height - margin
+            
+            text = f"Question {i+1}: Correct Key: {ans}"
+            if user_answers and i < len(user_answers):
+                u_ans = user_answers[i] if user_answers[i] else "No Answer"
+                match_text = " (CORRECT)" if u_ans == ans else " (INCORRECT)"
+                text += f" | Your Answer: {u_ans}{match_text}"
+            
+            c.drawString(margin, y_position, text)
+            y_position -= 15
+        
+        c.save()
+        
+        # Read the PDF bytes
+        with open(tmp_path, "rb") as f:
+            pdf_bytes = f.read()
+        
+        return pdf_bytes
+        
+    finally:
+        # Clean up temp file
+        if os.path.exists(tmp_path):
+            os.unlink(tmp_path)
 
 def lock_submit() -> None:
     """Lock the submit button to prevent multiple submissions."""
