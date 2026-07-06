@@ -3,3 +3,4 @@ pandas
 google-genai
 fpdf
 supabase
+reportlab
