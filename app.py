@@ -1592,7 +1592,7 @@ def render_export_page():
     )
 
 def render_settings_page():
-    st.title("⚙️ Global Settings")
+    st.title("⚙️ Settings")
     st.write("---")
     
     active_user = setup_user_profile()
@@ -1658,7 +1658,7 @@ def render_settings_page():
     # 2. Speed Switch
     st.subheader("Model Selection")
     model_choice = st.radio(
-        label="Speed Selection",
+        label="",
         options=["3.1 flash lite", "3.5 flash"],
         index=1 if st.session_state.get('exam_model', 'gemini-3.5-flash') == 'gemini-3.5-flash' else 0,
         horizontal=True,
