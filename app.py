@@ -15,7 +15,7 @@ import atexit
 import json
 from google import genai
 from google.genai import types
-from progress_manager import save_progress, load_progress
+from progress_manager import save_progress, load_progress, update_player_elo, save_single_player_score, get_leaderboard_data, supabase
 import shutil
 
 # PDF library availability check
@@ -82,7 +82,11 @@ initialize_pwa_assets()
 
 st.set_page_config(page_title="Trainer", page_icon="🩺", layout="wide")
 
-API_KEYS = [st.secrets["GENAI_KEY_1"]]#, st.secrets["GENAI_KEY_2"], st.secrets["GENAI_KEY_3"]] # (Keep your full list here)
+API_KEYS = [st.secrets["GENAI_KEY_1"], st.secrets["GENAI_KEY_2"]] #st.secrets["GENAI_KEY_3"]] # (Keep your full list here)
+MAX_REQUESTS_PER_KEY_PER_MODEL = {
+    'gemini-3.5-flash': 20,
+    'gemini-3.1-flash-lite': 500
+}  # Maximum requests per API key per model per day
 CSV_FILE = "learning_objectives_informative_reports.csv" 
 NOTES_FILE = "lecture_notes.csv"
 JOIN_COLUMN = "lecture_id"
@@ -203,18 +207,43 @@ def setup_user_profile() -> str:
     if 'username' not in st.session_state:
         st.session_state.username = "Default"
     
+    if 'profile_picture' not in st.session_state:
+        st.session_state.profile_picture = None
+    
     new_user = st.sidebar.text_input("Enter your username:", st.session_state.username)
     if st.sidebar.button("Switch / Create Profile"):
         st.session_state.username = validate_username(new_user)
         
         # Wipe the screen clean so the new user's data can load
-        keys_to_clear = ['current_level', 'num_questions', 'missed_questions', 'exam_history', 'current_exam', 'current_key', 'samples_df']
+        keys_to_clear = ['current_level', 'num_questions', 'missed_questions', 'exam_history', 'current_exam', 'current_key', 'samples_df', 'profile_picture']
         for k in keys_to_clear:
             if k in st.session_state:
                 del st.session_state[k]
         st.rerun()
     
     active_user = st.session_state.username
+    
+    # Profile picture upload
+    st.sidebar.subheader("Profile Picture")
+    uploaded_file = st.sidebar.file_uploader(
+        "Upload a profile picture", 
+        type=["png", "jpg", "jpeg", "gif"],
+        key=f"profile_upload_{active_user}"
+    )
+    
+    if uploaded_file is not None:
+        st.session_state.profile_picture = uploaded_file.getvalue()
+        st.sidebar.success("Profile picture updated!")
+    elif st.session_state.profile_picture is None:
+        # Load profile picture from saved progress if not already in session
+        loaded_progress = load_progress(active_user)
+        if loaded_progress and 'profile_picture' in loaded_progress:
+            st.session_state.profile_picture = loaded_progress['profile_picture']
+    
+    # Display profile picture
+    if st.session_state.profile_picture:
+        st.sidebar.image(st.session_state.profile_picture, width=100)
+    
     st.sidebar.success(f"Logged in as: **{active_user}**")
     initialize_app(active_user)
     
@@ -243,6 +272,7 @@ def save_on_tab_close():
                 "exam_history": st.session_state.get("exam_history", []),
                 "current_exam": st.session_state.get("current_exam", ""),
                 "current_key": st.session_state.get("current_key", []),
+                "profile_picture": st.session_state.get("profile_picture", None),
             }
             
             # Safely serialize the dataframe to standard records so the JSON manager handles it cleanly
@@ -311,6 +341,7 @@ def initialize_app(active_user: str, force_reset: bool = False) -> None:
         "current_exam": loaded_progress.get("current_exam", ""),
         "current_key": loaded_progress.get("current_key", []),
         "key_index": min(loaded_progress.get("key_index", 0), max(0, len(API_KEYS) - 1)) if len(API_KEYS) > 0 else 0,
+        "api_request_counts": loaded_progress.get("api_request_counts", {i: {'gemini-3.5-flash': 0, 'gemini-3.1-flash-lite': 0} for i in range(len(API_KEYS))}),
         "current_categories": loaded_progress.get("current_categories", []),
         "previous_test_data": {},
         "use_search": False,
@@ -344,8 +375,38 @@ def get_client() -> genai.Client:
     """Get the current Gemini AI client with API key rotation."""
     return genai.Client(api_key=API_KEYS[st.session_state.key_index])
 
+def rotate_to_next_available_key(model: str):
+    """Rotate to the next API key that hasn't exceeded the request limit for the specific model."""
+    keys_checked = 0
+    original_index = st.session_state.key_index
+    max_requests = MAX_REQUESTS_PER_KEY_PER_MODEL.get(model, 500)
+    
+    while keys_checked < len(API_KEYS):
+        current_index = st.session_state.key_index
+        key_counts = st.session_state.api_request_counts.get(current_index, {'gemini-3.5-flash': 0, 'gemini-3.1-flash-lite': 0})
+        request_count = key_counts.get(model, 0)
+        
+        if request_count < max_requests:
+            return True  # Current key is still available for this model
+        
+        # Move to next key
+        st.session_state.key_index = (st.session_state.key_index + 1) % len(API_KEYS)
+        keys_checked += 1
+        
+        # If we've checked all keys and returned to original, all are exhausted
+        if st.session_state.key_index == original_index and keys_checked > 0:
+            return False
+    
+    return False
+
 def call_gemini_with_rotation(prompt: str, model_to_use: str, use_search: bool = False) -> str | None:
     keys_tried = 0
+    max_requests = MAX_REQUESTS_PER_KEY_PER_MODEL.get(model_to_use, 500)
+    
+    # Check if current key is exhausted before starting
+    if not rotate_to_next_available_key(model_to_use):
+        st.error(f"All API keys have reached their request limit for {model_to_use}. Please add more keys or wait for reset.")
+        return None
     
     # 1. Establish tool rules: Google Search ONLY applies to Gemini 2.5 Flash
     tools = []
@@ -358,7 +419,7 @@ def call_gemini_with_rotation(prompt: str, model_to_use: str, use_search: bool =
     if tools:
         config_args["tools"] = tools
         
-    
+        
     if "3.1-flash-lite" in model_to_use.lower() or "3.5-flash" in model_to_use.lower():
         # Safeguard default state if UI component hasn't rendered yet
         current_level = st.session_state.get("thinking_level", "MEDIUM")
@@ -373,6 +434,16 @@ def call_gemini_with_rotation(prompt: str, model_to_use: str, use_search: bool =
 
     # --- REST OF YOUR CONTINUOUS API LOOP ---
     while keys_tried < len(API_KEYS):
+        # Check if current key is exhausted for this model before making request
+        key_counts = st.session_state.api_request_counts.get(st.session_state.key_index, {'gemini-3.5-flash': 0, 'gemini-3.1-flash-lite': 0})
+        current_count = key_counts.get(model_to_use, 0)
+        if current_count >= max_requests:
+            if not rotate_to_next_available_key(model_to_use):
+                st.error(f"All API keys have reached their request limit for {model_to_use}. Please add more keys or wait for reset.")
+                return None
+            keys_tried += 1
+            continue
+        
         try:
             client = get_client()
             response = client.models.generate_content(
@@ -380,6 +451,13 @@ def call_gemini_with_rotation(prompt: str, model_to_use: str, use_search: bool =
                 contents=prompt,
                 config=generation_config
             )
+            
+            # Increment request counter for successful request (model-specific)
+            if st.session_state.key_index not in st.session_state.api_request_counts:
+                st.session_state.api_request_counts[st.session_state.key_index] = {'gemini-3.5-flash': 0, 'gemini-3.1-flash-lite': 0}
+            st.session_state.api_request_counts[st.session_state.key_index][model_to_use] = \
+                st.session_state.api_request_counts[st.session_state.key_index].get(model_to_use, 0) + 1
+            
             return response.text
         except Exception as e:
             if "429" in str(e):
@@ -1591,6 +1669,824 @@ def render_export_page():
         key="download_exam_txt_page"
     )
 
+def render_game_page():
+    """Timed quiz game page - answer as many questions as possible in 1 minute."""
+    register_cleanup_handler()
+    active_user = setup_user_profile()
+    
+    st.title("🎮 Speed Quiz Challenge")
+    st.write("---")
+    
+    # Initialize game state
+    if 'game_questions' not in st.session_state:
+        st.session_state.game_questions = []
+    if 'game_answers' not in st.session_state:
+        st.session_state.game_answers = []
+    if 'game_current_index' not in st.session_state:
+        st.session_state.game_current_index = 0
+    if 'game_score' not in st.session_state:
+        st.session_state.game_score = 0
+    if 'game_start_time' not in st.session_state:
+        st.session_state.game_start_time = None
+    if 'game_active' not in st.session_state:
+        st.session_state.game_active = False
+    if 'game_completed' not in st.session_state:
+        st.session_state.game_completed = False
+    if 'game_score_saved' not in st.session_state:
+        st.session_state.game_score_saved = False
+    if 'game_settings' not in st.session_state:
+        st.session_state.game_settings = {
+            'difficulty': st.session_state.current_level,
+            'num_questions': 20,
+            'categories': []
+        }
+    
+    # Load CSV data for filtering
+    df_main = load_csv_data(CSV_FILE)
+    df_notes = load_csv_data(NOTES_FILE)
+    df = pd.merge(df_main, df_notes, on=JOIN_COLUMN, how='left')
+    if "semester" in df.columns:
+        df = df[df['semester'] == st.session_state.semester]
+    
+    # Get available categories
+    available_categories = df['subject'].unique().tolist() if 'subject' in df.columns else []
+    
+    # Settings phase
+    if not st.session_state.game_active and not st.session_state.game_completed:
+        st.subheader("⚙️ Game Settings")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            st.session_state.game_settings['difficulty'] = st.slider(
+                "Difficulty Level",
+                1, 50,
+                st.session_state.game_settings['difficulty'],
+                help="Higher difficulty = more complex questions"
+            )
+            st.session_state.game_settings['num_questions'] = st.slider(
+                "Number of Questions to Generate",
+                10, 50,
+                st.session_state.game_settings['num_questions'],
+                help="Questions will be pre-generated before the game starts"
+            )
+        
+        with col2:
+            st.session_state.game_settings['categories'] = st.multiselect(
+                "Categories (leave empty for all)",
+                available_categories,
+                default=st.session_state.game_settings['categories'],
+                help="Filter questions by specific subjects"
+            )
+        
+        st.info("📝 Questions will be generated before the timer starts. This ensures you're not limited by AI generation speed during the game.")
+        
+        if st.button("🚀 Start Game", type="primary", use_container_width=True):
+            # Generate questions before starting
+            with st.spinner("Generating questions... This may take a moment."):
+                # Filter data based on settings
+                filtered_df = df.copy()
+                if st.session_state.game_settings['categories']:
+                    filtered_df = filtered_df[filtered_df['subject'].isin(st.session_state.game_settings['categories'])]
+                
+                if filtered_df.empty:
+                    st.error("No content available for selected filters. Please adjust your settings.")
+                    return
+                
+                # Sample content for question generation
+                num_to_sample = min(st.session_state.game_settings['num_questions'], len(filtered_df))
+                samples_df = filtered_df.sample(n=num_to_sample, replace=False)
+                topics_list = samples_df['content'].dropna().head(st.session_state.game_settings['num_questions']).tolist()
+                
+                # Generate questions
+                exam_text = get_blind_exam(
+                    topics_list,
+                    st.session_state.game_settings['difficulty'],
+                    st.session_state.game_settings['num_questions']
+                )
+                
+                if exam_text:
+                    # Parse the generated exam
+                    st.session_state.game_questions = parse_exam_text(exam_text)
+                    st.session_state.game_answers = extract_answer_key(exam_text)
+                    
+                    if not st.session_state.game_questions or not st.session_state.game_answers:
+                        st.error("Failed to parse generated questions. Please try again.")
+                        return
+                    
+                    st.session_state.game_current_index = 0
+                    st.session_state.game_score = 0
+                    st.session_state.game_user_answers = []
+                    st.session_state.game_active = True
+                    st.session_state.game_start_time = time.time()
+                    st.rerun()
+                else:
+                    st.error("Failed to generate questions. Please try again.")
+    
+    # Active game phase
+    elif st.session_state.game_active:
+        # Calculate remaining time
+        elapsed = time.time() - st.session_state.game_start_time
+        remaining = max(0, 60 - elapsed)
+        
+        # Display timer
+        timer_col1, timer_col2, timer_col3 = st.columns([1, 2, 1])
+        with timer_col2:
+            if remaining > 10:
+                st.metric("⏱️ Time Remaining", f"{remaining:.1f}s")
+            else:
+                st.metric("⏱️ Time Remaining", f"{remaining:.1f}s", delta_color="inverse")
+        
+        # Check if time is up
+        if remaining <= 0:
+            st.session_state.game_active = False
+            st.session_state.game_completed = True
+            st.rerun()
+            return
+        
+        # Display current question
+        if st.session_state.game_current_index < len(st.session_state.game_questions):
+            current_q = st.session_state.game_questions[st.session_state.game_current_index]
+            
+            st.markdown(f"### Question {st.session_state.game_current_index + 1}/{len(st.session_state.game_questions)}")
+            st.markdown(current_q['question'])
+            
+            # Display options
+            user_answer = st.radio(
+                "Select your answer:",
+                options=['A', 'B', 'C', 'D'],
+                key=f"game_q_{st.session_state.game_current_index}",
+                horizontal=True
+            )
+            
+            col1, col2, col3 = st.columns([1, 2, 1])
+            with col2:
+                if st.button("Submit Answer", type="primary", use_container_width=True, key="game_submit"):
+                    # Check if user selected an answer
+                    if user_answer is None:
+                        st.warning("Please select an answer before submitting.")
+                        st.rerun()
+                        return
+                    
+                    # Record answer
+                    correct_answer = st.session_state.game_answers[st.session_state.game_current_index]
+                    is_correct = user_answer == correct_answer
+                    
+                    if is_correct:
+                        st.session_state.game_score += 1
+                    
+                    st.session_state.game_user_answers.append({
+                        'question_index': st.session_state.game_current_index,
+                        'user_answer': user_answer,
+                        'correct_answer': correct_answer,
+                        'is_correct': is_correct
+                    })
+                    
+                    # Move to next question
+                    st.session_state.game_current_index += 1
+                    st.rerun()
+        else:
+            # All questions answered
+            st.session_state.game_active = False
+            st.session_state.game_completed = True
+            st.rerun()
+    
+    # Results phase
+    elif st.session_state.game_completed:
+        st.subheader("🏆 Game Results")
+        
+        total_answered = len(st.session_state.game_user_answers)
+        total_questions = len(st.session_state.game_questions)
+        accuracy = (st.session_state.game_score / total_answered * 100) if total_answered > 0 else 0
+        time_taken = 60.0  # Fixed 60 seconds
+        
+        # Save score to leaderboard (only once)
+        if 'game_score_saved' not in st.session_state or not st.session_state.game_score_saved:
+            save_single_player_score(
+                active_user,
+                st.session_state.game_score,
+                total_questions,
+                accuracy,
+                st.session_state.game_settings['difficulty'],
+                time_taken,
+                st.session_state.game_settings['categories']
+            )
+            st.session_state.game_score_saved = True
+        
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Correct Answers", st.session_state.game_score)
+        with col2:
+            st.metric("Questions Answered", f"{total_answered}/{total_questions}")
+        with col3:
+            st.metric("Accuracy", f"{accuracy:.1f}%")
+        
+        st.write("---")
+        
+        # Show answer breakdown
+        if st.session_state.game_user_answers:
+            st.subheader("Answer Breakdown")
+            for answer in st.session_state.game_user_answers:
+                q_idx = answer['question_index']
+                q_data = st.session_state.game_questions[q_idx]
+                
+                if answer['is_correct']:
+                    st.success(f"Q{q_idx + 1}: ✅ Correct ({answer['user_answer']})")
+                else:
+                    st.error(f"Q{q_idx + 1}: ❌ Wrong (You: {answer['user_answer']} | Correct: {answer['correct_answer']})")
+                
+                with st.expander(f"View Question {q_idx + 1}"):
+                    st.markdown(q_data['question'])
+        
+        st.write("---")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("🔄 Play Again", type="primary", use_container_width=True):
+                # Reset game state
+                st.session_state.game_questions = []
+                st.session_state.game_answers = []
+                st.session_state.game_current_index = 0
+                st.session_state.game_score = 0
+                st.session_state.game_start_time = None
+                st.session_state.game_active = False
+                st.session_state.game_completed = False
+                st.session_state.game_user_answers = []
+                st.session_state.game_score_saved = False
+                st.rerun()
+        
+        with col2:
+            if st.button("🏠 Back to Settings", use_container_width=True):
+                st.session_state.game_questions = []
+                st.session_state.game_answers = []
+                st.session_state.game_current_index = 0
+                st.session_state.game_score = 0
+                st.session_state.game_start_time = None
+                st.session_state.game_active = False
+                st.session_state.game_completed = False
+                st.session_state.game_user_answers = []
+                st.session_state.game_score_saved = False
+                st.rerun()
+
+def render_multiplayer_page():
+    """1v1 multiplayer quiz game - GeoGuessr style."""
+    register_cleanup_handler()
+    active_user = setup_user_profile()
+    
+    st.title("⚔️ 1v1 Multiplayer Challenge")
+    st.write("---")
+    
+    # Initialize multiplayer state
+    if 'mp_room_code' not in st.session_state:
+        st.session_state.mp_room_code = None
+    if 'mp_is_host' not in st.session_state:
+        st.session_state.mp_is_host = False
+    if 'mp_questions' not in st.session_state:
+        st.session_state.mp_questions = []
+    if 'mp_answers' not in st.session_state:
+        st.session_state.mp_answers = []
+    if 'mp_current_index' not in st.session_state:
+        st.session_state.mp_current_index = 0
+    if 'mp_score' not in st.session_state:
+        st.session_state.mp_score = 0
+    if 'mp_user_answers' not in st.session_state:
+        st.session_state.mp_user_answers = []
+    if 'mp_game_active' not in st.session_state:
+        st.session_state.mp_game_active = False
+    if 'mp_game_completed' not in st.session_state:
+        st.session_state.mp_game_completed = False
+    if 'mp_elo_updated' not in st.session_state:
+        st.session_state.mp_elo_updated = False
+    if 'mp_opponent_progress' not in st.session_state:
+        st.session_state.mp_opponent_progress = {'current_index': 0, 'score': 0}
+    if 'mp_game_start_time' not in st.session_state:
+        st.session_state.mp_game_start_time = None
+    
+    # Load CSV data
+    df_main = load_csv_data(CSV_FILE)
+    df_notes = load_csv_data(NOTES_FILE)
+    df = pd.merge(df_main, df_notes, on=JOIN_COLUMN, how='left')
+    if "semester" in df.columns:
+        df = df[df['semester'] == st.session_state.semester]
+    
+    available_categories = df['subject'].unique().tolist() if 'subject' in df.columns else []
+    
+    # LOBBY PHASE
+    if not st.session_state.mp_room_code:
+        st.subheader("🎯 Game Lobby")
+        
+        tab1, tab2 = st.tabs(["Create Room", "Join Room"])
+        
+        with tab1:
+            st.write("Create a new game room and share the code with a friend.")
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                difficulty = st.slider("Difficulty Level", 1, 50, st.session_state.current_level)
+                num_questions = st.slider("Number of Questions", 5, 30, 10)
+            with col2:
+                categories = st.multiselect("Categories", available_categories, help="Leave empty for all subjects")
+            
+            if st.button("🏠 Create Room", type="primary", use_container_width=True):
+                # Generate room code
+                import random
+                import string
+                room_code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+                
+                # Generate questions
+                with st.spinner("Generating questions..."):
+                    filtered_df = df.copy()
+                    if categories:
+                        filtered_df = filtered_df[filtered_df['subject'].isin(categories)]
+                    
+                    if filtered_df.empty:
+                        st.error("No content available for selected filters.")
+                        return
+                    
+                    num_to_sample = min(num_questions, len(filtered_df))
+                    samples_df = filtered_df.sample(n=num_to_sample, replace=False)
+                    topics_list = samples_df['content'].dropna().head(num_questions).tolist()
+                    
+                    exam_text = get_blind_exam(topics_list, difficulty, num_questions)
+                    
+                    if exam_text:
+                        questions = parse_exam_text(exam_text)
+                        answers = extract_answer_key(exam_text)
+                        
+                        if questions and answers:
+                            # Create room in Supabase
+                            room_data = {
+                                'room_code': room_code,
+                                'host': active_user,
+                                'player2': None,
+                                'status': 'waiting',
+                                'questions': json.dumps(questions),
+                                'answers': json.dumps(answers),
+                                'host_progress': json.dumps({'current_index': 0, 'score': 0}),
+                                'player2_progress': json.dumps({'current_index': 0, 'score': 0}),
+                                'host_answers': json.dumps([]),
+                                'player2_answers': json.dumps([]),
+                                'created_at': datetime.now().isoformat()
+                            }
+                            
+                            try:
+                                supabase.table('multiplayer_rooms').insert(room_data).execute()
+                                st.session_state.mp_room_code = room_code
+                                st.session_state.mp_is_host = True
+                                st.session_state.mp_questions = questions
+                                st.session_state.mp_answers = answers
+                                st.success(f"Room created! Share this code with your friend: **{room_code}**")
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"Failed to create room: {e}")
+                        else:
+                            st.error("Failed to parse questions.")
+                    else:
+                        st.error("Failed to generate questions.")
+        
+        with tab2:
+            st.write("Join an existing game room using the code provided by your friend.")
+            
+            room_code_input = st.text_input("Enter Room Code", max_chars=6, help="6-character code").upper()
+            
+            if st.button("🚀 Join Room", type="primary", use_container_width=True):
+                if len(room_code_input) != 6:
+                    st.error("Invalid room code. Must be 6 characters.")
+                    return
+                
+                # Check if room exists
+                try:
+                    response = supabase.table('multiplayer_rooms').select('*').eq('room_code', room_code_input).execute()
+                    
+                    if not response.data:
+                        st.error("Room not found. Check the code and try again.")
+                        return
+                    
+                    room = response.data[0]
+                    
+                    if room['status'] != 'waiting':
+                        st.error("This room is already full or the game has started.")
+                        return
+                    
+                    if room['host'] == active_user:
+                        st.error("You cannot join your own room.")
+                        return
+                    
+                    # Join the room
+                    supabase.table('multiplayer_rooms').update({
+                        'player2': active_user,
+                        'status': 'ready'
+                    }).eq('room_code', room_code_input).execute()
+                    
+                    st.session_state.mp_room_code = room_code_input
+                    st.session_state.mp_is_host = False
+                    st.session_state.mp_questions = json.loads(room['questions'])
+                    st.session_state.mp_answers = json.loads(room['answers'])
+                    st.success("Joined room successfully!")
+                    st.rerun()
+                    
+                except Exception as e:
+                    st.error(f"Failed to join room: {e}")
+    
+    # WAITING FOR OPPONENT (HOST ONLY)
+    elif st.session_state.mp_room_code and not st.session_state.mp_game_active and not st.session_state.mp_game_completed:
+        if st.session_state.mp_is_host:
+            st.subheader(f"🏠 Room: {st.session_state.mp_room_code}")
+            st.info("Waiting for opponent to join...")
+            
+            # Poll for opponent
+            try:
+                response = supabase.table('multiplayer_rooms').select('*').eq('room_code', st.session_state.mp_room_code).execute()
+                if response.data:
+                    room = response.data[0]
+                    if room['player2'] and room['status'] == 'ready':
+                        st.success(f"**{room['player2']}** has joined! Starting game...")
+                        st.session_state.mp_game_active = True
+                        st.session_state.mp_game_start_time = time.time()
+                        st.rerun()
+                    else:
+                        st.write(f"Share this code with a friend: **{st.session_state.mp_room_code}**")
+            except Exception as e:
+                st.error(f"Error checking room status: {e}")
+            
+            if st.button("Cancel", use_container_width=True):
+                # Delete room
+                try:
+                    supabase.table('multiplayer_rooms').delete().eq('room_code', st.session_state.mp_room_code).execute()
+                except:
+                    pass
+                st.session_state.mp_room_code = None
+                st.session_state.mp_questions = []
+                st.session_state.mp_answers = []
+                st.rerun()
+        
+        else:
+            # Player 2 waiting for host to start
+            st.subheader(f"🏠 Room: {st.session_state.mp_room_code}")
+            st.info("Waiting for host to start the game...")
+            
+            try:
+                response = supabase.table('multiplayer_rooms').select('*').eq('room_code', st.session_state.mp_room_code).execute()
+                if response.data:
+                    room = response.data[0]
+                    if room['status'] == 'active':
+                        st.session_state.mp_game_active = True
+                        st.session_state.mp_game_start_time = time.time()
+                        st.rerun()
+            except Exception as e:
+                st.error(f"Error checking room status: {e}")
+    
+    # ACTIVE GAME PHASE
+    elif st.session_state.mp_game_active and not st.session_state.mp_game_completed:
+        # Poll opponent progress
+        try:
+            response = supabase.table('multiplayer_rooms').select('*').eq('room_code', st.session_state.mp_room_code).execute()
+            if response.data:
+                room = response.data[0]
+                if st.session_state.mp_is_host:
+                    opponent_progress = json.loads(room['player2_progress'])
+                else:
+                    opponent_progress = json.loads(room['host_progress'])
+                st.session_state.mp_opponent_progress = opponent_progress
+        except:
+            pass
+        
+        # Live scoreboard
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Your Score", st.session_state.mp_score)
+        with col2:
+            st.metric("Your Progress", f"{st.session_state.mp_current_index}/{len(st.session_state.mp_questions)}")
+        with col3:
+            opponent_name = "Opponent"
+            st.metric(f"{opponent_name} Score", st.session_state.mp_opponent_progress['score'])
+        
+        st.write("---")
+        
+        # Display current question
+        if st.session_state.mp_current_index < len(st.session_state.mp_questions):
+            current_q = st.session_state.mp_questions[st.session_state.mp_current_index]
+            
+            st.markdown(f"### Question {st.session_state.mp_current_index + 1}/{len(st.session_state.mp_questions)}")
+            st.markdown(current_q['question'])
+            
+            user_answer = st.radio(
+                "Select your answer:",
+                options=['A', 'B', 'C', 'D'],
+                key=f"mp_q_{st.session_state.mp_current_index}",
+                horizontal=True
+            )
+            
+            col1, col2, col3 = st.columns([1, 2, 1])
+            with col2:
+                if st.button("Submit Answer", type="primary", use_container_width=True, key="mp_submit"):
+                    # Check if user selected an answer
+                    if user_answer is None:
+                        st.warning("Please select an answer before submitting.")
+                        st.rerun()
+                        return
+                    
+                    correct_answer = st.session_state.mp_answers[st.session_state.mp_current_index]
+                    is_correct = user_answer == correct_answer
+                    
+                    if is_correct:
+                        st.session_state.mp_score += 1
+                    
+                    st.session_state.mp_user_answers.append({
+                        'question_index': st.session_state.mp_current_index,
+                        'user_answer': user_answer,
+                        'correct_answer': correct_answer,
+                        'is_correct': is_correct
+                    })
+                    
+                    # Update progress in Supabase
+                    progress = {
+                        'current_index': st.session_state.mp_current_index + 1,
+                        'score': st.session_state.mp_score
+                    }
+                    
+                    try:
+                        if st.session_state.mp_is_host:
+                            supabase.table('multiplayer_rooms').update({
+                                'host_progress': json.dumps(progress),
+                                'host_answers': json.dumps(st.session_state.mp_user_answers),
+                                'status': 'active'
+                            }).eq('room_code', st.session_state.mp_room_code).execute()
+                        else:
+                            supabase.table('multiplayer_rooms').update({
+                                'player2_progress': json.dumps(progress),
+                                'player2_answers': json.dumps(st.session_state.mp_user_answers),
+                                'status': 'active'
+                            }).eq('room_code', st.session_state.mp_room_code).execute()
+                    except:
+                        pass
+                    
+                    st.session_state.mp_current_index += 1
+                    st.rerun()
+        else:
+            # All questions answered
+            st.session_state.mp_game_active = False
+            st.session_state.mp_game_completed = True
+            st.rerun()
+    
+    # RESULTS PHASE
+    elif st.session_state.mp_game_completed:
+        st.subheader("🏆 Game Results")
+        
+        # Fetch final opponent data
+        try:
+            response = supabase.table('multiplayer_rooms').select('*').eq('room_code', st.session_state.mp_room_code).execute()
+            if response.data:
+                room = response.data[0]
+                if st.session_state.mp_is_host:
+                    opponent_answers = json.loads(room['player2_answers'])
+                    opponent_progress = json.loads(room['player2_progress'])
+                    opponent_name = room['player2']
+                else:
+                    opponent_answers = json.loads(room['host_answers'])
+                    opponent_progress = json.loads(room['host_progress'])
+                    opponent_name = room['host']
+                
+                opponent_score = opponent_progress['score']
+            else:
+                opponent_answers = []
+                opponent_score = 0
+                opponent_name = "Opponent"
+        except:
+            opponent_answers = []
+            opponent_score = 0
+            opponent_name = "Opponent"
+        
+        # Determine result and update ELO
+        if st.session_state.mp_score > opponent_score:
+            result = "win"
+            result_display = "🎉 You Win!"
+        elif opponent_score > st.session_state.mp_score:
+            result = "loss"
+            result_display = "😢 You Lose"
+        else:
+            result = "tie"
+            result_display = "🤝 It's a Tie!"
+        
+        # Update ELO ratings (only once per game completion)
+        if 'mp_elo_updated' not in st.session_state or not st.session_state.mp_elo_updated:
+            if opponent_name and opponent_name != "Opponent":
+                update_player_elo(active_user, opponent_name, result)
+                st.session_state.mp_elo_updated = True
+        
+        # Display comparison
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Your Score", st.session_state.mp_score, 
+                      delta="WINNER!" if result == "win" else "")
+        with col2:
+            st.metric(f"{opponent_name}'s Score", opponent_score,
+                      delta="WINNER!" if result == "loss" else "")
+        with col3:
+            if result == "win":
+                st.success(result_display)
+            elif result == "loss":
+                st.error(result_display)
+            else:
+                st.info(result_display)
+        
+        st.write("---")
+        
+        # Answer comparison
+        st.subheader("Answer Comparison")
+        for i, q in enumerate(st.session_state.mp_questions):
+            your_answer = st.session_state.mp_user_answers[i] if i < len(st.session_state.mp_user_answers) else None
+            opp_answer = opponent_answers[i] if i < len(opponent_answers) else None
+            correct = st.session_state.mp_answers[i]
+            
+            your_status = "✅" if your_answer and your_answer['is_correct'] else "❌"
+            opp_status = "✅" if opp_answer and opp_answer['is_correct'] else "❌"
+            
+            your_ans = your_answer['user_answer'] if your_answer else "-"
+            opp_ans = opp_answer['user_answer'] if opp_answer else "-"
+            
+            st.markdown(f"**Q{i+1}**: Correct: {correct} | You: {your_ans} {your_status} | {opponent_name}: {opp_ans} {opp_status}")
+            
+            with st.expander(f"View Question {i+1}"):
+                st.markdown(q['question'])
+        
+        st.write("---")
+        
+        if st.button("🏠 Back to Lobby", use_container_width=True):
+            # Clean up room
+            try:
+                supabase.table('multiplayer_rooms').delete().eq('room_code', st.session_state.mp_room_code).execute()
+            except:
+                pass
+            
+            st.session_state.mp_room_code = None
+            st.session_state.mp_is_host = False
+            st.session_state.mp_questions = []
+            st.session_state.mp_answers = []
+            st.session_state.mp_current_index = 0
+            st.session_state.mp_score = 0
+            st.session_state.mp_user_answers = []
+            st.session_state.mp_game_active = False
+            st.session_state.mp_game_completed = False
+            st.session_state.mp_opponent_progress = {'current_index': 0, 'score': 0}
+            st.session_state.mp_elo_updated = False
+            st.session_state.mp_game_start_time = None
+            st.rerun()
+
+def render_leaderboard_page():
+    """Leaderboard page showing single player and multiplayer rankings."""
+    register_cleanup_handler()
+    active_user = setup_user_profile()
+    
+    st.title("🏆 Leaderboard")
+    st.write("---")
+    
+    # Fetch leaderboard data
+    leaderboard_data = get_leaderboard_data()
+    elo_leaderboard = leaderboard_data.get('elo_leaderboard', [])
+    single_leaderboard = leaderboard_data.get('single_player_leaderboard', [])
+    
+    # Create tabs
+    tab1, tab2 = st.tabs(["🎮 Single Player Best Scores", "⚔️ 1v1 ELO Rankings"])
+    
+    with tab1:
+        st.subheader("Single Player Speed Quiz - Top Scores")
+        
+        if not single_leaderboard:
+            st.info("No scores recorded yet. Play the Speed Quiz to get on the leaderboard!")
+        else:
+            # Display leaderboard table
+            for idx, entry in enumerate(single_leaderboard, 1):
+                with st.container():
+                    col1, col2, col3, col4, col5, col6 = st.columns([1, 2, 2, 2, 2, 3])
+                    
+                    # Rank badge
+                    if idx == 1:
+                        rank_badge = "🥇"
+                    elif idx == 2:
+                        rank_badge = "🥈"
+                    elif idx == 3:
+                        rank_badge = "🥉"
+                    else:
+                        rank_badge = f"#{idx}"
+                    
+                    col1.markdown(f"### {rank_badge}")
+                    col2.markdown(f"**{entry['username']}**")
+                    col3.metric("Score", entry['score'])
+                    col4.metric("Accuracy", f"{entry['accuracy']:.1f}%")
+                    col5.metric("Difficulty", entry['difficulty'])
+                    col6.caption(f"{entry['created_at'][:10]}")
+                    
+                    if entry.get('categories'):
+                        categories_str = ', '.join(entry['categories']) if isinstance(entry['categories'], list) else str(entry['categories'])
+                        col6.caption(f"Categories: {categories_str}")
+                    
+                    st.divider()
+        
+        # Show user's best score
+        if single_leaderboard:
+            user_scores = [s for s in single_leaderboard if s['username'] == active_user]
+            if user_scores:
+                user_best = max(user_scores, key=lambda x: x['score'])
+                st.info(f"🎯 Your best score: **{user_best['score']}** (Accuracy: {user_best['accuracy']:.1f}%)")
+    
+    with tab2:
+        st.subheader("1v1 Multiplayer - ELO Rankings")
+        
+        if not elo_leaderboard:
+            st.info("No ELO ratings yet. Play 1v1 Multiplayer to get ranked!")
+        else:
+            # Display ELO leaderboard table
+            for idx, entry in enumerate(elo_leaderboard, 1):
+                with st.container():
+                    col1, col2, col3, col4, col5, col6 = st.columns([1, 2, 2, 2, 2, 2])
+                    
+                    # Rank badge
+                    if idx == 1:
+                        rank_badge = "🥇"
+                    elif idx == 2:
+                        rank_badge = "🥈"
+                    elif idx == 3:
+                        rank_badge = "🥉"
+                    else:
+                        rank_badge = f"#{idx}"
+                    
+                    col1.markdown(f"### {rank_badge}")
+                    col2.markdown(f"**{entry['username']}**")
+                    col3.metric("ELO", entry['elo_rating'])
+                    col4.metric("W/L/T", f"{entry['games_won']}/{entry['games_lost']}/{entry['games_tied']}")
+                    col5.metric("Games", entry['games_played'])
+                    
+                    # Win rate calculation
+                    if entry['games_played'] > 0:
+                        win_rate = (entry['games_won'] / entry['games_played']) * 100
+                        col6.metric("Win Rate", f"{win_rate:.1f}%")
+                    else:
+                        col6.metric("Win Rate", "0%")
+                    
+                    st.divider()
+        
+        # Show user's ELO rating
+        if elo_leaderboard:
+            user_elo = next((e for e in elo_leaderboard if e['username'] == active_user), None)
+            if user_elo:
+                st.info(f"⚔️ Your ELO rating: **{user_elo['elo_rating']}** (Games: {user_elo['games_played']}, W/L/T: {user_elo['games_won']}/{user_elo['games_lost']}/{user_elo['games_tied']})")
+            else:
+                st.info("You don't have an ELO rating yet. Play 1v1 Multiplayer to get ranked!")
+
+def parse_exam_text(exam_text: str) -> list:
+    """Parse exam text into structured question format."""
+    questions = []
+    individual_questions = QUESTION_SPLIT_PATTERN.split(exam_text.strip())
+    
+    for q_text in individual_questions:
+        if not q_text.strip():
+            continue
+        
+        # Extract question text
+        prompt_match = QUESTION_PROMPT_PATTERN.search(q_text)
+        question_text = prompt_match.group(1).strip() if prompt_match else q_text
+        
+        # Extract options
+        opt_A = OPTION_A_PATTERN.search(q_text)
+        opt_B = OPTION_B_PATTERN.search(q_text)
+        opt_C = OPTION_C_PATTERN.search(q_text)
+        opt_D = OPTION_D_PATTERN.search(q_text)
+        
+        options = {
+            'A': opt_A.group(1).strip()[2:].strip() if opt_A else "",
+            'B': opt_B.group(1).strip()[2:].strip() if opt_B else "",
+            'C': opt_C.group(1).strip()[2:].strip() if opt_C else "",
+            'D': opt_D.group(1).strip()[2:].strip() if opt_D else ""
+        }
+        
+        questions.append({
+            'question': question_text,
+            'options': options
+        })
+    
+    return questions
+
+def extract_answer_key(exam_text: str) -> list:
+    """Extract answer key from exam text."""
+    # Look for [KEY: A, B, C, ...] pattern at the end
+    key_match = re.search(r'\[KEY:\s*([^\]]+)\]', exam_text)
+    if key_match:
+        key_string = key_match.group(1).strip()
+        # Parse the key string
+        answers = [ans.strip() for ans in key_string.split(',')]
+        return answers
+    
+    # Fallback: try to extract from the last line
+    lines = exam_text.strip().split('\n')
+    if lines:
+        last_line = lines[-1].strip()
+        if 'KEY:' in last_line:
+            key_part = last_line.split('KEY:')[1].strip()
+            answers = [ans.strip() for ans in key_part.split(',')]
+            return answers
+    
+    return []
+
 def render_settings_page():
     st.title("⚙️ Settings")
     st.write("---")
@@ -1625,7 +2521,7 @@ def render_settings_page():
     )
     
     st.session_state.temperature = st.slider(
-        "Temperature",
+        "Question Creativity 1",
         min_value=0.0,
         max_value=2.0,
         value=st.session_state.temperature,
@@ -1634,7 +2530,7 @@ def render_settings_page():
     )
     
     st.session_state.top_p = st.slider(
-        "Top P",
+        "Question Creativity 2",
         min_value=0.0,
         max_value=1.0,
         value=st.session_state.top_p,
@@ -1654,6 +2550,46 @@ def render_settings_page():
         else:
             st.info("No previous submission backup found to restore.")
 
+    st.write("---")
+    
+    # API Key Usage Display
+    st.subheader("API Key Usage")
+    
+    for i, model_counts in st.session_state.api_request_counts.items():
+        is_current = i == st.session_state.key_index
+        status = "🟢 Active" if is_current else "⚪ Available"
+        
+        st.markdown(f"**Key {i + 1}** {status}")
+        
+        # Show usage for each model
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            flash35_count = model_counts.get('gemini-3.5-flash', 0)
+            flash35_max = MAX_REQUESTS_PER_KEY_PER_MODEL['gemini-3.5-flash']
+            flash35_percent = min((flash35_count / flash35_max) * 100, 100)
+            
+            st.metric(
+                "3.5 Flash",
+                f"{flash35_count}/{flash35_max}",
+                delta_color="normal" if flash35_count < flash35_max else "inverse"
+            )
+            st.progress(flash35_percent / 100)
+        
+        with col2:
+            flash31_count = model_counts.get('gemini-3.1-flash-lite', 0)
+            flash31_max = MAX_REQUESTS_PER_KEY_PER_MODEL['gemini-3.1-flash-lite']
+            flash31_percent = min((flash31_count / flash31_max) * 100, 100)
+            
+            st.metric(
+                "3.1 Flash Lite",
+                f"{flash31_count}/{flash31_max}",
+                delta_color="normal" if flash31_count < flash31_max else "inverse"
+            )
+            st.progress(flash31_percent / 100)
+        
+        st.divider()
+    
     st.write("---")
     # 2. Speed Switch
     st.subheader("Model Selection")
@@ -1768,6 +2704,9 @@ pg = st.navigation([
     st.Page(render_trainer_page, title="Exam Trainer", icon="📝"),
     st.Page(render_stats_page, title="Stats", icon="📊", url_path="stats"),
     st.Page(render_export_page, title="Export Questions", icon="📥", url_path="export"), 
+    st.Page(render_game_page, title="Speed Quiz", icon="🎮", url_path="game"),
+    st.Page(render_multiplayer_page, title="1v1 Multiplayer", icon="⚔️", url_path="multiplayer"),
+    st.Page(render_leaderboard_page, title="Leaderboard", icon="🏆", url_path="leaderboard"),
     st.Page(render_settings_page, title="Settings", icon="⚙️", url_path="settings")
 ])
 pg.run()

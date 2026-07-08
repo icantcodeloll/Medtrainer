@@ -56,7 +56,8 @@ def save_progress(session_state, username: str = "Default") -> bool:
         "last_user_input": session_state.get("last_user_input", ""),
         "last_correct_key": session_state.get("last_correct_key", ""),
         "exam_submitted": session_state.get("exam_submitted", False),
-        "current_categories": session_state.get("current_categories", [])
+        "current_categories": session_state.get("current_categories", []),
+        "profile_picture": session_state.get("profile_picture", None)
     }
     
     row_payload = {
@@ -137,3 +138,146 @@ def migrate_progress_data(progress_data: dict) -> dict:
     #     progress_data["new_field"] = default_value
     
     return progress_data
+
+def calculate_elo_rating(winner_elo: int, loser_elo: int, k_factor: int = 32) -> tuple[int, int]:
+    """
+    Calculate new ELO ratings after a match using the standard ELO formula.
+    
+    Args:
+        winner_elo: Current ELO rating of the winner
+        loser_elo: Current ELO rating of the loser
+        k_factor: K-factor determines how much ratings change (default 32)
+        
+    Returns:
+        tuple: (new_winner_elo, new_loser_elo)
+    """
+    # Calculate expected scores
+    expected_winner = 1 / (1 + 10 ** ((loser_elo - winner_elo) / 400))
+    expected_loser = 1 / (1 + 10 ** ((winner_elo - loser_elo) / 400))
+    
+    # Calculate new ratings
+    new_winner_elo = int(winner_elo + k_factor * (1 - expected_winner))
+    new_loser_elo = int(loser_elo + k_factor * (0 - expected_loser))
+    
+    return new_winner_elo, new_loser_elo
+
+def update_player_elo(username: str, opponent_username: str, result: str) -> bool:
+    """
+    Update ELO ratings for both players after a multiplayer match.
+    
+    Args:
+        username: First player's username
+        opponent_username: Second player's username
+        result: 'win', 'loss', or 'tie' from the perspective of username
+        
+    Returns:
+        bool: True if update was successful
+    """
+    try:
+        # Get current ELO ratings
+        response = supabase.table("player_elo_ratings").select("*").in_("username", [username, opponent_username]).execute()
+        
+        players = {p["username"]: p for p in response.data} if response.data else {}
+        
+        # Initialize players if they don't exist
+        if username not in players:
+            players[username] = {"username": username, "elo_rating": 1000, "games_played": 0, "games_won": 0, "games_lost": 0, "games_tied": 0}
+            supabase.table("player_elo_ratings").insert(players[username]).execute()
+        
+        if opponent_username not in players:
+            players[opponent_username] = {"username": opponent_username, "elo_rating": 1000, "games_played": 0, "games_won": 0, "games_lost": 0, "games_tied": 0}
+            supabase.table("player_elo_ratings").insert(players[opponent_username]).execute()
+        
+        player_elo = players[username]["elo_rating"]
+        opponent_elo = players[opponent_username]["elo_rating"]
+        
+        # Calculate new ELO ratings
+        if result == "win":
+            new_player_elo, new_opponent_elo = calculate_elo_rating(player_elo, opponent_elo)
+            players[username]["games_won"] += 1
+            players[opponent_username]["games_lost"] += 1
+        elif result == "loss":
+            new_opponent_elo, new_player_elo = calculate_elo_rating(opponent_elo, player_elo)
+            players[username]["games_lost"] += 1
+            players[opponent_username]["games_won"] += 1
+        else:  # tie
+            # For ties, both players move toward the average
+            avg_elo = (player_elo + opponent_elo) / 2
+            new_player_elo = int(player_elo + 16 * (0.5 - (1 / (1 + 10 ** ((opponent_elo - player_elo) / 400)))))
+            new_opponent_elo = int(opponent_elo + 16 * (0.5 - (1 / (1 + 10 ** ((player_elo - opponent_elo) / 400)))))
+            players[username]["games_tied"] += 1
+            players[opponent_username]["games_tied"] += 1
+        
+        # Update both players
+        players[username]["elo_rating"] = new_player_elo
+        players[username]["games_played"] += 1
+        
+        players[opponent_username]["elo_rating"] = new_opponent_elo
+        players[opponent_username]["games_played"] += 1
+        
+        supabase.table("player_elo_ratings").update(players[username]).eq("username", username).execute()
+        supabase.table("player_elo_ratings").update(players[opponent_username]).eq("username", opponent_username).execute()
+        
+        return True
+    except Exception as e:
+        print(f"Error updating ELO ratings: {e}")
+        return False
+
+def save_single_player_score(username: str, score: int, total_questions: int, accuracy: float, difficulty: int, time_taken: float, categories: list) -> bool:
+    """
+    Save a single player speed quiz score to the leaderboard.
+    
+    Args:
+        username: Player's username
+        score: Number of correct answers
+        total_questions: Total number of questions
+        accuracy: Accuracy percentage
+        difficulty: Difficulty level (1-50)
+        time_taken: Time taken in seconds
+        categories: List of categories used
+        
+    Returns:
+        bool: True if save was successful
+    """
+    try:
+        score_data = {
+            "username": username,
+            "score": score,
+            "total_questions": total_questions,
+            "accuracy": accuracy,
+            "difficulty": difficulty,
+            "time_taken": time_taken,
+            "categories": categories
+        }
+        supabase.table("single_player_scores").insert(score_data).execute()
+        return True
+    except Exception as e:
+        print(f"Error saving single player score: {e}")
+        return False
+
+def get_leaderboard_data() -> dict:
+    """
+    Fetch leaderboard data for both single player and multiplayer.
+    
+    Returns:
+        dict: Dictionary containing 'elo_leaderboard' and 'single_player_leaderboard'
+    """
+    try:
+        # Get ELO leaderboard (top 50)
+        elo_response = supabase.table("player_elo_ratings").select("*").order("elo_rating", desc=True).limit(50).execute()
+        elo_leaderboard = elo_response.data if elo_response.data else []
+        
+        # Get single player leaderboard (top 50 by score)
+        single_response = supabase.table("single_player_scores").select("*").order("score", desc=True).limit(50).execute()
+        single_leaderboard = single_response.data if single_response.data else []
+        
+        return {
+            "elo_leaderboard": elo_leaderboard,
+            "single_player_leaderboard": single_leaderboard
+        }
+    except Exception as e:
+        print(f"Error fetching leaderboard data: {e}")
+        return {
+            "elo_leaderboard": [],
+            "single_player_leaderboard": []
+        }
