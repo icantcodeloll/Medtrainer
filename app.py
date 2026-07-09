@@ -87,8 +87,8 @@ MAX_REQUESTS_PER_KEY_PER_MODEL = {
     'gemini-3.5-flash': 20,
     'gemini-3.1-flash-lite': 500
 }  # Maximum requests per API key per model per day
-CSV_FILE = "learning_objectives_informative_reports.csv" 
-NOTES_FILE = "lecture_notes.csv"
+CSV_FILE = "learning_objectives_informative_reports_y2s1.csv" 
+NOTES_FILE = "lecture_notes_y2s1.csv"
 JOIN_COLUMN = "lecture_id"
 EXAM_WEIGHTS = {
     "Anatomy": 42, 
