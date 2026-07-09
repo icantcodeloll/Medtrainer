@@ -353,7 +353,8 @@ def initialize_app(active_user: str, force_reset: bool = False) -> None:
         "user_selections": {},
         "last_user_answers_list": [],
         "show_settings": False,
-        "current_page": "Exam Trainer"
+        "current_page": "Exam Trainer",
+        "leaderboard_opt_in": loaded_progress.get("leaderboard_opt_in", False)
     }
 
     # Bulk assign missing parameters into active memory layout
@@ -947,12 +948,18 @@ def render_trainer_page():
     # 2. CORE LOGIC FUNCTIONS
     # ==========================================
     # Dynamically pick the target CSV depending on the selectbox state
-    if st.session_state.get("semester") == "Y2S2":
-        CSV_FILE = "learning_objectives_y2s2.csv"
-        NOTES_FILE = "lecture_notes.csv"
+    if st.session_state.get("semester") == "Y1S1":
+        CSV_FILE = "learning_objectives_informative_reports_y1s1.csv"
+        NOTES_FILE = "lecture_notes_y1s1.csv"
+    elif st.session_state.get("semester") == "Y1S2":
+        CSV_FILE = "learning_objectives_informative_reports_y1s2.csv"
+        NOTES_FILE = "lecture_notes_y1s2.csv"
+    elif st.session_state.get("semester") == "Y2S1":
+        CSV_FILE = "learning_objectives_informative_reports_y2s1.csv"
+        NOTES_FILE = "lecture_notes_y2s1.csv"
     else:
-        CSV_FILE = "learning_objectives_informative_reports.csv"
-        NOTES_FILE = "lecture_notes.csv"
+        CSV_FILE = "learning_objectives_informative_reports_y2s2.csv"
+        NOTES_FILE = "lecture_notes_y2s2.csv"
 
     JOIN_COLUMN = "lecture_id"
     # ==========================================
@@ -1738,7 +1745,6 @@ def render_game_page():
                 help="Filter questions by specific subjects"
             )
         
-        st.info("📝 Questions will be generated before the timer starts. This ensures you're not limited by AI generation speed during the game.")
         
         if st.button("🚀 Start Game", type="primary", use_container_width=True):
             # Generate questions before starting
@@ -1807,15 +1813,18 @@ def render_game_page():
         if st.session_state.game_current_index < len(st.session_state.game_questions):
             current_q = st.session_state.game_questions[st.session_state.game_current_index]
             
-            st.markdown(f"### Question {st.session_state.game_current_index + 1}/{len(st.session_state.game_questions)}")
+            st.markdown(f"### Question {st.session_state.game_current_index + 1}")
             st.markdown(current_q['question'])
             
-            # Display options
+            # Display options (matching trainer page layout)
+            options_dict = current_q['options']
+            choice_keys = list(options_dict.keys())
             user_answer = st.radio(
                 "Select your answer:",
-                options=['A', 'B', 'C', 'D'],
+                options=choice_keys,
+                format_func=lambda x: f"{x.lower()}. {options_dict[x]}",
                 key=f"game_q_{st.session_state.game_current_index}",
-                horizontal=True
+                label_visibility="collapsed"
             )
             
             col1, col2, col3 = st.columns([1, 2, 1])
@@ -1859,17 +1868,18 @@ def render_game_page():
         accuracy = (st.session_state.game_score / total_answered * 100) if total_answered > 0 else 0
         time_taken = 60.0  # Fixed 60 seconds
         
-        # Save score to leaderboard (only once)
+        # Save score to leaderboard (only once and only if opted in)
         if 'game_score_saved' not in st.session_state or not st.session_state.game_score_saved:
-            save_single_player_score(
-                active_user,
-                st.session_state.game_score,
-                total_questions,
-                accuracy,
-                st.session_state.game_settings['difficulty'],
-                time_taken,
-                st.session_state.game_settings['categories']
-            )
+            if st.session_state.leaderboard_opt_in:
+                save_single_player_score(
+                    active_user,
+                    st.session_state.game_score,
+                    total_questions,
+                    accuracy,
+                    st.session_state.game_settings['difficulty'],
+                    time_taken,
+                    st.session_state.game_settings['categories']
+                )
             st.session_state.game_score_saved = True
         
         col1, col2, col3 = st.columns(3)
@@ -1984,7 +1994,11 @@ def render_multiplayer_page():
                 difficulty = st.slider("Difficulty Level", 1, 50, st.session_state.current_level)
                 num_questions = st.slider("Number of Questions", 5, 30, 10)
             with col2:
-                categories = st.multiselect("Categories", available_categories, help="Leave empty for all subjects")
+                all_subjects = st.checkbox("All Subjects", value=True, help="Include questions from all subjects")
+                if not all_subjects:
+                    categories = st.multiselect("Select Subjects", available_categories, help="Choose specific subjects to focus on")
+                else:
+                    categories = []
             
             if st.button("🏠 Create Room", type="primary", use_container_width=True):
                 # Generate room code
@@ -2025,7 +2039,7 @@ def render_multiplayer_page():
                                 'player2_progress': json.dumps({'current_index': 0, 'score': 0}),
                                 'host_answers': json.dumps([]),
                                 'player2_answers': json.dumps([]),
-                                'created_at': datetime.now().isoformat()
+                                'created_at': datetime.datetime.now().isoformat()
                             }
                             
                             try:
@@ -2267,9 +2281,9 @@ def render_multiplayer_page():
             result = "tie"
             result_display = "🤝 It's a Tie!"
         
-        # Update ELO ratings (only once per game completion)
+        # Update ELO ratings (only once per game completion and only if opted in)
         if 'mp_elo_updated' not in st.session_state or not st.session_state.mp_elo_updated:
-            if opponent_name and opponent_name != "Opponent":
+            if opponent_name and opponent_name != "Opponent" and st.session_state.leaderboard_opt_in:
                 update_player_elo(active_user, opponent_name, result)
                 st.session_state.mp_elo_updated = True
         
@@ -2344,9 +2358,11 @@ def render_leaderboard_page():
     leaderboard_data = get_leaderboard_data()
     elo_leaderboard = leaderboard_data.get('elo_leaderboard', [])
     single_leaderboard = leaderboard_data.get('single_player_leaderboard', [])
+    accuracy_leaderboard = leaderboard_data.get('accuracy_leaderboard', [])
+    questions_leaderboard = leaderboard_data.get('questions_leaderboard', [])
     
     # Create tabs
-    tab1, tab2 = st.tabs(["🎮 Single Player Best Scores", "⚔️ 1v1 ELO Rankings"])
+    tab1, tab2, tab3, tab4 = st.tabs(["🎮 Single Player Best Scores", "⚔️ 1v1 ELO Rankings", "🎯 Overall Accuracy", "📊 Total Questions Completed"])
     
     with tab1:
         st.subheader("Single Player Speed Quiz - Top Scores")
@@ -2432,6 +2448,78 @@ def render_leaderboard_page():
                 st.info(f"⚔️ Your ELO rating: **{user_elo['elo_rating']}** (Games: {user_elo['games_played']}, W/L/T: {user_elo['games_won']}/{user_elo['games_lost']}/{user_elo['games_tied']})")
             else:
                 st.info("You don't have an ELO rating yet. Play 1v1 Multiplayer to get ranked!")
+
+    with tab3:
+        st.subheader("Overall Accuracy - All Time")
+        
+        if not accuracy_leaderboard:
+            st.info("No accuracy data yet. Play the Speed Quiz to get on the leaderboard!")
+        else:
+            # Display accuracy leaderboard table
+            for idx, entry in enumerate(accuracy_leaderboard, 1):
+                with st.container():
+                    col1, col2, col3, col4, col5 = st.columns([1, 2, 2, 2, 2])
+                    
+                    # Rank badge
+                    if idx == 1:
+                        rank_badge = "🥇"
+                    elif idx == 2:
+                        rank_badge = "🥈"
+                    elif idx == 3:
+                        rank_badge = "🥉"
+                    else:
+                        rank_badge = f"#{idx}"
+                    
+                    col1.markdown(f"### {rank_badge}")
+                    col2.markdown(f"**{entry['username']}**")
+                    col3.metric("Overall Accuracy", f"{entry['overall_accuracy']:.1f}%")
+                    col4.metric("Correct", entry['total_correct'])
+                    col5.metric("Total Questions", entry['total_questions'])
+                    
+                    st.divider()
+        
+        # Show user's overall accuracy
+        if accuracy_leaderboard:
+            user_accuracy = next((e for e in accuracy_leaderboard if e['username'] == active_user), None)
+            if user_accuracy:
+                st.info(f"🎯 Your overall accuracy: **{user_accuracy['overall_accuracy']:.1f}%** ({user_accuracy['total_correct']}/{user_accuracy['total_questions']} correct)")
+            else:
+                st.info("You don't have accuracy data yet. Play the Speed Quiz to get ranked!")
+
+    with tab4:
+        st.subheader("Total Questions Completed - All Time")
+        
+        if not questions_leaderboard:
+            st.info("No question data yet. Play the Speed Quiz to get on the leaderboard!")
+        else:
+            # Display questions leaderboard table
+            for idx, entry in enumerate(questions_leaderboard, 1):
+                with st.container():
+                    col1, col2, col3 = st.columns([1, 2, 2])
+                    
+                    # Rank badge
+                    if idx == 1:
+                        rank_badge = "🥇"
+                    elif idx == 2:
+                        rank_badge = "🥈"
+                    elif idx == 3:
+                        rank_badge = "🥉"
+                    else:
+                        rank_badge = f"#{idx}"
+                    
+                    col1.markdown(f"### {rank_badge}")
+                    col2.markdown(f"**{entry['username']}**")
+                    col3.metric("Total Questions", entry['total_questions'])
+                    
+                    st.divider()
+        
+        # Show user's total questions
+        if questions_leaderboard:
+            user_questions = next((e for e in questions_leaderboard if e['username'] == active_user), None)
+            if user_questions:
+                st.info(f"📊 Your total questions completed: **{user_questions['total_questions']}**")
+            else:
+                st.info("You don't have question data yet. Play the Speed Quiz to get ranked!")
 
 def parse_exam_text(exam_text: str) -> list:
     """Parse exam text into structured question format."""
@@ -2537,6 +2625,18 @@ def render_settings_page():
         step=0.05,
         help="Nucleus sampling: Lower (0.0) = more focused, Higher (1.0) = more diverse"
     )
+    
+    st.write("---")
+    
+    # Leaderboard opt-in setting
+    st.subheader("Leaderboard Privacy")
+    st.session_state.leaderboard_opt_in = st.checkbox(
+        "Show my scores on the leaderboard",
+        value=st.session_state.leaderboard_opt_in,
+        help="When enabled, your scores will appear on the public leaderboard. When disabled, your scores are private."
+    )
+    
+    st.write("---")
     
 
     if st.button("Undo last submission"):

@@ -4,3 +4,4 @@ google-genai
 fpdf
 supabase
 reportlab
+python-docx

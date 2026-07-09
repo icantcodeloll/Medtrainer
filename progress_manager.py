@@ -57,7 +57,8 @@ def save_progress(session_state, username: str = "Default") -> bool:
         "last_correct_key": session_state.get("last_correct_key", ""),
         "exam_submitted": session_state.get("exam_submitted", False),
         "current_categories": session_state.get("current_categories", []),
-        "profile_picture": session_state.get("profile_picture", None)
+        "profile_picture": session_state.get("profile_picture", None),
+        "leaderboard_opt_in": session_state.get("leaderboard_opt_in", False)
     }
     
     row_payload = {
@@ -258,9 +259,11 @@ def save_single_player_score(username: str, score: int, total_questions: int, ac
 def get_leaderboard_data() -> dict:
     """
     Fetch leaderboard data for both single player and multiplayer.
+    Also calculates overall accuracy and total questions completed per user.
     
     Returns:
-        dict: Dictionary containing 'elo_leaderboard' and 'single_player_leaderboard'
+        dict: Dictionary containing 'elo_leaderboard', 'single_player_leaderboard', 
+              'accuracy_leaderboard', and 'questions_leaderboard'
     """
     try:
         # Get ELO leaderboard (top 50)
@@ -271,13 +274,63 @@ def get_leaderboard_data() -> dict:
         single_response = supabase.table("single_player_scores").select("*").order("score", desc=True).limit(50).execute()
         single_leaderboard = single_response.data if single_response.data else []
         
+        # Get all single player scores for accuracy and questions calculations
+        all_scores_response = supabase.table("single_player_scores").select("*").execute()
+        all_scores = all_scores_response.data if all_scores_response.data else []
+        
+        # Calculate overall accuracy per user
+        user_accuracy = {}
+        for score in all_scores:
+            username = score['username']
+            if username not in user_accuracy:
+                user_accuracy[username] = {'total_correct': 0, 'total_questions': 0}
+            user_accuracy[username]['total_correct'] += score['score']
+            user_accuracy[username]['total_questions'] += score['total_questions']
+        
+        # Convert to list and sort by accuracy
+        accuracy_leaderboard = []
+        for username, data in user_accuracy.items():
+            overall_accuracy = (data['total_correct'] / data['total_questions'] * 100) if data['total_questions'] > 0 else 0
+            accuracy_leaderboard.append({
+                'username': username,
+                'overall_accuracy': overall_accuracy,
+                'total_correct': data['total_correct'],
+                'total_questions': data['total_questions']
+            })
+        
+        # Sort by overall accuracy (descending)
+        accuracy_leaderboard.sort(key=lambda x: x['overall_accuracy'], reverse=True)
+        
+        # Calculate total questions completed per user
+        user_questions = {}
+        for score in all_scores:
+            username = score['username']
+            if username not in user_questions:
+                user_questions[username] = 0
+            user_questions[username] += score['total_questions']
+        
+        # Convert to list and sort by total questions
+        questions_leaderboard = []
+        for username, total_questions in user_questions.items():
+            questions_leaderboard.append({
+                'username': username,
+                'total_questions': total_questions
+            })
+        
+        # Sort by total questions (descending)
+        questions_leaderboard.sort(key=lambda x: x['total_questions'], reverse=True)
+        
         return {
             "elo_leaderboard": elo_leaderboard,
-            "single_player_leaderboard": single_leaderboard
+            "single_player_leaderboard": single_leaderboard,
+            "accuracy_leaderboard": accuracy_leaderboard,
+            "questions_leaderboard": questions_leaderboard
         }
     except Exception as e:
         print(f"Error fetching leaderboard data: {e}")
         return {
             "elo_leaderboard": [],
-            "single_player_leaderboard": []
+            "single_player_leaderboard": [],
+            "accuracy_leaderboard": [],
+            "questions_leaderboard": []
         }
