@@ -2587,10 +2587,10 @@ def render_settings_page():
     st.session_state.num_questions = st.slider("Number of Questions", 1, 50, st.session_state.num_questions)
     
     # Define the options exactly as you want them
-    semester_options = ["Y2S1", "Y2S2"]
+    semester_options = ["Y1S1", "Y1S2", "Y2S1", "Y2S2"]
 
     # Look up what is currently saved in session state to determine the starting index (default to 0 if not found)
-    current_semester = st.session_state.get("semester", "Y2S1")
+    current_semester = st.session_state.get("semester", "Y2S2")
     default_index = semester_options.index(current_semester) if current_semester in semester_options else 0
 
     # Your selectbox, dynamically setting its initial value based on session state
