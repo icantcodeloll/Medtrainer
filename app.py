@@ -312,7 +312,7 @@ def initialize_app(active_user: str, force_reset: bool = False) -> None:
         "current_level": loaded_progress.get("current_level", 1),
         "exam_model": loaded_progress.get("exam_model", 'gemini-3.1-flash-lite'),
         "num_questions": loaded_progress.get("num_questions", 5),
-        "semester": loaded_progress.get("semester", "y2s1"),
+        "semester": loaded_progress.get("semester", "y2s2"),
         "missed_questions": loaded_progress.get("missed_questions", []),
         "exam_history": loaded_progress.get("exam_history", []),
         "current_exam": loaded_progress.get("current_exam", ""),
@@ -934,6 +934,9 @@ def render_trainer_page():
     elif st.session_state.get("semester") == "Y2S1":
         CSV_FILE = "learning_objectives_informative_reports_y2s1.csv"
         NOTES_FILE = "lecture_notes_y2s1.csv"
+    elif st.session_state.get("semester") == "Y2S2":
+        CSV_FILE = "learning_objectives_informative_reports_y2s2.csv"
+        NOTES_FILE = "lecture_notes_y2s2.csv"
     else:
         CSV_FILE = "learning_objectives_informative_reports_y2s2.csv"
         NOTES_FILE = "lecture_notes_y2s2.csv"
@@ -1078,7 +1081,6 @@ def render_trainer_page():
             try:
                 # We use replace=False so we don't duplicate questions in the same exam
                 st.session_state.samples_df = df.sample(min(n, len(df)), weights='sampling_weight', replace=False)
-                st.sidebar.info("Y2S1 complete")
             except ValueError:
                 # Fallback if weights math fails (e.g., all weights are zero)
                 st.session_state.samples_df = df.sample(min(n, len(df)))
@@ -1380,7 +1382,7 @@ def render_trainer_page():
                     "question": individual_questions[i].strip(),
                     "correct": correct,
                     "yours": u_ans,
-                    "semester": st.session_state.get("semester", "Y2S1"),
+                    "semester": st.session_state.get("semester", "Y2S2"),
                     "category": st.session_state.current_categories[i] if i < len(st.session_state.current_categories) else "General",
                 })
                 
@@ -1396,7 +1398,7 @@ def render_trainer_page():
                         "question": individual_questions[i].strip(),
                         "correct": correct,
                         "yours": u_ans,
-                        "semester": st.session_state.get("semester", "Y2S1"),
+                        "semester": st.session_state.get("semester", "Y2S2"),
                         "category": st.session_state.current_categories[i] if i < len(st.session_state.current_categories) else "General",
                     })
 
@@ -1450,7 +1452,7 @@ def render_trainer_page():
     # Missed Questions Bank in Sidebar
     if st.session_state.missed_questions:
         # Filter to only include mistakes from the active semester
-        current_semester = st.session_state.get("semester", "Y2S1")
+        current_semester = st.session_state.get("semester", "Y2S2")
         semester_filtered_mistakes = [
             item for item in st.session_state.missed_questions
             if isinstance(item, dict) and item.get('semester') == current_semester
@@ -1507,7 +1509,7 @@ def render_stats_page():
         df_history = pd.DataFrame(history_data)
         
         # Apply the active semester filtering cleanly (Case-insensitive)
-        current_sem = st.session_state.get("semester", "Y2S1").upper()
+        current_sem = st.session_state.get("semester", "Y2S2").upper()
         if "semester" in df_history.columns:
             df_history = df_history[df_history['semester'].str.upper() == current_sem]
             
