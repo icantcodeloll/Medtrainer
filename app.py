@@ -207,15 +207,13 @@ def setup_user_profile() -> str:
     if 'username' not in st.session_state:
         st.session_state.username = "Default"
     
-    if 'profile_picture' not in st.session_state:
-        st.session_state.profile_picture = None
     
     new_user = st.sidebar.text_input("Enter your username:", st.session_state.username)
     if st.sidebar.button("Switch / Create Profile"):
         st.session_state.username = validate_username(new_user)
         
         # Wipe the screen clean so the new user's data can load
-        keys_to_clear = ['current_level', 'num_questions', 'missed_questions', 'exam_history', 'current_exam', 'current_key', 'samples_df', 'profile_picture']
+        keys_to_clear = ['current_level', 'num_questions', 'missed_questions', 'exam_history', 'current_exam', 'current_key', 'samples_df']
         for k in keys_to_clear:
             if k in st.session_state:
                 del st.session_state[k]
@@ -223,26 +221,6 @@ def setup_user_profile() -> str:
     
     active_user = st.session_state.username
     
-    # Profile picture upload
-    st.sidebar.subheader("Profile Picture")
-    uploaded_file = st.sidebar.file_uploader(
-        "Upload a profile picture", 
-        type=["png", "jpg", "jpeg", "gif"],
-        key=f"profile_upload_{active_user}"
-    )
-    
-    if uploaded_file is not None:
-        st.session_state.profile_picture = uploaded_file.getvalue()
-        st.sidebar.success("Profile picture updated!")
-    elif st.session_state.profile_picture is None:
-        # Load profile picture from saved progress if not already in session
-        loaded_progress = load_progress(active_user)
-        if loaded_progress and 'profile_picture' in loaded_progress:
-            st.session_state.profile_picture = loaded_progress['profile_picture']
-    
-    # Display profile picture
-    if st.session_state.profile_picture:
-        st.sidebar.image(st.session_state.profile_picture, width=100)
     
     st.sidebar.success(f"Logged in as: **{active_user}**")
     initialize_app(active_user)
@@ -272,7 +250,6 @@ def save_on_tab_close():
                 "exam_history": st.session_state.get("exam_history", []),
                 "current_exam": st.session_state.get("current_exam", ""),
                 "current_key": st.session_state.get("current_key", []),
-                "profile_picture": st.session_state.get("profile_picture", None),
             }
             
             # Safely serialize the dataframe to standard records so the JSON manager handles it cleanly
@@ -1874,7 +1851,7 @@ def render_game_page():
                 save_single_player_score(
                     active_user,
                     st.session_state.game_score,
-                    total_questions,
+                    total_answered,
                     accuracy,
                     st.session_state.game_settings['difficulty'],
                     time_taken,
@@ -2362,18 +2339,18 @@ def render_leaderboard_page():
     questions_leaderboard = leaderboard_data.get('questions_leaderboard', [])
     
     # Create tabs
-    tab1, tab2, tab3, tab4 = st.tabs(["🎮 Single Player Best Scores", "⚔️ 1v1 ELO Rankings", "🎯 Overall Accuracy", "📊 Total Questions Completed"])
+    tab1, tab2, tab3, tab4 = st.tabs(["📊 Total Questions Completed", "🎯 Overall Accuracy", "⚔️ 1v1 ELO Rankings", "🎮 Single Player Best Scores"])
     
     with tab1:
-        st.subheader("Single Player Speed Quiz - Top Scores")
+        st.subheader("Total Questions Completed - All Time")
         
-        if not single_leaderboard:
-            st.info("No scores recorded yet. Play the Speed Quiz to get on the leaderboard!")
+        if not questions_leaderboard:
+            st.info("No question data yet. Play the Speed Quiz to get on the leaderboard!")
         else:
-            # Display leaderboard table
-            for idx, entry in enumerate(single_leaderboard, 1):
+            # Display questions leaderboard table
+            for idx, entry in enumerate(questions_leaderboard, 1):
                 with st.container():
-                    col1, col2, col3, col4, col5, col6 = st.columns([1, 2, 2, 2, 2, 3])
+                    col1, col2, col3 = st.columns([1, 2, 2])
                     
                     # Rank badge
                     if idx == 1:
@@ -2387,25 +2364,56 @@ def render_leaderboard_page():
                     
                     col1.markdown(f"### {rank_badge}")
                     col2.markdown(f"**{entry['username']}**")
-                    col3.metric("Score", entry['score'])
-                    col4.metric("Accuracy", f"{entry['accuracy']:.1f}%")
-                    col5.metric("Difficulty", entry['difficulty'])
-                    col6.caption(f"{entry['created_at'][:10]}")
-                    
-                    if entry.get('categories'):
-                        categories_str = ', '.join(entry['categories']) if isinstance(entry['categories'], list) else str(entry['categories'])
-                        col6.caption(f"Categories: {categories_str}")
+                    col3.metric("Total Questions", entry['total_questions'])
                     
                     st.divider()
         
-        # Show user's best score
-        if single_leaderboard:
-            user_scores = [s for s in single_leaderboard if s['username'] == active_user]
-            if user_scores:
-                user_best = max(user_scores, key=lambda x: x['score'])
-                st.info(f"🎯 Your best score: **{user_best['score']}** (Accuracy: {user_best['accuracy']:.1f}%)")
+        # Show user's total questions
+        if questions_leaderboard:
+            user_questions = next((e for e in questions_leaderboard if e['username'] == active_user), None)
+            if user_questions:
+                st.info(f"📊 Your total questions completed: **{user_questions['total_questions']}**")
+            else:
+                st.info("You don't have question data yet. Play the Speed Quiz to get ranked!")
     
     with tab2:
+        st.subheader("Overall Accuracy - All Time")
+        
+        if not accuracy_leaderboard:
+            st.info("No accuracy data yet. Play the Speed Quiz to get on the leaderboard!")
+        else:
+            # Display accuracy leaderboard table
+            for idx, entry in enumerate(accuracy_leaderboard, 1):
+                with st.container():
+                    col1, col2, col3, col4, col5 = st.columns([1, 2, 2, 2, 2])
+                    
+                    # Rank badge
+                    if idx == 1:
+                        rank_badge = "🥇"
+                    elif idx == 2:
+                        rank_badge = "🥈"
+                    elif idx == 3:
+                        rank_badge = "🥉"
+                    else:
+                        rank_badge = f"#{idx}"
+                    
+                    col1.markdown(f"### {rank_badge}")
+                    col2.markdown(f"**{entry['username']}**")
+                    col3.metric("Overall Accuracy", f"{entry['overall_accuracy']:.1f}%")
+                    col4.metric("Correct", entry['total_correct'])
+                    col5.metric("Total Questions", entry['total_questions'])
+                    
+                    st.divider()
+        
+        # Show user's overall accuracy
+        if accuracy_leaderboard:
+            user_accuracy = next((e for e in accuracy_leaderboard if e['username'] == active_user), None)
+            if user_accuracy:
+                st.info(f"🎯 Your overall accuracy: **{user_accuracy['overall_accuracy']:.1f}%** ({user_accuracy['total_correct']}/{user_accuracy['total_questions']} correct)")
+            else:
+                st.info("You don't have accuracy data yet. Play the Speed Quiz to get ranked!")
+
+    with tab3:
         st.subheader("1v1 Multiplayer - ELO Rankings")
         
         if not elo_leaderboard:
@@ -2449,53 +2457,16 @@ def render_leaderboard_page():
             else:
                 st.info("You don't have an ELO rating yet. Play 1v1 Multiplayer to get ranked!")
 
-    with tab3:
-        st.subheader("Overall Accuracy - All Time")
-        
-        if not accuracy_leaderboard:
-            st.info("No accuracy data yet. Play the Speed Quiz to get on the leaderboard!")
-        else:
-            # Display accuracy leaderboard table
-            for idx, entry in enumerate(accuracy_leaderboard, 1):
-                with st.container():
-                    col1, col2, col3, col4, col5 = st.columns([1, 2, 2, 2, 2])
-                    
-                    # Rank badge
-                    if idx == 1:
-                        rank_badge = "🥇"
-                    elif idx == 2:
-                        rank_badge = "🥈"
-                    elif idx == 3:
-                        rank_badge = "🥉"
-                    else:
-                        rank_badge = f"#{idx}"
-                    
-                    col1.markdown(f"### {rank_badge}")
-                    col2.markdown(f"**{entry['username']}**")
-                    col3.metric("Overall Accuracy", f"{entry['overall_accuracy']:.1f}%")
-                    col4.metric("Correct", entry['total_correct'])
-                    col5.metric("Total Questions", entry['total_questions'])
-                    
-                    st.divider()
-        
-        # Show user's overall accuracy
-        if accuracy_leaderboard:
-            user_accuracy = next((e for e in accuracy_leaderboard if e['username'] == active_user), None)
-            if user_accuracy:
-                st.info(f"🎯 Your overall accuracy: **{user_accuracy['overall_accuracy']:.1f}%** ({user_accuracy['total_correct']}/{user_accuracy['total_questions']} correct)")
-            else:
-                st.info("You don't have accuracy data yet. Play the Speed Quiz to get ranked!")
-
     with tab4:
-        st.subheader("Total Questions Completed - All Time")
+        st.subheader("Single Player Speed Quiz - Top Scores")
         
-        if not questions_leaderboard:
-            st.info("No question data yet. Play the Speed Quiz to get on the leaderboard!")
+        if not single_leaderboard:
+            st.info("No scores recorded yet. Play the Speed Quiz to get on the leaderboard!")
         else:
-            # Display questions leaderboard table
-            for idx, entry in enumerate(questions_leaderboard, 1):
+            # Display leaderboard table
+            for idx, entry in enumerate(single_leaderboard, 1):
                 with st.container():
-                    col1, col2, col3 = st.columns([1, 2, 2])
+                    col1, col2, col3, col4, col5, col6 = st.columns([1, 2, 2, 2, 2, 3])
                     
                     # Rank badge
                     if idx == 1:
@@ -2509,17 +2480,23 @@ def render_leaderboard_page():
                     
                     col1.markdown(f"### {rank_badge}")
                     col2.markdown(f"**{entry['username']}**")
-                    col3.metric("Total Questions", entry['total_questions'])
+                    col3.metric("Score", entry['score'])
+                    col4.metric("Accuracy", f"{entry['accuracy']:.1f}%")
+                    col5.metric("Difficulty", entry['difficulty'])
+                    col6.caption(f"{entry['created_at'][:10]}")
+                    
+                    if entry.get('categories'):
+                        categories_str = ', '.join(entry['categories']) if isinstance(entry['categories'], list) else str(entry['categories'])
+                        col6.caption(f"Categories: {categories_str}")
                     
                     st.divider()
         
-        # Show user's total questions
-        if questions_leaderboard:
-            user_questions = next((e for e in questions_leaderboard if e['username'] == active_user), None)
-            if user_questions:
-                st.info(f"📊 Your total questions completed: **{user_questions['total_questions']}**")
-            else:
-                st.info("You don't have question data yet. Play the Speed Quiz to get ranked!")
+        # Show user's best score
+        if single_leaderboard:
+            user_scores = [s for s in single_leaderboard if s['username'] == active_user]
+            if user_scores:
+                user_best = max(user_scores, key=lambda x: x['score'])
+                st.info(f"🎯 Your best score: **{user_best['score']}** (Accuracy: {user_best['accuracy']:.1f}%)")
 
 def parse_exam_text(exam_text: str) -> list:
     """Parse exam text into structured question format."""
