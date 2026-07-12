@@ -1236,58 +1236,63 @@ def render_trainer_page():
 
     # --- TAB 1: BLUEPRINT FILTERS (Original Logic) ---
     with filter_tab1:
-        # --- Subject filter Checkboxes ---
-        st.markdown("**Subjects:**")
-        categories = sorted(df_sidebar['category'].fillna("Uncategorized").astype(str).unique().tolist())
-        subject_filter = []
-        for cat in categories:
-            if st.checkbox(cat, value=True, key=f"focus_{cat}"):
-                subject_filter.append(cat)
-                
-        st.markdown("---")
-        
-        # --- Exam Filter Checkboxes ---
-        exam_filter = []
-        if 'exam' in df_sidebar.columns:
-            st.markdown("**Exam:**")
-            exams = sorted(df_sidebar['exam'].fillna("Uncategorized").astype(str).unique().tolist())
-            for ex in exams:
-                if st.checkbox(ex, value=True, key=f"exam_{ex}"):
-                    exam_filter.append(ex)
-        else:
-            exam_filter = []
+        with st.form("exam_filter_form"):
+            # --- Subject filter Checkboxes ---
+            st.markdown("**Subjects:**")
+            categories = sorted(df_sidebar['category'].fillna("Uncategorized").astype(str).unique().tolist())
+            subject_filter = []
+            for cat in categories:
+                if st.checkbox(cat, value=True, key=f"focus_{cat}"):
+                    subject_filter.append(cat)
+                    
+            st.markdown("---")
             
-        st.markdown("---")
-        
-        # --- Systems Filter Checkboxes ---
-        system_filter = []
-        if 'system' in df_sidebar.columns:
-            st.markdown("**Systems:**")
-            systems = sorted(df_sidebar['system'].fillna("Uncategorized").astype(str).unique().tolist())
-            for sys in systems:
-                if st.checkbox(sys, value=True, key=f"sys_{sys}"):
-                    system_filter.append(sys)
-        else:
+            # --- Exam Filter Checkboxes ---
+            exam_filter = []
+            if 'exam' in df_sidebar.columns:
+                st.markdown("**Exam:**")
+                exams = sorted(df_sidebar['exam'].fillna("Uncategorized").astype(str).unique().tolist())
+                for ex in exams:
+                    if st.checkbox(ex, value=True, key=f"exam_{ex}"):
+                        exam_filter.append(ex)
+            else:
+                exam_filter = []
+                
+            st.markdown("---")
+            
+            # --- Systems Filter Checkboxes ---
             system_filter = []
+            if 'system' in df_sidebar.columns:
+                st.markdown("**Systems:**")
+                systems = sorted(df_sidebar['system'].fillna("Uncategorized").astype(str).unique().tolist())
+                for sys in systems:
+                    if st.checkbox(sys, value=True, key=f"sys_{sys}"):
+                        system_filter.append(sys)
+            else:
+                system_filter = []
+            
+            st.form_submit_button("Apply Filters")
 
     # --- TAB 2: LECTURE FILTERS (New Integrated Feature) ---
     with filter_tab2:
-        
-        # Identify your Join Column dynamically from the dataset
-        if JOIN_COLUMN in df_sidebar.columns:
-            # Get all unique lecture IDs available
-            available_lectures = sorted(df_sidebar[JOIN_COLUMN].dropna().unique().tolist())
+        with st.form("lecture_filter_form"):
+            # Identify your Join Column dynamically from the dataset
+            if JOIN_COLUMN in df_sidebar.columns:
+                # Get all unique lecture IDs available
+                available_lectures = sorted(df_sidebar[JOIN_COLUMN].dropna().unique().tolist())
+                
+                # Use a multi-select box so users can select one or multiple lectures
+                selected_lectures = st.multiselect(
+                    "Select Lecture:", 
+                    options=available_lectures,
+                    default=[],
+                    key="filter_by_lecture_ids"
+                )
+            else:
+                st.warning(f"Join column '{JOIN_COLUMN}' not found in the dataset.")
+                selected_lectures = []
             
-            # Use a multi-select box so users can select one or multiple lectures
-            selected_lectures = st.multiselect(
-                "Select Lecture:", 
-                options=available_lectures,
-                default=[],
-                key="filter_by_lecture_ids"
-            )
-        else:
-            st.warning(f"Join column '{JOIN_COLUMN}' not found in the dataset.")
-            selected_lectures = []
+            st.form_submit_button("Apply Lecture Filter")
 
     # PDF Upload Section for Grading
     st.sidebar.subheader("Submit Filled PDF")
@@ -1878,13 +1883,36 @@ def render_game_page():
         elapsed = time.time() - st.session_state.game_start_time
         remaining = max(0, 60 - elapsed)
         
-        # Display timer
-        timer_col1, timer_col2, timer_col3 = st.columns([1, 2, 1])
-        with timer_col2:
-            if remaining > 10:
-                st.metric("⏱️ Time Remaining", f"{remaining:.1f}s")
-            else:
-                st.metric("⏱️ Time Remaining", f"{remaining:.1f}s", delta_color="inverse")
+        # Display timer with JavaScript for smooth updates
+        timer_html = f"""
+        <div style="text-align: center; padding: 20px;">
+            <div style="font-size: 24px; font-weight: bold; color: {'#ff6b6b' if remaining <= 10 else '#4CAF50'};">
+                ⏱️ Time Remaining: <span id="timer">{remaining:.1f}</span>s
+            </div>
+        </div>
+        <script>
+            var startTime = {time.time()};
+            var timeLimit = 60;
+            var timerElement = document.getElementById('timer');
+            
+            function updateTimer() {{
+                var elapsed = (Date.now() / 1000) - startTime;
+                var remaining = Math.max(0, timeLimit - elapsed);
+                timerElement.textContent = remaining.toFixed(1);
+                
+                if (remaining <= 0) {{
+                    timerElement.style.color = '#ff6b6b';
+                }}
+                
+                if (remaining > 0) {{
+                    requestAnimationFrame(updateTimer);
+                }}
+            }}
+            
+            updateTimer();
+        </script>
+        """
+        components.html(timer_html, height=80)
         
         # Check if time is up
         if remaining <= 0:
@@ -1897,23 +1925,26 @@ def render_game_page():
         if st.session_state.game_current_index < len(st.session_state.game_questions):
             current_q = st.session_state.game_questions[st.session_state.game_current_index]
             
-            st.markdown(f"### Question {st.session_state.game_current_index + 1}")
-            st.markdown(current_q['question'])
-            
-            # Display options (matching trainer page layout)
-            options_dict = current_q['options']
-            choice_keys = list(options_dict.keys())
-            user_answer = st.radio(
-                "Select your answer:",
-                options=choice_keys,
-                format_func=lambda x: f"{x.lower()}. {options_dict[x]}",
-                key=f"game_q_{st.session_state.game_current_index}",
-                label_visibility="collapsed"
-            )
-            
-            col1, col2, col3 = st.columns([1, 2, 1])
-            with col2:
-                if st.button("Submit Answer", type="primary", use_container_width=True, key="game_submit"):
+            with st.form(f"game_question_form_{st.session_state.game_current_index}"):
+                st.markdown(f"### Question {st.session_state.game_current_index + 1}")
+                st.markdown(current_q['question'])
+                
+                # Display options (matching trainer page layout)
+                options_dict = current_q['options']
+                choice_keys = list(options_dict.keys())
+                user_answer = st.radio(
+                    "Select your answer:",
+                    options=choice_keys,
+                    format_func=lambda x: f"{x.lower()}. {options_dict[x]}",
+                    key=f"game_q_{st.session_state.game_current_index}",
+                    label_visibility="collapsed"
+                )
+                
+                col1, col2, col3 = st.columns([1, 2, 1])
+                with col2:
+                    submitted = st.form_submit_button("Submit Answer", type="primary", use_container_width=True)
+                
+                if submitted:
                     # Check if user selected an answer
                     if user_answer is None:
                         st.warning("Please select an answer before submitting.")
@@ -2264,19 +2295,22 @@ def render_multiplayer_page():
         if st.session_state.mp_current_index < len(st.session_state.mp_questions):
             current_q = st.session_state.mp_questions[st.session_state.mp_current_index]
             
-            st.markdown(f"### Question {st.session_state.mp_current_index + 1}/{len(st.session_state.mp_questions)}")
-            st.markdown(current_q['question'])
-            
-            user_answer = st.radio(
-                "Select your answer:",
-                options=['A', 'B', 'C', 'D'],
-                key=f"mp_q_{st.session_state.mp_current_index}",
-                horizontal=True
-            )
-            
-            col1, col2, col3 = st.columns([1, 2, 1])
-            with col2:
-                if st.button("Submit Answer", type="primary", use_container_width=True, key="mp_submit"):
+            with st.form(f"mp_question_form_{st.session_state.mp_current_index}"):
+                st.markdown(f"### Question {st.session_state.mp_current_index + 1}/{len(st.session_state.mp_questions)}")
+                st.markdown(current_q['question'])
+                
+                user_answer = st.radio(
+                    "Select your answer:",
+                    options=['A', 'B', 'C', 'D'],
+                    key=f"mp_q_{st.session_state.mp_current_index}",
+                    horizontal=True
+                )
+                
+                col1, col2, col3 = st.columns([1, 2, 1])
+                with col2:
+                    submitted = st.form_submit_button("Submit Answer", type="primary", use_container_width=True)
+                
+                if submitted:
                     # Check if user selected an answer
                     if user_answer is None:
                         st.warning("Please select an answer before submitting.")
