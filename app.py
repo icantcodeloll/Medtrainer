@@ -36,6 +36,13 @@ try:
 except ImportError:
     PDF_AVAILABLE = False
 
+# PDF parsing library availability check
+try:
+    from PyPDF2 import PdfReader
+    PDF_PARSING_AVAILABLE = True
+except ImportError:
+    PDF_PARSING_AVAILABLE = False
+
 def initialize_pwa_assets():
     """
     Automated hook ensuring manifest, service worker, and app tags are mapped
@@ -79,8 +86,6 @@ def initialize_pwa_assets():
 
 # Trigger asset pipeline validation prior to UI layout assembly
 initialize_pwa_assets()
-
-st.set_page_config(page_title="Trainer", page_icon="🩺", layout="wide")
 
 API_KEYS = [st.secrets["GENAI_KEY_1"], st.secrets["GENAI_KEY_2"]] #st.secrets["GENAI_KEY_3"]] # (Keep your full list here)
 MAX_REQUESTS_PER_KEY_PER_MODEL = {
@@ -331,7 +336,8 @@ def initialize_app(active_user: str, force_reset: bool = False) -> None:
         "last_user_answers_list": [],
         "show_settings": False,
         "current_page": "Exam Trainer",
-        "leaderboard_opt_in": loaded_progress.get("leaderboard_opt_in", False)
+        "leaderboard_opt_in": loaded_progress.get("leaderboard_opt_in", False),
+        "uploaded_pdf_answers": None
     }
 
     # Bulk assign missing parameters into active memory layout
@@ -759,6 +765,57 @@ def lock_submit() -> None:
     """Lock the submit button to prevent multiple submissions."""
     st.session_state.is_submitting = True
 
+def extract_answers_from_pdf(pdf_bytes: bytes) -> list[str] | None:
+    """
+    Extract user answers from a filled PDF exam form.
+    
+    Args:
+        pdf_bytes: PDF file bytes
+        
+    Returns:
+        List of user answers (A, B, C, D) or None if parsing fails
+    """
+    if not PDF_PARSING_AVAILABLE:
+        return None
+    
+    try:
+        # Create a PDF reader object
+        pdf_reader = PdfReader(io.BytesIO(pdf_bytes))
+        
+        # Extract form fields from the PDF
+        user_answers = []
+        
+        # Iterate through all pages
+        for page in pdf_reader.pages:
+            # Check if the page has form fields
+            if '/Annots' in page:
+                annotations = page['/Annots']
+                if annotations:
+                    for annotation in annotations:
+                        annotation_obj = annotation.get_object()
+                        if '/T' in annotation_obj and '/V' in annotation_obj:
+                            # Get the field name and value
+                            field_name = annotation_obj['/T']
+                            field_value = annotation_obj['/V']
+                            
+                            # Extract question number from field name (e.g., "q1" -> 1)
+                            if isinstance(field_name, str) and field_name.startswith('q'):
+                                try:
+                                    q_num = int(field_name[1:])
+                                    # Ensure we have enough slots in the list
+                                    while len(user_answers) < q_num:
+                                        user_answers.append(None)
+                                    # Store the answer value (should be A, B, C, or D)
+                                    user_answers[q_num - 1] = str(field_value).upper()
+                                except (ValueError, IndexError):
+                                    continue
+        
+        return user_answers if user_answers else None
+        
+    except Exception as e:
+        st.error(f"Error parsing PDF: {e}")
+        return None
+
 def render_data_portability_interface():
     """
     Renders password-protected download/upload tools in the sidebar to 
@@ -789,6 +846,9 @@ def render_data_portability_interface():
     st.sidebar.success("Access Granted")
     st.sidebar.caption("Download data profiles before changing code, and reupload them afterward.")
 
+    # Generate timestamp once for all downloads
+    timestamp_melb = datetime.datetime.now(ZoneInfo("Australia/Melbourne")).strftime('%Y%m%d_%H%M%S')
+
     # 2. FETCH ALL USER PROGRESS DATA FROM SUPABASE
     try:
         from progress_manager import supabase
@@ -808,7 +868,6 @@ def render_data_portability_interface():
             
             zip_buffer.seek(0)
             
-            timestamp_melb = datetime.datetime.now(ZoneInfo("Australia/Melbourne")).strftime('%Y%m%d_%H%M%S')
             st.sidebar.download_button(
                 label="Download All User Data (.zip)",
                 data=zip_buffer,
@@ -957,13 +1016,22 @@ def render_trainer_page():
     # NEW: Show exam breakdown at top if submitted
     if st.session_state.get('exam_submitted'):
         num_actual_questions = len(st.session_state.current_key)
+        
+        # Prevent division by zero
+        if num_actual_questions > 0:
+            percentage = (st.session_state.last_score / num_actual_questions * 100)
+            delta_text = f"{percentage:.1f}% Correct"
+            delta_color = "normal" if percentage >= 70 else "inverse"
+        else:
+            delta_text = "0% Correct"
+            delta_color = "inverse"
             
         # Display score and leveling notification in callout boxes
         st.metric(
             label="Exam Performance", 
             value=f"{st.session_state.last_score} / {num_actual_questions}",
-            delta=f"{(st.session_state.last_score / num_actual_questions * 100):.1f}% Correct",
-            delta_color="normal" if st.session_state.last_score / num_actual_questions >= 0.7 else "inverse"
+            delta=delta_text,
+            delta_color=delta_color
         )
         
         if st.session_state.get('level_message'):
@@ -986,6 +1054,31 @@ def render_trainer_page():
             use_container_width=True,
             help="Click here to compile a fresh customized exam based on your filter selections."
         )
+    
+    # PDF Upload Section
+    st.write("---")
+    st.subheader("Submit Filled PDF for Grading")
+    uploaded_pdf = st.file_uploader(
+        "Upload your filled exam PDF",
+        type="pdf",
+        help="Upload a PDF that was generated from this app with your answers filled in"
+    )
+    
+    if uploaded_pdf is not None:
+        if st.button("Grade Uploaded PDF", type="secondary", use_container_width=True):
+            if not PDF_PARSING_AVAILABLE:
+                st.error("PDF parsing library not available. Please install PyPDF2.")
+            else:
+                with st.spinner("Parsing PDF and extracting answers..."):
+                    pdf_bytes = uploaded_pdf.read()
+                    user_answers = extract_answers_from_pdf(pdf_bytes)
+                    
+                    if user_answers is None:
+                        st.error("Could not extract answers from the PDF. Make sure you're uploading a PDF generated from this app with filled form fields.")
+                    else:
+                        # Store the extracted answers in session state
+                        st.session_state.uploaded_pdf_answers = user_answers
+                        st.success(f"Successfully extracted {len(user_answers)} answers from PDF. Click 'Submit for Grading' to grade your answers.")
     
     if generate_clicked:
         st.session_state.is_submitting = False
@@ -1135,7 +1228,7 @@ def render_trainer_page():
             with st.spinner(f"Generating {n} questions at Level {st.session_state.current_level}..."):
                 raw_response = get_blind_exam(samples, st.session_state.current_level, n)
 
-                if "[KEY:" in raw_response:
+                if raw_response and "[KEY:" in raw_response:
                     # Use a split that keeps the questions separate from the key
                     text, key_part = raw_response.split("[KEY:")
 
@@ -1350,13 +1443,31 @@ def render_trainer_page():
             # Standalone execution grading submission action button (normalized look)
             submitted = st.form_submit_button("Submit for Grading", disabled=st.session_state.get('is_submitting', False) or st.session_state.get('exam_submitted', False))
         if submitted:
-            # Capture selections from form radio buttons
-            num_actual_questions = len(individual_questions)
-            for idx in range(num_actual_questions):
-                st.session_state.user_selections[idx] = st.session_state.get(f"radio_q_{idx}")
-            
-            user_answers = [st.session_state.user_selections.get(idx, None) for idx in range(num_actual_questions)]
-            user_input = "\n".join([f"Q{idx+1}: {ans if ans else 'No Answer'}" for idx, ans in enumerate(user_answers)])
+            # Check if we have uploaded PDF answers to use instead of form selections
+            if 'uploaded_pdf_answers' in st.session_state and st.session_state.uploaded_pdf_answers:
+                # Use answers extracted from PDF
+                num_actual_questions = len(individual_questions)
+                pdf_answers = st.session_state.uploaded_pdf_answers
+                
+                # Ensure we have the right number of answers
+                user_answers = pdf_answers[:num_actual_questions] if len(pdf_answers) >= num_actual_questions else pdf_answers + [None] * (num_actual_questions - len(pdf_answers))
+                
+                # Update user_selections to match PDF answers
+                for idx, ans in enumerate(user_answers):
+                    st.session_state.user_selections[idx] = ans
+                
+                user_input = "\n".join([f"Q{idx+1}: {ans if ans else 'No Answer'}" for idx, ans in enumerate(user_answers)])
+                
+                # Clear the uploaded PDF answers after use
+                st.session_state.uploaded_pdf_answers = None
+            else:
+                # Capture selections from form radio buttons (original logic)
+                num_actual_questions = len(individual_questions)
+                for idx in range(num_actual_questions):
+                    st.session_state.user_selections[idx] = st.session_state.get(f"radio_q_{idx}")
+                
+                user_answers = [st.session_state.user_selections.get(idx, None) for idx in range(num_actual_questions)]
+                user_input = "\n".join([f"Q{idx+1}: {ans if ans else 'No Answer'}" for idx, ans in enumerate(user_answers)])
             
             correct_key = st.session_state.current_key[:num_actual_questions]
             correct_key_formatted = "\n".join([f"Q{idx+1}: {ans}" for idx, ans in enumerate(correct_key)])
@@ -1957,7 +2068,7 @@ def render_multiplayer_page():
     if "semester" in df.columns:
         df = df[df['semester'] == st.session_state.semester]
     
-    available_categories = df['subject'].unique().tolist() if 'subject' in df.columns else []
+    available_categories = df['category'].unique().tolist() if 'category' in df.columns else []
     
     # LOBBY PHASE
     if not st.session_state.mp_room_code:
@@ -1989,7 +2100,7 @@ def render_multiplayer_page():
                 with st.spinner("Generating questions..."):
                     filtered_df = df.copy()
                     if categories:
-                        filtered_df = filtered_df[filtered_df['subject'].isin(categories)]
+                        filtered_df = filtered_df[filtered_df['category'].isin(categories)]
                     
                     if filtered_df.empty:
                         st.error("No content available for selected filters.")
@@ -2438,7 +2549,10 @@ def render_leaderboard_page():
                     
                     col1.markdown(f"### {rank_badge}")
                     col2.markdown(f"**{entry['username']}**")
-                    col3.metric("ELO", entry['elo_rating'])
+                    # Use Glicko rating with fallback to old elo_rating for backward compatibility
+                    rating = entry.get('rating', entry.get('elo_rating', 1500))
+                    rd = entry.get('rd', 350)
+                    col3.metric("Rating", f"{rating:.0f} ±{rd:.0f}")
                     col4.metric("W/L/T", f"{entry['games_won']}/{entry['games_lost']}/{entry['games_tied']}")
                     col5.metric("Games", entry['games_played'])
                     
@@ -2451,13 +2565,16 @@ def render_leaderboard_page():
                     
                     st.divider()
         
-        # Show user's ELO rating
+        # Show user's Glicko rating
         if elo_leaderboard:
             user_elo = next((e for e in elo_leaderboard if e['username'] == active_user), None)
             if user_elo:
-                st.info(f"⚔️ Your ELO rating: **{user_elo['elo_rating']}** (Games: {user_elo['games_played']}, W/L/T: {user_elo['games_won']}/{user_elo['games_lost']}/{user_elo['games_tied']})")
+                # Use Glicko rating with fallback to old elo_rating for backward compatibility
+                rating = user_elo.get('rating', user_elo.get('elo_rating', 1500))
+                rd = user_elo.get('rd', 350)
+                st.info(f"⚔️ Your Glicko rating: **{rating:.0f} ±{rd:.0f}** (Games: {user_elo['games_played']}, W/L/T: {user_elo['games_won']}/{user_elo['games_lost']}/{user_elo['games_tied']})")
             else:
-                st.info("You don't have an ELO rating yet. Play 1v1 Multiplayer to get ranked!")
+                st.info("You don't have a Glicko rating yet. Play 1v1 Multiplayer to get ranked!")
 
     with tab4:
         st.subheader("Single Player Speed Quiz - Top Scores")
@@ -2722,8 +2839,8 @@ def render_settings_page():
                     st.session_state.confirm_reset = False  # Dismiss confirmation
                     st.rerun()
     with col2:
-        st.sidebar.markdown("### Contribute")
-        uploaded_note = st.sidebar.file_uploader("Upload Notes to Contribute", type=["txt", "csv", "pdf"])
+        st.markdown("### Contribute")
+        uploaded_note = st.file_uploader("Upload Notes to Contribute", type=["txt", "csv", "pdf"])
 
         if uploaded_note is not None:
             # Save it to a designated directory or process it into your database
@@ -2733,7 +2850,7 @@ def render_settings_page():
             with open(save_path, "wb") as f:
                 f.write(uploaded_note.getbuffer())
             
-            st.sidebar.success("Thank you for contributing! Your notes have been submitted.")
+            st.success("Thank you for contributing! Your notes have been submitted.")
         render_data_portability_interface()
 
 # ==============================================================

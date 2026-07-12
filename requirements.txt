@@ -5,3 +5,4 @@ fpdf
 supabase
 reportlab
 python-docx
+PyPDF2
