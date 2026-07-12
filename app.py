@@ -917,7 +917,7 @@ def render_data_portability_interface():
                 st.balloons()
             except Exception as e:
                 st.sidebar.error(f"Migration processing error: {str(e)}")
-
+                
     # -------------------------------------------------------------
     # 4. DOWNLOAD USER CONTRIBUTIONS
     # -------------------------------------------------------------
@@ -1289,12 +1289,8 @@ def render_trainer_page():
             st.warning(f"Join column '{JOIN_COLUMN}' not found in the dataset.")
             selected_lectures = []
 
-
-    st.sidebar.markdown("---")
-
     # PDF Upload Section for Grading
     st.sidebar.subheader("Submit Filled PDF")
-    st.sidebar.markdown("*Export PDF from Export page, fill it out, then upload here for grading*")
     uploaded_pdf = st.sidebar.file_uploader(
         "Upload filled exam PDF",
         type="pdf",
@@ -1315,8 +1311,6 @@ def render_trainer_page():
                     else:
                         st.session_state.uploaded_pdf_answers = user_answers
                         st.sidebar.success(f"Extracted {len(user_answers)} answers. Click 'Submit for Grading' in main view.")
-
-    st.sidebar.markdown("---")
 
     # --- NEW: RESTORE BACKUP BUTTON ---
     if st.session_state.get('previous_test_data'):
