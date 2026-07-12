@@ -1055,31 +1055,6 @@ def render_trainer_page():
             help="Click here to compile a fresh customized exam based on your filter selections."
         )
     
-    # PDF Upload Section
-    st.write("---")
-    st.subheader("Submit Filled PDF for Grading")
-    uploaded_pdf = st.file_uploader(
-        "Upload your filled exam PDF",
-        type="pdf",
-        help="Upload a PDF that was generated from this app with your answers filled in"
-    )
-    
-    if uploaded_pdf is not None:
-        if st.button("Grade Uploaded PDF", type="secondary", use_container_width=True):
-            if not PDF_PARSING_AVAILABLE:
-                st.error("PDF parsing library not available. Please install PyPDF2.")
-            else:
-                with st.spinner("Parsing PDF and extracting answers..."):
-                    pdf_bytes = uploaded_pdf.read()
-                    user_answers = extract_answers_from_pdf(pdf_bytes)
-                    
-                    if user_answers is None:
-                        st.error("Could not extract answers from the PDF. Make sure you're uploading a PDF generated from this app with filled form fields.")
-                    else:
-                        # Store the extracted answers in session state
-                        st.session_state.uploaded_pdf_answers = user_answers
-                        st.success(f"Successfully extracted {len(user_answers)} answers from PDF. Click 'Submit for Grading' to grade your answers.")
-    
     if generate_clicked:
         st.session_state.is_submitting = False
         # --- NEW: BACKUP THE CURRENT EXAM BEFORE OVERWRITING ---
@@ -1317,6 +1292,31 @@ def render_trainer_page():
 
     st.sidebar.markdown("---")
 
+    # PDF Upload Section for Grading
+    st.sidebar.subheader("Submit Filled PDF")
+    st.sidebar.markdown("*Export PDF from Export page, fill it out, then upload here for grading*")
+    uploaded_pdf = st.sidebar.file_uploader(
+        "Upload filled exam PDF",
+        type="pdf",
+        help="Upload a PDF exported from the Export Questions page with your answers filled in"
+    )
+    
+    if uploaded_pdf is not None:
+        if st.sidebar.button("Grade Uploaded PDF", use_container_width=True):
+            if not PDF_PARSING_AVAILABLE:
+                st.sidebar.error("PDF parsing library not available. Please install PyPDF2.")
+            else:
+                with st.sidebar.spinner("Parsing PDF..."):
+                    pdf_bytes = uploaded_pdf.read()
+                    user_answers = extract_answers_from_pdf(pdf_bytes)
+                    
+                    if user_answers is None:
+                        st.sidebar.error("Could not extract answers from PDF.")
+                    else:
+                        st.session_state.uploaded_pdf_answers = user_answers
+                        st.sidebar.success(f"Extracted {len(user_answers)} answers. Click 'Submit for Grading' in main view.")
+
+    st.sidebar.markdown("---")
 
     # --- NEW: RESTORE BACKUP BUTTON ---
     if st.session_state.get('previous_test_data'):
