@@ -328,7 +328,7 @@ def initialize_app(active_user: str, force_reset: bool = False) -> None:
         "previous_test_data": {},
         "use_search": False,
         "thinking_level": "MEDIUM",
-        "temperature": 1.0,
+        "temperature": 0.7,
         "top_p": 0.95,
         "exam_submitted": False,
         "last_score": 0,
@@ -410,7 +410,7 @@ def call_gemini_with_rotation(prompt: str, model_to_use: str, use_search: bool =
         config_args["thinking_config"] = types.ThinkingConfig(thinking_level=current_level)
 
     # Add temperature and top_p settings
-    config_args["temperature"] = st.session_state.get("temperature", 1.0)
+    config_args["temperature"] = st.session_state.get("temperature", 0.7)
     config_args["top_p"] = st.session_state.get("top_p", 0.95)
 
     # Pack arguments into the structural API configuration object
