@@ -90,7 +90,7 @@ initialize_pwa_assets()
 API_KEYS = [st.secrets["GENAI_KEY_1"], st.secrets["GENAI_KEY_2"]] #st.secrets["GENAI_KEY_3"]] # (Keep your full list here)
 MAX_REQUESTS_PER_KEY_PER_MODEL = {
     'gemini-3.6-flash': 20,
-    'gemini-3.5-flash-lite': 500
+    'gemini-3.5-flash-lite': 200
 }  # Maximum requests per API key per model per day
 CSV_FILE = "learning_objectives_informative_reports_y2s1.csv" 
 NOTES_FILE = "lecture_notes_y2s1.csv"

@@ -47,7 +47,7 @@ except ImportError:
 API_KEYS = []  # User needs to configure these
 MAX_REQUESTS_PER_KEY_PER_MODEL = {
     'gemini-3.6-flash': 20,
-    'gemini-3.5-flash-lite': 500
+    'gemini-3.5-flash-lite': 200
 }
 CSV_FILE = "learning_objectives_informative_reports_y2s1.csv" 
 NOTES_FILE = "lecture_notes_y2s1.csv"
