@@ -1230,6 +1230,10 @@ def render_trainer_page():
     # Move Active Level metric here
     st.sidebar.metric("Active Level", f"{st.session_state.current_level}/50")
 
+    # Current semester indicator
+    st.sidebar.info(f"**Current Semester:** {st.session_state.semester.upper()}")
+    st.sidebar.caption("Change semester in Settings")
+
     df_sidebar = load_csv_data(CSV_FILE)
 
     # Create two tabs inside the sidebar
