@@ -949,6 +949,7 @@ def render_data_portability_interface():
 # Define the view functions
 def render_trainer_page():
     global CSV_FILE
+    generate_clicked = False
     # ==========================================
     # 0. INITIALIZATION ENGINE
     # ==========================================
@@ -1043,6 +1044,17 @@ def render_trainer_page():
             st.markdown(st.session_state.immediate_wrong_breakdown)
         
         st.write("---")
+    # This layout structure prevents the button from stretching awkwardly on wide screens
+    gen_col1, gen_col2, gen_col3 = st.columns([1, 2, 1])
+
+    with gen_col1:
+        # use_container_width fills the left column layout; type="primary" makes it high-contrast
+        generate_clicked = st.button(
+            "Generate New Exam", 
+            type="primary", 
+            use_container_width=True,
+            help="Click here to compile a fresh customized exam based on your filter selections."
+        )
     
     if generate_clicked:
         st.session_state.is_submitting = False
@@ -1316,15 +1328,6 @@ def render_trainer_page():
             st.session_state.previous_test_data = current_backup if current_backup else {}
                 
             st.rerun()
-    
-    # Generate New Exam button in sidebar
-    st.sidebar.write("---")
-    generate_clicked = st.sidebar.button(
-        "Generate New Exam", 
-        type="primary", 
-        use_container_width=True,
-        help="Click here to compile a fresh customized exam based on your filter selections."
-    )
     # ----------------------------------
 
 
