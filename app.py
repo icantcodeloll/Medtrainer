@@ -1045,7 +1045,7 @@ def render_trainer_page():
         
         st.write("---")
     # This layout structure prevents the button from stretching awkwardly on wide screens
-    gen_col1, gen_col2, gen_col3 = st.columns([1, 2, 1])
+    gen_col1, gen_col2, gen_col3 = st.columns([2, 1, 1])
 
     with gen_col1:
         # use_container_width fills the left column layout; type="primary" makes it high-contrast
