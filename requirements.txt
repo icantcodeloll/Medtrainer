@@ -6,3 +6,5 @@ supabase
 reportlab
 python-docx
 PyPDF2
+shiny
+opencv-python-headless

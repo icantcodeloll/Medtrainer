@@ -89,8 +89,8 @@ initialize_pwa_assets()
 
 API_KEYS = [st.secrets["GENAI_KEY_1"], st.secrets["GENAI_KEY_2"]] #st.secrets["GENAI_KEY_3"]] # (Keep your full list here)
 MAX_REQUESTS_PER_KEY_PER_MODEL = {
-    'gemini-3.5-flash': 20,
-    'gemini-3.1-flash-lite': 500
+    'gemini-3.6-flash': 20,
+    'gemini-3.5-flash-lite': 500
 }  # Maximum requests per API key per model per day
 CSV_FILE = "learning_objectives_informative_reports_y2s1.csv" 
 NOTES_FILE = "lecture_notes_y2s1.csv"
@@ -107,8 +107,8 @@ EXAM_WEIGHTS = {
     "Int Med": 6
 }
 # Models
-EXAM_MODEL = 'gemini-3.1-flash-lite'
-GRADER_MODEL = 'gemini-3.1-flash-lite'
+EXAM_MODEL = 'gemini-3.5-flash-lite'
+GRADER_MODEL = 'gemini-3.5-flash-lite'
 
 # Constants
 LEVEL_UP_THRESHOLD = 90
@@ -249,7 +249,7 @@ def save_on_tab_close():
             # Construct a clean dictionary snapshot of the active workspace
             state_snapshot = {
                 "current_level": st.session_state.get("current_level", 1),
-                "exam_model": st.session_state.get("exam_model", 'gemini-3.1-flash-lite'),
+                "exam_model": st.session_state.get("exam_model", 'gemini-3.5-flash-lite'),
                 "num_questions": st.session_state.get("num_questions", 5),
                 "missed_questions": st.session_state.get("missed_questions", []),
                 "exam_history": st.session_state.get("exam_history", []),
@@ -315,7 +315,7 @@ def initialize_app(active_user: str, force_reset: bool = False) -> None:
     # Core parameters mapping dictionary 
     defaults = {
         "current_level": loaded_progress.get("current_level", 1),
-        "exam_model": loaded_progress.get("exam_model", 'gemini-3.1-flash-lite'),
+        "exam_model": loaded_progress.get("exam_model", 'gemini-3.5-flash-lite'),
         "num_questions": loaded_progress.get("num_questions", 5),
         "semester": loaded_progress.get("semester", "y2s2"),
         "missed_questions": loaded_progress.get("missed_questions", []),
@@ -323,7 +323,7 @@ def initialize_app(active_user: str, force_reset: bool = False) -> None:
         "current_exam": loaded_progress.get("current_exam", ""),
         "current_key": loaded_progress.get("current_key", []),
         "key_index": min(loaded_progress.get("key_index", 0), max(0, len(API_KEYS) - 1)) if len(API_KEYS) > 0 else 0,
-        "api_request_counts": loaded_progress.get("api_request_counts", {i: {'gemini-3.5-flash': 0, 'gemini-3.1-flash-lite': 0} for i in range(len(API_KEYS))}),
+        "api_request_counts": loaded_progress.get("api_request_counts", {i: {'gemini-3.6-flash': 0, 'gemini-3.5-flash-lite': 0} for i in range(len(API_KEYS))}),
         "current_categories": loaded_progress.get("current_categories", []),
         "previous_test_data": {},
         "use_search": False,
@@ -367,7 +367,7 @@ def rotate_to_next_available_key(model: str):
     
     while keys_checked < len(API_KEYS):
         current_index = st.session_state.key_index
-        key_counts = st.session_state.api_request_counts.get(current_index, {'gemini-3.5-flash': 0, 'gemini-3.1-flash-lite': 0})
+        key_counts = st.session_state.api_request_counts.get(current_index, {'gemini-3.6-flash': 0, 'gemini-3.5-flash-lite': 0})
         request_count = key_counts.get(model, 0)
         
         if request_count < max_requests:
@@ -419,7 +419,7 @@ def call_gemini_with_rotation(prompt: str, model_to_use: str, use_search: bool =
     # --- REST OF YOUR CONTINUOUS API LOOP ---
     while keys_tried < len(API_KEYS):
         # Check if current key is exhausted for this model before making request
-        key_counts = st.session_state.api_request_counts.get(st.session_state.key_index, {'gemini-3.5-flash': 0, 'gemini-3.1-flash-lite': 0})
+        key_counts = st.session_state.api_request_counts.get(st.session_state.key_index, {'gemini-3.6-flash': 0, 'gemini-3.5-flash-lite': 0})
         current_count = key_counts.get(model_to_use, 0)
         if current_count >= max_requests:
             if not rotate_to_next_available_key(model_to_use):
@@ -438,7 +438,7 @@ def call_gemini_with_rotation(prompt: str, model_to_use: str, use_search: bool =
             
             # Increment request counter for successful request (model-specific)
             if st.session_state.key_index not in st.session_state.api_request_counts:
-                st.session_state.api_request_counts[st.session_state.key_index] = {'gemini-3.5-flash': 0, 'gemini-3.1-flash-lite': 0}
+                st.session_state.api_request_counts[st.session_state.key_index] = {'gemini-3.6-flash': 0, 'gemini-3.5-flash-lite': 0}
             st.session_state.api_request_counts[st.session_state.key_index][model_to_use] = \
                 st.session_state.api_request_counts[st.session_state.key_index].get(model_to_use, 0) + 1
             
@@ -1043,17 +1043,6 @@ def render_trainer_page():
             st.markdown(st.session_state.immediate_wrong_breakdown)
         
         st.write("---")
-    # This layout structure prevents the button from stretching awkwardly on wide screens
-    gen_col1, gen_col2, gen_col3 = st.columns([1, 2, 1])
-
-    with gen_col2:
-        # use_container_width fills the middle column layout; type="primary" makes it high-contrast
-        generate_clicked = st.button(
-            "Generate New Exam", 
-            type="primary", 
-            use_container_width=True,
-            help="Click here to compile a fresh customized exam based on your filter selections."
-        )
     
     if generate_clicked:
         st.session_state.is_submitting = False
@@ -1244,8 +1233,6 @@ def render_trainer_page():
             for cat in categories:
                 if st.checkbox(cat, value=True, key=f"focus_{cat}"):
                     subject_filter.append(cat)
-                    
-            st.markdown("---")
             
             # --- Exam Filter Checkboxes ---
             exam_filter = []
@@ -1257,8 +1244,6 @@ def render_trainer_page():
                         exam_filter.append(ex)
             else:
                 exam_filter = []
-                
-            st.markdown("---")
             
             # --- Systems Filter Checkboxes ---
             system_filter = []
@@ -1331,6 +1316,15 @@ def render_trainer_page():
             st.session_state.previous_test_data = current_backup if current_backup else {}
                 
             st.rerun()
+    
+    # Generate New Exam button in sidebar
+    st.sidebar.write("---")
+    generate_clicked = st.sidebar.button(
+        "Generate New Exam", 
+        type="primary", 
+        use_container_width=True,
+        help="Click here to compile a fresh customized exam based on your filter selections."
+    )
     # ----------------------------------
 
 
@@ -2789,28 +2783,28 @@ def render_settings_page():
         col1, col2 = st.columns(2)
         
         with col1:
-            flash35_count = model_counts.get('gemini-3.5-flash', 0)
-            flash35_max = MAX_REQUESTS_PER_KEY_PER_MODEL['gemini-3.5-flash']
-            flash35_percent = min((flash35_count / flash35_max) * 100, 100)
+            flash36_count = model_counts.get('gemini-3.6-flash', 0)
+            flash36_max = MAX_REQUESTS_PER_KEY_PER_MODEL['gemini-3.6-flash']
+            flash36_percent = min((flash36_count / flash36_max) * 100, 100)
             
             st.metric(
-                "3.5 Flash",
-                f"{flash35_count}/{flash35_max}",
-                delta_color="normal" if flash35_count < flash35_max else "inverse"
+                "3.6 Flash",
+                f"{flash36_count}/{flash36_max}",
+                delta_color="normal" if flash36_count < flash36_max else "inverse"
             )
-            st.progress(flash35_percent / 100)
+            st.progress(flash36_percent / 100)
         
         with col2:
-            flash31_count = model_counts.get('gemini-3.1-flash-lite', 0)
-            flash31_max = MAX_REQUESTS_PER_KEY_PER_MODEL['gemini-3.1-flash-lite']
-            flash31_percent = min((flash31_count / flash31_max) * 100, 100)
+            flash35lite_count = model_counts.get('gemini-3.5-flash-lite', 0)
+            flash35lite_max = MAX_REQUESTS_PER_KEY_PER_MODEL['gemini-3.5-flash-lite']
+            flash35lite_percent = min((flash35lite_count / flash35lite_max) * 100, 100)
             
             st.metric(
-                "3.1 Flash Lite",
-                f"{flash31_count}/{flash31_max}",
-                delta_color="normal" if flash31_count < flash31_max else "inverse"
+                "3.5 Flash Lite",
+                f"{flash35lite_count}/{flash35lite_max}",
+                delta_color="normal" if flash35lite_count < flash35lite_max else "inverse"
             )
-            st.progress(flash31_percent / 100)
+            st.progress(flash35lite_percent / 100)
         
         st.divider()
     
@@ -2819,12 +2813,12 @@ def render_settings_page():
     st.subheader("Model Selection")
     model_choice = st.radio(
         label="",
-        options=["3.1 flash lite", "3.5 flash"],
-        index=1 if st.session_state.get('exam_model', 'gemini-3.5-flash') == 'gemini-3.5-flash' else 0,
+        options=["3.5 flash lite", "3.6 flash"],
+        index=1 if st.session_state.get('exam_model', 'gemini-3.6-flash') == 'gemini-3.6-flash' else 0,
         horizontal=True,
         help="Fast uses Flash-Lite. Slow & Smart uses Flash."
     )
-    st.session_state.exam_model = 'gemini-3.5-flash' if "Slow" in model_choice else 'gemini-3.1-flash-lite'
+    st.session_state.exam_model = 'gemini-3.6-flash' if "Slow" in model_choice else 'gemini-3.5-flash-lite'
     
     st.write("---")
     
@@ -2929,7 +2923,7 @@ pg = st.navigation([
     st.Page(render_stats_page, title="Stats", icon="📊", url_path="stats"),
     st.Page(render_export_page, title="Export Questions", icon="📥", url_path="export"), 
     st.Page(render_game_page, title="Speed Quiz", icon="🎮", url_path="game"),
-    st.Page(render_multiplayer_page, title="1v1 Multiplayer", icon="⚔️", url_path="multiplayer"),
+    # st.Page(render_multiplayer_page, title="1v1 Multiplayer", icon="⚔️", url_path="multiplayer"),
     st.Page(render_leaderboard_page, title="Leaderboard", icon="🏆", url_path="leaderboard"),
     st.Page(render_settings_page, title="Settings", icon="⚙️", url_path="settings")
 ])
