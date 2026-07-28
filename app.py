@@ -985,7 +985,11 @@ def render_trainer_page():
     # 2. CORE LOGIC FUNCTIONS
     # ==========================================
     # Dynamically pick the target CSV depending on the selectbox state
-    if st.session_state.get("semester") == "Y1S1":
+    if st.session_state.get("semester") == "ALL":
+        # For ALL semesters, we'll handle this in the data loading section
+        CSV_FILE = None
+        NOTES_FILE = None
+    elif st.session_state.get("semester") == "Y1S1":
         CSV_FILE = "learning_objectives_informative_reports_y1s1.csv"
         NOTES_FILE = "lecture_notes_y1s1.csv"
     elif st.session_state.get("semester") == "Y1S2":
@@ -1076,11 +1080,41 @@ def render_trainer_page():
 
         n = st.session_state.num_questions
         try:
-            df_main = load_csv_data(CSV_FILE)
-            df_notes = load_csv_data(NOTES_FILE)
-            df = pd.merge(df_main, df_notes, on=JOIN_COLUMN, how='left')
-            if "semester" in df.columns:
-                df = df[df['semester'] == st.session_state.semester]
+            # Handle ALL semesters case by loading and combining all CSV files
+            if st.session_state.get("semester") == "ALL":
+                # Load all semester data
+                all_dfs_main = []
+                all_dfs_notes = []
+                
+                semester_files = [
+                    ("Y1S1", "learning_objectives_informative_reports_y1s1.csv", "lecture_notes_y1s1.csv"),
+                    ("Y1S2", "learning_objectives_informative_reports_y1s2.csv", "lecture_notes_y1s2.csv"),
+                    ("Y2S1", "learning_objectives_informative_reports_y2s1.csv", "lecture_notes_y2s1.csv"),
+                    ("Y2S2", "learning_objectives_informative_reports_y2s2.csv", "lecture_notes_y2s2.csv")
+                ]
+                
+                for sem, main_file, notes_file in semester_files:
+                    if os.path.exists(main_file) and os.path.exists(notes_file):
+                        df_main_temp = load_csv_data(main_file)
+                        df_notes_temp = load_csv_data(notes_file)
+                        df_main_temp['semester'] = sem  # Add semester identifier
+                        all_dfs_main.append(df_main_temp)
+                        all_dfs_notes.append(df_notes_temp)
+                
+                if not all_dfs_main:
+                    st.error("No semester CSV files found!")
+                    st.stop()
+                
+                df_main = pd.concat(all_dfs_main, ignore_index=True)
+                df_notes = pd.concat(all_dfs_notes, ignore_index=True)
+                df = pd.merge(df_main, df_notes, on=JOIN_COLUMN, how='left')
+                # Don't filter by semester when ALL is selected
+            else:
+                df_main = load_csv_data(CSV_FILE)
+                df_notes = load_csv_data(NOTES_FILE)
+                df = pd.merge(df_main, df_notes, on=JOIN_COLUMN, how='left')
+                if "semester" in df.columns:
+                    df = df[df['semester'] == st.session_state.semester]
 
             # ────────── ADD THIS NEW BLOCK HERE TO INITIALIZE FILTERS ──────────
             # Reconstruct subject_filter from session state checkboxes
@@ -1234,7 +1268,28 @@ def render_trainer_page():
     st.sidebar.info(f"**Current Semester:** {st.session_state.semester.upper()}")
     st.sidebar.caption("Change semester in Settings")
 
-    df_sidebar = load_csv_data(CSV_FILE)
+    # Handle ALL semesters case for sidebar filters
+    if st.session_state.get("semester") == "ALL":
+        # Load all semester data for sidebar filters
+        all_dfs_sidebar = []
+        semester_files = [
+            "learning_objectives_informative_reports_y1s1.csv",
+            "learning_objectives_informative_reports_y1s2.csv",
+            "learning_objectives_informative_reports_y2s1.csv",
+            "learning_objectives_informative_reports_y2s2.csv"
+        ]
+        
+        for file in semester_files:
+            if os.path.exists(file):
+                all_dfs_sidebar.append(load_csv_data(file))
+        
+        if not all_dfs_sidebar:
+            st.error("No semester CSV files found!")
+            st.stop()
+        
+        df_sidebar = pd.concat(all_dfs_sidebar, ignore_index=True)
+    else:
+        df_sidebar = load_csv_data(CSV_FILE)
 
     # Create two tabs inside the sidebar
     filter_tab1, filter_tab2 = st.sidebar.tabs(["Exam Filter", "Lecture Filter"])
@@ -1799,11 +1854,40 @@ def render_game_page():
         }
     
     # Load CSV data for filtering
-    df_main = load_csv_data(CSV_FILE)
-    df_notes = load_csv_data(NOTES_FILE)
-    df = pd.merge(df_main, df_notes, on=JOIN_COLUMN, how='left')
-    if "semester" in df.columns:
-        df = df[df['semester'] == st.session_state.semester]
+    if st.session_state.get("semester") == "ALL":
+        # Load all semester data
+        all_dfs_main = []
+        all_dfs_notes = []
+        
+        semester_files = [
+            ("Y1S1", "learning_objectives_informative_reports_y1s1.csv", "lecture_notes_y1s1.csv"),
+            ("Y1S2", "learning_objectives_informative_reports_y1s2.csv", "lecture_notes_y1s2.csv"),
+            ("Y2S1", "learning_objectives_informative_reports_y2s1.csv", "lecture_notes_y2s1.csv"),
+            ("Y2S2", "learning_objectives_informative_reports_y2s2.csv", "lecture_notes_y2s2.csv")
+        ]
+        
+        for sem, main_file, notes_file in semester_files:
+            if os.path.exists(main_file) and os.path.exists(notes_file):
+                df_main_temp = load_csv_data(main_file)
+                df_notes_temp = load_csv_data(notes_file)
+                df_main_temp['semester'] = sem
+                all_dfs_main.append(df_main_temp)
+                all_dfs_notes.append(df_notes_temp)
+        
+        if not all_dfs_main:
+            st.error("No semester CSV files found!")
+            st.stop()
+        
+        df_main = pd.concat(all_dfs_main, ignore_index=True)
+        df_notes = pd.concat(all_dfs_notes, ignore_index=True)
+        df = pd.merge(df_main, df_notes, on=JOIN_COLUMN, how='left')
+        # Don't filter by semester when ALL is selected
+    else:
+        df_main = load_csv_data(CSV_FILE)
+        df_notes = load_csv_data(NOTES_FILE)
+        df = pd.merge(df_main, df_notes, on=JOIN_COLUMN, how='left')
+        if "semester" in df.columns:
+            df = df[df['semester'] == st.session_state.semester]
     
     # Get available categories
     available_categories = df['subject'].unique().tolist() if 'subject' in df.columns else []
@@ -2088,11 +2172,40 @@ def render_multiplayer_page():
         st.session_state.mp_game_start_time = None
     
     # Load CSV data
-    df_main = load_csv_data(CSV_FILE)
-    df_notes = load_csv_data(NOTES_FILE)
-    df = pd.merge(df_main, df_notes, on=JOIN_COLUMN, how='left')
-    if "semester" in df.columns:
-        df = df[df['semester'] == st.session_state.semester]
+    if st.session_state.get("semester") == "ALL":
+        # Load all semester data
+        all_dfs_main = []
+        all_dfs_notes = []
+        
+        semester_files = [
+            ("Y1S1", "learning_objectives_informative_reports_y1s1.csv", "lecture_notes_y1s1.csv"),
+            ("Y1S2", "learning_objectives_informative_reports_y1s2.csv", "lecture_notes_y1s2.csv"),
+            ("Y2S1", "learning_objectives_informative_reports_y2s1.csv", "lecture_notes_y2s1.csv"),
+            ("Y2S2", "learning_objectives_informative_reports_y2s2.csv", "lecture_notes_y2s2.csv")
+        ]
+        
+        for sem, main_file, notes_file in semester_files:
+            if os.path.exists(main_file) and os.path.exists(notes_file):
+                df_main_temp = load_csv_data(main_file)
+                df_notes_temp = load_csv_data(notes_file)
+                df_main_temp['semester'] = sem
+                all_dfs_main.append(df_main_temp)
+                all_dfs_notes.append(df_notes_temp)
+        
+        if not all_dfs_main:
+            st.error("No semester CSV files found!")
+            st.stop()
+        
+        df_main = pd.concat(all_dfs_main, ignore_index=True)
+        df_notes = pd.concat(all_dfs_notes, ignore_index=True)
+        df = pd.merge(df_main, df_notes, on=JOIN_COLUMN, how='left')
+        # Don't filter by semester when ALL is selected
+    else:
+        df_main = load_csv_data(CSV_FILE)
+        df_notes = load_csv_data(NOTES_FILE)
+        df = pd.merge(df_main, df_notes, on=JOIN_COLUMN, how='left')
+        if "semester" in df.columns:
+            df = df[df['semester'] == st.session_state.semester]
     
     available_categories = df['category'].unique().tolist() if 'category' in df.columns else []
     
@@ -2712,7 +2825,7 @@ def render_settings_page():
     st.session_state.num_questions = st.slider("Number of Questions", 1, 50, st.session_state.num_questions)
     
     # Define the options exactly as you want them
-    semester_options = ["Y1S1", "Y1S2", "Y2S1", "Y2S2"]
+    semester_options = ["ALL", "Y1S1", "Y1S2", "Y2S1", "Y2S2"]
 
     # Look up what is currently saved in session state to determine the starting index (default to 0 if not found)
     current_semester = st.session_state.get("semester", "Y2S2")
