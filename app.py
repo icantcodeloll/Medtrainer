@@ -284,6 +284,7 @@ def register_cleanup_handler():
 def load_csv_data(file_path: str) -> pd.DataFrame:
     """
     Load CSV data with caching to improve performance.
+    Handles encoding errors by trying multiple encodings.
     
     Args:
         file_path: Path to the CSV file
@@ -291,7 +292,19 @@ def load_csv_data(file_path: str) -> pd.DataFrame:
     Returns:
         pd.DataFrame: Loaded CSV data
     """
-    return pd.read_csv(file_path)
+    encodings = ['utf-8', 'latin1', 'iso-8859-1', 'cp1252']
+    
+    for encoding in encodings:
+        try:
+            return pd.read_csv(file_path, encoding=encoding)
+        except UnicodeDecodeError:
+            continue
+        except Exception as e:
+            # If it's not a Unicode error, raise it immediately
+            raise
+    
+    # If all encodings fail, try with error handling
+    return pd.read_csv(file_path, encoding='utf-8', errors='replace')
 
 
 # ==========================================
