@@ -1192,15 +1192,52 @@ def render_trainer_page():
             # --- SMART SAMPLING (CATEGORY WEIGHTED) ---
             # Map the base category weights from your blueprint
             df['sampling_weight'] = df['category'].map(EXAM_WEIGHTS).fillna(0.05)
-
-            # Sample using the category weights
-            try:
-                # We use replace=False so we don't duplicate questions in the same exam
-                st.session_state.samples_df = df.sample(min(n, len(df)), weights='sampling_weight', replace=False)
-            except ValueError:
-                # Fallback if weights math fails (e.g., all weights are zero)
-                st.session_state.samples_df = df.sample(min(n, len(df)))
-                st.sidebar.warning("Fallback Sampling: Standard random generation used.")
+            
+            # When ALL semesters is selected, add semester balancing to ensure equal representation
+            if st.session_state.get("semester") == "ALL" and "semester" in df.columns:
+                # Calculate questions per semester (equal distribution)
+                semesters = df['semester'].unique()
+                questions_per_semester = max(1, n // len(semesters))
+                
+                # Sample from each semester separately
+                sampled_dfs = []
+                for sem in semesters:
+                    df_sem = df[df['semester'] == sem].copy()
+                    if len(df_sem) > 0:
+                        # Apply category weighting within this semester
+                        df_sem['sampling_weight'] = df_sem['category'].map(EXAM_WEIGHTS).fillna(0.05)
+                        # Sample from this semester
+                        try:
+                            sem_sample = df_sem.sample(min(questions_per_semester, len(df_sem)), weights='sampling_weight', replace=False)
+                            sampled_dfs.append(sem_sample)
+                        except ValueError:
+                            # Fallback if weights math fails
+                            sem_sample = df_sem.sample(min(questions_per_semester, len(df_sem)))
+                            sampled_dfs.append(sem_sample)
+                
+                # Combine samples from all semesters
+                if sampled_dfs:
+                    st.session_state.samples_df = pd.concat(sampled_dfs, ignore_index=True)
+                    # If we didn't get enough questions, sample more randomly from remaining
+                    if len(st.session_state.samples_df) < n:
+                        remaining_needed = n - len(st.session_state.samples_df)
+                        already_sampled = st.session_state.samples_df.index
+                        df_remaining = df[~df.index.isin(already_sampled)]
+                        if len(df_remaining) > 0:
+                            additional_sample = df_remaining.sample(min(remaining_needed, len(df_remaining)))
+                            st.session_state.samples_df = pd.concat([st.session_state.samples_df, additional_sample], ignore_index=True)
+                else:
+                    st.session_state.samples_df = df.sample(min(n, len(df)))
+            else:
+                # Original sampling logic for individual semesters
+                # Sample using the category weights
+                try:
+                    # We use replace=False so we don't duplicate questions in the same exam
+                    st.session_state.samples_df = df.sample(min(n, len(df)), weights='sampling_weight', replace=False)
+                except ValueError:
+                    # Fallback if weights math fails (e.g., all weights are zero)
+                    st.session_state.samples_df = df.sample(min(n, len(df)))
+                    st.sidebar.warning("Fallback Sampling: Standard random generation used.")
             
             samples_df = st.session_state.samples_df
             # ----------------------------
