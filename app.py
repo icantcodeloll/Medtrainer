@@ -1137,14 +1137,18 @@ def render_trainer_page():
             # Reconstruct exam_filter from session state checkboxes
             exam_filter = []
             if 'exam' in df_main.columns:
-                exams = sorted(df_main['exam'].fillna("Uncategorized").astype(str).unique().tolist())
-                exam_filter = [ex for ex in exams if st.session_state.get(f"exam_{ex}", True)]
+                # Only reconstruct if there's meaningful exam data
+                if df_main['exam'].notna().any():
+                    exams = sorted(df_main['exam'].fillna("Uncategorized").astype(str).unique().tolist())
+                    exam_filter = [ex for ex in exams if st.session_state.get(f"exam_{ex}", True)]
                 
             # Reconstruct system_filter from session state checkboxes
             system_filter = []
             if 'system' in df_main.columns:
-                systems = sorted(df_main['system'].fillna("Uncategorized").astype(str).unique().tolist())
-                system_filter = [sys for sys in systems if st.session_state.get(f"sys_{sys}", True)]
+                # Only reconstruct if there's meaningful system data
+                if df_main['system'].notna().any():
+                    systems = sorted(df_main['system'].fillna("Uncategorized").astype(str).unique().tolist())
+                    system_filter = [sys for sys in systems if st.session_state.get(f"sys_{sys}", True)]
             # ───────────────────────────────────────────────────────────────────
 
             # --- NEW LECTURE TAB OVERRIDE CHECK --- 
@@ -1162,19 +1166,25 @@ def render_trainer_page():
                     
                 # --- Filter by exam ---
                 if 'exam' in df.columns:
-                    if not exam_filter:
-                        st.error("Please select at least one Exam filter.")
-                        st.stop()
-                    else:
-                        df = df[df['exam'].isin(exam_filter)]
+                    # Only require exam filter if the column has meaningful data (non-null values)
+                    has_exam_data = df['exam'].notna().any()
+                    if has_exam_data:
+                        if not exam_filter:
+                            st.error("Please select at least one Exam filter.")
+                            st.stop()
+                        else:
+                            df = df[df['exam'].isin(exam_filter)]
                         
                 # --- Filter by system ---
                 if 'system' in df.columns:
-                    if not system_filter:
-                        st.error("Please select at least one System filter.")
-                        st.stop()
-                    else:
-                        df = df[df['system'].isin(system_filter)]
+                    # Only require system filter if the column has meaningful data (non-null values)
+                    has_system_data = df['system'].notna().any()
+                    if has_system_data:
+                        if not system_filter:
+                            st.error("Please select at least one System filter.")
+                            st.stop()
+                        else:
+                            df = df[df['system'].isin(system_filter)]
                     
             # Final safety check to ensure data isn't missing
             if df.empty:
@@ -1358,22 +1368,32 @@ def render_trainer_page():
             # --- Exam Filter Checkboxes ---
             exam_filter = []
             if 'exam' in df_sidebar.columns:
-                st.markdown("**Exam:**")
-                exams = sorted(df_sidebar['exam'].fillna("Uncategorized").astype(str).unique().tolist())
-                for ex in exams:
-                    if st.checkbox(ex, value=True, key=f"exam_{ex}"):
-                        exam_filter.append(ex)
+                # Only show exam filter if there's meaningful data (non-null values)
+                if df_sidebar['exam'].notna().any():
+                    st.markdown("**Exam:**")
+                    exams = sorted(df_sidebar['exam'].fillna("Uncategorized").astype(str).unique().tolist())
+                    for ex in exams:
+                        if st.checkbox(ex, value=True, key=f"exam_{ex}"):
+                            exam_filter.append(ex)
+                else:
+                    # No meaningful exam data, don't show filter
+                    exam_filter = []
             else:
                 exam_filter = []
             
             # --- Systems Filter Checkboxes ---
             system_filter = []
             if 'system' in df_sidebar.columns:
-                st.markdown("**Systems:**")
-                systems = sorted(df_sidebar['system'].fillna("Uncategorized").astype(str).unique().tolist())
-                for sys in systems:
-                    if st.checkbox(sys, value=True, key=f"sys_{sys}"):
-                        system_filter.append(sys)
+                # Only show system filter if there's meaningful data (non-null values)
+                if df_sidebar['system'].notna().any():
+                    st.markdown("**Systems:**")
+                    systems = sorted(df_sidebar['system'].fillna("Uncategorized").astype(str).unique().tolist())
+                    for sys in systems:
+                        if st.checkbox(sys, value=True, key=f"sys_{sys}"):
+                            system_filter.append(sys)
+                else:
+                    # No meaningful system data, don't show filter
+                    system_filter = []
             else:
                 system_filter = []
             
